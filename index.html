@@ -10574,6 +10574,7 @@ paintCss();build();paint();
 #rbn.bs-glass,#rbp.bs-glass,#rbs.bs-glass,#hd.bs-glass{--rb1:rgba(255,255,255,.12);--rb2:rgba(255,255,255,.04);--rbo:rgba(255,255,255,.22);--rbh:rgba(255,255,255,.2)}
 #rbn.bs-flat,#rbp.bs-flat,#rbs.bs-flat,#hd.bs-flat{--rb1:var(--rp2);--rb2:var(--rp2);--rbo:var(--rln);--rbh:var(--rbo)}
 body.rbon #tb,body.rbon #tb2{display:none!important}
+body.rbon #pm.pm{z-index:70!important}
 body.rbon #hd{flex:none;gap:10px;padding:8px 14px;background:var(--rp);border-bottom:1px solid var(--rln);color:var(--rt);flex-wrap:nowrap;position:relative;z-index:30}
 body.rbon #hd h1{flex:none;font-size:15px;line-height:1.15;color:var(--rt);letter-spacing:.01em}
 body.rbon #hd #as{color:#34d399;font-size:11px;line-height:1.1}
@@ -10802,6 +10803,126 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   if(g){g.querySelector('.rgi').append(b);b.dataset.rid='pwab';return true}
   const hd=document.getElementById('hd');if(hd&&!document.getElementById('rbn')&&document.readyState=='complete'){hd.append(b);return true}return false}
  let n=0;const t=setInterval(()=>{if(mount()||++n>30)clearInterval(t)},400);
+})();
+
+/* ===== f6zl: interfeys tili — O'zbek / Русский / English (lug'at + avto-tarjima keshi) ===== */
+(()=>{
+ const LK='daftar-ui',CK='daftar-uic';
+ let L='uz';try{L=localStorage.getItem(LK)||'uz'}catch(_){}if(!/^(uz|ru|en)$/.test(L))L='uz';
+ const IDX={ru:0,en:1};
+ const D={
+ 'Fayl':['Файл','File'],'AI Aqil qopi':['ИИ-ассистент','AI Assistant'],'Darsliklar va kurslar':['Учебники и курсы','Textbooks & courses'],
+ 'Bosh sahifa':['Главная','Home'],'Qo‘shish':['Вставка','Insert'],'Matn va til':['Текст и язык','Text & language'],'Eksport':['Экспорт','Export'],'Ulashish':['Поделиться','Share'],'Modullar':['Модули','Modules'],'Ko‘rinish':['Вид','View'],
+ 'Sozlash':['Настроить','Customize'],'Tema':['Тема','Theme'],'Tahrir':['Правка','Edit'],'Shrift':['Шрифт','Font'],'Tekislash':['Выравнивание','Alignment'],'Katak':['Ячейка','Cell'],'Raqam':['Число','Number'],'Jadval':['Таблица','Table'],'Filtr':['Фильтр','Filter'],'Tozalash':['Очистка','Clean up'],
+ 'Silka':['Ссылка','Link'],'Belgilar':['Метки','Marks'],'Matematika':['Математика','Math'],'Belgi va formula':['Метки и формулы','Marks & formulas'],
+ 'Imlo':['Орфография','Spelling'],'Tarjimon':['Переводчик','Translator'],'Lug‘at':['Словарь','Dictionary'],'Raqam→so‘z':['Число→слова','Number→words'],'Rasm→matn':['Фото→текст','Image→text'],'Tekshiruv':['Проверка','Proofing'],
+ 'Avto ovoz':['Авто-голос','Auto voice'],'Ovozli o‘qish':['Озвучивание','Read aloud'],'AI':['ИИ','AI'],'Rasm va A4':['Изображение и A4','Image & A4'],'Tarmoqlar':['Соцсети','Networks'],'Birgalikda':['Вместе','Together'],'Hamkorlik':['Совместная работа','Collaboration'],
+ 'Fan':['Предмет','Subject'],'Termin':['Термин','Term'],'Limit':['Предел','Limit'],'Savdo':['Торговля','Trade'],'Obyektivka':['Анкета (объективка)','CV form'],'Boshqaruv':['Управление','Management'],'Dars':['Урок','Lesson'],'Boshqa':['Прочее','Other'],
+ 'Eski ko‘rinish':['Старый вид','Classic view'],'Ilova sifatida o‘rnatish':['Установить как приложение','Install as app'],'Oyna':['Окно','Window'],'Tema va fon':['Тема и фон','Theme & background'],'Yig‘ish':['Свернуть','Collapse'],'Mening':['Мои','Mine'],
+ 'Fanlarim (nomini o‘zgartirish uchun 2 marta bosing)':['Мои предметы (двойной клик — переименовать)','My subjects (double-click to rename)'],'Yozuv':['Заметки','Notes'],'Yangi fan...':['Новый предмет...','New subject...'],'Yangi mavzu...':['Новая тема...','New topic...'],
+ 'Butun fanni o‘chirish':['Удалить предмет целиком','Delete whole subject'],'Reja, eslatmalar...':['План, заметки...','Plan, notes...'],'Katak mazmuni':['Содержимое ячейки','Cell content'],'Katak manzili':['Адрес ячейки','Cell address'],
+ 'Qidirish yoki buyruq… (Imlo, Tarjimon, Excel…)':['Поиск или команда… (Орфография, Переводчик, Excel…)','Search or command… (Spelling, Translator, Excel…)'],
+ 'Hisob':['Аккаунт','Account'],'Google bilan kirish':['Войти через Google','Sign in with Google'],'Tizim':['Система','System'],'Til va ko‘rinish':['Язык и вид','Language & view'],'Sana va vaqt':['Дата и время','Date & time'],
+ 'Panel o‘lchami':['Размер панели','Panel size'],'Balandlik: avto':['Высота: авто','Height: auto'],'Yozuv rangi':['Цвет текста','Text color'],'Asl':['По умолчанию','Default'],'Tugma uslubi':['Стиль кнопок','Button style'],
+ 'Qora+kulrang':['Чёрно-серый','Black & grey'],'Shisha':['Стекло','Glass'],'Tekis':['Плоский','Flat'],'Fon rasmi (muqova)':['Фоновое изображение (обложка)','Background image (cover)'],'Rasm tanlash':['Выбрать изображение','Choose image'],'Olib tashlash':['Убрать','Remove'],
+ 'Yorug‘lik':['Яркость','Brightness'],'Xiralik':['Размытие','Blur'],'Joylashuvni asliga qaytarish':['Сбросить расположение','Reset layout'],'Bo‘sh joy — tugmani shu yerga tashlang':['Свободное место — перетащите кнопку сюда','Free space — drop a button here'],
+ 'Tilla':['Золотой','Gold'],'Oq':['Белый','White'],'Kumush':['Серебро','Silver'],'Moviy':['Синий','Blue'],'Yashil':['Зелёный','Green'],'Pushti':['Розовый','Pink'],
+ 'Yangi fan':['Новый предмет','New subject'],'Yangi mavzu':['Новая тема','New topic'],'Ochish / Import':['Открыть / Импорт','Open / Import'],'Boshqacha saqlash':['Сохранить как','Save as'],'Yangi versiya sifatida saqlash':['Сохранить как новую версию','Save as new version'],
+ 'Versiyalar':['Версии','Versions'],'Import':['Импорт','Import'],'Zaxira: Excel, Word, HTML, JSON':['Резервная копия: Excel, Word, HTML, JSON','Backup: Excel, Word, HTML, JSON'],'Ota-ona nazorati':['Родительский контроль','Parental control'],
+ 'Chop etish':['Печать','Print'],'Zaxira nusxa olish (HTML)':['Создать резервную копию (HTML)','Create backup (HTML)'],'So‘nggi mavzular':['Недавние темы','Recent topics'],'Joriy dars (.html)':['Текущий урок (.html)','Current lesson (.html)'],
+ 'Yopish':['Закрыть','Close'],'Saqlash':['Сохранить','Save'],'Bekor qilish':['Отмена','Cancel'],'Nusxalash':['Копировать','Copy'],'Qidirish':['Поиск','Search'],'Sozlamalar':['Настройки','Settings'],'O‘chirish':['Удалить','Delete'],'Tariflar':['Тарифы','Plans'],
+ 'Ochish':['Открыть','Open'],'Yuborish':['Отправить','Send'],'Qaytarish':['Вернуть','Redo'],'Bepul':['Бесплатно','Free'],'Standart':['Стандарт','Standard'],'To‘liq':['Полный','Full'],'so‘m':['сум','UZS'],'so‘m / oy':['сум / мес.','UZS / month'],
+ 'Hozirgi tarif':['Текущий тариф','Current plan'],'Daftar tariflari':['Тарифы Daftar','Daftar plans'],'Hamma uchun':['Для всех','For everyone'],'Standartni tanlash':['Выбрать Стандарт','Choose Standard'],'Pro\'ni tanlash':['Выбрать Pro','Choose Pro'],
+ 'Asosiy daftar hamisha bepul. Qo‘shimcha xizmatlar uchun obuna.':['Основной дневник всегда бесплатный. Дополнительные услуги — по подписке.','The core notebook is always free. Extra services by subscription.'],
+ 'Imlo yordamchisi':['Помощник по орфографии','Spelling assistant'],'Matn bahosi':['Оценка текста','Text score'],'BARCHA XATOLIKLAR':['ВСЕ ОШИБКИ','ALL ERRORS'],'Yangi suhbat':['Новый чат','New chat'],'Jadvalni tahlil qil':['Проанализировать таблицу','Analyze the table'],'Yangi mavzu och':['Открыть новую тему','Open a new topic'],
+ 'Telefon rejimi':['Режим телефона','Phone mode'],'Windows (kompyuter) rejimi':['Режим Windows (компьютер)','Windows (desktop) mode'],'Ovoz tili':['Язык озвучивания','Voice language'],'Til':['Язык','Language'],
+ 'Bekor qilish (Ctrl+Z)':['Отменить (Ctrl+Z)','Undo (Ctrl+Z)'],'Qaytarish (Ctrl+Y)':['Вернуть (Ctrl+Y)','Redo (Ctrl+Y)'],'Qalin (Ctrl+B)':['Жирный (Ctrl+B)','Bold (Ctrl+B)'],'Kursiv (Ctrl+I)':['Курсив (Ctrl+I)','Italic (Ctrl+I)'],'Chizilgan':['Зачёркнутый','Strikethrough'],
+ 'Matn rangi':['Цвет текста','Text color'],'Katak foni':['Цвет заливки','Fill color'],'Chegaralar':['Границы','Borders'],'Masshtab':['Масштаб','Zoom'],'Aytib yozish':['Голосовой ввод','Dictate'],'O‘qish / Pauza':['Читать / Пауза','Read / Pause'],
+ 'O‘qish tezligi':['Скорость чтения','Reading speed'],'Ovoz turi':['Тип голоса','Voice type'],'Varaq qo‘shish':['Добавить лист','Add sheet'],'Barcha varaqlar':['Все листы','All sheets'],'Fan qo‘shish':['Добавить предмет','Add subject'],'Mavzu qo‘shish':['Добавить тему','Add topic'],
+ 'Rasm qo‘shish':['Добавить изображение','Add image'],'Tanlangan rasmni o‘chirish':['Удалить выбранное изображение','Delete selected image'],'Fayl menyusi':['Меню файла','File menu'],'Tariflar va obuna':['Тарифы и подписка','Plans & subscription'],
+ 'Filtr yoqish / o‘chirish':['Включить / выключить фильтр','Toggle filter'],'Shriftni kichraytirish':['Уменьшить шрифт','Decrease font size'],'Shriftni kattalashtirish':['Увеличить шрифт','Increase font size'],'Shrift o‘lchami':['Размер шрифта','Font size'],
+ 'Gorizontal tekislash':['Горизонтальное выравнивание','Horizontal alignment'],'Vertikal tekislash':['Вертикальное выравнивание','Vertical alignment'],'Matnni o‘rash':['Перенос текста','Wrap text'],'Matn burilishi':['Поворот текста','Text rotation'],
+ 'Word (.docx) sifatida saqlash':['Сохранить как Word (.docx)','Save as Word (.docx)'],'Excel (.xlsx) sifatida saqlash':['Сохранить как Excel (.xlsx)','Save as Excel (.xlsx)'],'PDF sifatida saqlash':['Сохранить как PDF','Save as PDF'],
+ 'Imlo tekshiruvi (4 til: o‘zbek, English, Русский, العربية) — katak, varaq, yozuv':['Проверка орфографии (4 языка) — ячейка, лист, заметки','Spell check (4 languages) — cell, sheet, notes'],
+ 'O‘zbekcha':['O‘zbekcha','O‘zbekcha'],'Русский':['Русский','Русский'],'English':['English','English'],
+ 'Daftar Azimxodjayev':['Daftar Azimxodjayev','Daftar Azimxodjayev'],'Yangi panelga o‘tish':['Перейти на новую панель','Switch to the new panel'],'Mavzu va fon':['Тема и фон','Theme & background'],'Zaxira nusxa':['Резервная копия','Backup'],
+ };
+ const RX=[[/^Sinov: (\d+) kun$/,['Пробный период: $1 дн.','Trial: $1 day(s)']],[/^Avto-saqlandi (.+)$/,['Автосохранено $1','Autosaved $1']],[/^Papkaga yozildi (.+)$/,['Записано в папку $1','Saved to folder $1']],[/^(\d+) ta tanlandi$/,['Выбрано: $1','$1 selected']],[/^(.+) bo‘limlari$/,['$1: разделы','$1 sections']],[/^Tariflar$/,['Тарифы','Plans']]];
+ const CR=/^([^\p{L}\p{N}‘’']*)([\s\S]*?)([^\p{L}\p{N}.‘’'?!)…]*)$/u;
+ let C={};const loadC=()=>{try{C=JSON.parse(localStorage.getItem(CK+'-'+L)||'{}')}catch(_){C={}}};
+ let saveT=0;const saveC=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{const k=Object.keys(C);if(k.length>2500)k.slice(0,500).forEach(x=>delete C[x]);localStorage.setItem(CK+'-'+L,JSON.stringify(C))}catch(_){}},800)};
+ const SKIP='script,style,noscript,textarea,input,[contenteditable],#gw,#tw,#nt,#sl,#tl,#tabs,#ed,#trx,#fx,#nb,#cr,.nottr';
+ const SKIPA='script,style,#gw,#tw,#nt,#sl,#tl,#tabs,#trx,#cr,.nottr';
+ const NOAUTO='#aqp,#trx,td,pre,code,kbd';
+ const pend=new Set(),touched=new Set();
+ function tr(core){
+  if(!core||core.length<2)return null;
+  const d=D[core];if(d)return d[IDX[L]];
+  for(const [r,v] of RX)if(r.test(core))return core.replace(r,v[IDX[L]]);
+  return C[core]||null}
+ function conv(v,el){
+  const m=v.match(CR);if(!m)return v;const core=m[2].trim();if(!core)return v;
+  const lead=m[2].match(/^\s*/)[0],trail=m[2].match(/\s*$/)[0];
+  const t=tr(core);
+  if(t)return m[1]+lead+t+trail+m[3];
+  if(core.length<=160&&/\p{L}{3}/u.test(core)&&!/\d/.test(core)&&!(el&&el.closest(NOAUTO))&&!/[Ѐ-ӿ]/.test(core)&&!(/^[\x00-\x7F]+$/.test(core)&&/^[A-Za-z]{1,6}$/.test(core)))pend.add(core);
+  return v}
+ function doText(n){
+  const el=n.parentElement;if(!el||el.closest(SKIP))return;
+  const cur=n.nodeValue;
+  if(n.__t!==undefined&&cur===n.__t)return;
+  if(n.__o===undefined||cur!==n.__t)n.__o=cur;
+  const nv=conv(n.__o,el);
+  if(nv!==cur){n.__t=nv;n.nodeValue=nv;touched.add(n)}else{n.__t=undefined}
+ }
+ const AT=['title','placeholder','aria-label'];
+ function doAttr(e){
+  if(e.closest&&e.closest(SKIPA+',#rbq'))return;if(e.closest&&e.closest('#gw'))return;
+  const o=e.__oa||(e.__oa={}),t=e.__ta||(e.__ta={});
+  AT.forEach(a=>{const cur=e.getAttribute(a);if(cur==null)return;if(t[a]!==undefined&&cur===t[a])return;o[a]=cur;const nv=conv(cur,e);if(nv!==cur){t[a]=nv;e.setAttribute(a,nv);touched.add(e)}else t[a]=undefined})}
+ function walk(root){
+  if(!root)return;
+  if(root.nodeType==3){doText(root);return}
+  if(root.nodeType!=1)return;
+  if(root.matches&&root.matches(SKIP))return;
+  doAttr(root);
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT);let n;
+  while(n=w.nextNode()){if(n.nodeType==3)doText(n);else{if(n.matches(SKIP)){/* ichiga kirmaymiz */const nx=n;let c=0;}else doAttr(n)}}
+ }
+ function restore(){touched.forEach(x=>{try{if(x.nodeType==3){if(x.__o!==undefined&&x.nodeValue===x.__t){x.nodeValue=x.__o}x.__t=undefined}else{const o=x.__oa||{},t=x.__ta||{};AT.forEach(a=>{if(t[a]!==undefined&&x.getAttribute(a)===t[a])x.setAttribute(a,o[a]);t[a]=undefined})}}catch(_){}});touched.clear()}
+ /* avto-tarjima (kesh) */
+ let busy=false,failAt=0;
+ async function gtx(q,tl){const u='https://translate.googleapis.com/translate_a/single?client=gtx&sl=uz&tl='+tl+'&dt=t&q='+encodeURIComponent(q);const r=await fetch(u);if(!r.ok)throw new Error('http');const j=await r.json();return(j[0]||[]).map(x=>x[0]).join('')}
+ async function flush(){
+  if(busy||L=='uz'||!pend.size||Date.now()-failAt<60000)return;busy=true;const lang=L;
+  try{while(pend.size&&L==lang){const arr=[...pend].slice(0,18);arr.forEach(x=>pend.delete(x));const todo=arr.filter(x=>!C[x]);if(!todo.length)continue;
+   try{const out=(await gtx(todo.join('\n'),lang)).split('\n');if(out.length==todo.length)todo.forEach((x,i)=>{const o=out[i].trim();if(o)C[x]=o});else for(const x of todo){const o=(await gtx(x,lang)).trim();if(o)C[x]=o}}catch(e){failAt=Date.now();break}}
+   saveC();if(L==lang)pass()}
+  finally{busy=false}}
+ let ft=0;const sched=()=>{clearTimeout(ft);ft=setTimeout(flush,500)};
+ function pass(){walk(document.body);if(pend.size)sched()}
+ /* kuzatuvchi */
+ let mo=null,q=new Set(),qt=0;
+ function enqueue(n){q.add(n);if(!qt)qt=setTimeout(()=>{qt=0;const a=[...q];q.clear();mo&&mo.disconnect();try{a.forEach(n=>{if(n.isConnected!==false)walk(n)})}finally{observe()}if(pend.size)sched()},40)}
+ function observe(){if(L=='uz'||!mo)return;mo.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:AT})}
+ function start(){if(!mo)mo=new MutationObserver(ms=>{for(const m of ms){if(m.type=='childList')m.addedNodes.forEach(n=>enqueue(n));else if(m.type=='characterData')enqueue(m.target);else enqueue(m.target)}});
+  document.documentElement.lang=L=='uz'?'uz':L;loadC();pass();observe()}
+ function stop(){if(mo)mo.disconnect();restore();document.documentElement.lang='uz'}
+ function set(l,fromUser){
+  if(l==L&&!fromUser)return;stop();L=l;try{localStorage.setItem(LK,L)}catch(_){}
+  if(L!='uz')start();label();
+  if(fromUser){const v=byId('lg');if(v){const want={uz:'uz-UZ',ru:'ru-RU',en:'en-US'}[L];if([...v.options].some(o=>o.value==want)){v.value=want;v.dispatchEvent(new Event('change',{bubbles:true}))}}
+   try{msg({uz:'🌐 Til: O‘zbekcha',ru:'🌐 Язык интерфейса: Русский',en:'🌐 Interface language: English'}[L]+(L!='uz'?' · '+({ru:'Часть текста переводится автоматически (нужен интернет).',en:'Some text is translated automatically (internet needed).'}[L]):''))}catch(_){}}}
+ const byId=i=>document.getElementById(i);
+ function label(){const b=byId('rblg');if(b)b.textContent='🌐 '+L.toUpperCase()}
+ function mount(){
+  if(byId('rblg'))return true;const hd=byId('hd');if(!hd)return false;
+  const b=document.createElement('button');b.id='rblg';b.className='nottr';b.title='Interfeys tili / Язык / Language';b.style.cssText='height:32px;padding:0 10px';
+  b.onclick=()=>menu(b,[{t:'🇺🇿 O‘zbekcha',fn:()=>set('uz',true)},{t:'🇷🇺 Русский',fn:()=>set('ru',true)},{t:'🇬🇧 English',fn:()=>set('en',true)}]);
+  const av=byId('rbav');if(av)av.before(b);else{const th=byId('th');if(th)th.after(b);else hd.append(b)}label();return true}
+ let n=0;const iv=setInterval(()=>{if(mount()||++n>40)clearInterval(iv)},300);
+ if(L!='uz')setTimeout(start,600);
+ window.__ui={set,get:()=>L,pass,D,tr};
 })();
 
 loadTopic();applyView();pushRecent();gw.focus();
