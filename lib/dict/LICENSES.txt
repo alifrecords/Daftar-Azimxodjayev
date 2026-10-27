@@ -1,0 +1,9 @@
+Daftar — imlo lug'atlari manbalari va litsenziyalari / Spelling dictionary sources and licences
+
+uz.txt.gz  — o'zbek so'zlari: Apertium-uzb (https://github.com/apertium/apertium-uzb, GPL-3.0), UniMorph Uzbek (https://github.com/unimorph/uzb, CC BY-SA 3.0), Daftar'ning o'z o'zaklari/terminlari.
+en.*.gz    — dictionary-en / en_US hunspell (SCOWL, MIT / BSD-uslubidagi litsenziya), https://github.com/wooorm/dictionaries
+ru.*.gz    — dictionary-ru / ru_RU hunspell (A.I. Lebedev, LGPL-2.1), https://github.com/wooorm/dictionaries
+ar.*.gz    — Arabic Ayaspell (hunspell) via LibreOffice dictionaries (GPL-2.0), https://github.com/LibreOffice/dictionaries
+spw.js     — nspell (MIT), https://github.com/wooorm/nspell
+
+Eslatma: GPL/LGPL/CC BY-SA ma'lumotlarni tijoriy tarqatishdan oldin ushbu litsenziya shartlarini tekshiring (ma'lumot fayllari alohida saqlanadi — kerak bo'lsa olib tashlash mumkin).
