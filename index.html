@@ -10984,6 +10984,8 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  const fmtT=t=>{t=Math.max(0,t);const m=Math.floor(t/60),sc=Math.floor(t%60),ms=Math.floor((t%1)*1000);return m+':'+String(sc).padStart(2,'0')+':'+String(ms).padStart(3,'0')};
  const fmtB=t=>{const bt=beat(),b=Math.floor(t/bt+1e-9),bar=Math.floor(b/D.ts)+1,bb=b%D.ts+1,tk=Math.floor((t/bt-b)*480);return String(bar).padStart(3,'0')+'.'+bb+'.'+String(Math.max(0,tk)).padStart(3,'0')};
  const projEnd=()=>{let e=0;D.tracks.forEach(t=>t.clips.forEach(c=>{e=Math.max(e,c.start+c.dur)}));return e};
+ const isSel=c=>D.sel==c.id||(D.ms&&D.ms.includes(c.id));
+ const selAll=()=>{const r=[];D.tracks.forEach(t=>t.clips.forEach(c=>{if(isSel(c))r.push({t,c})}));return r};
  const selC=()=>{if(!D.sel)return null;for(const t of D.tracks){const c=t.clips.find(x=>x.id==D.sel);if(c)return{t,c}}return null};
  const selTrack=()=>D.tracks.find(t=>t.id==D.selT)||D.tracks[0]||null;
  const msg2=t=>{try{msg(t)}catch(_){}};
@@ -11077,10 +11079,11 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   /* pleyer boshi */
   const hx=Math.round(X(D.ph))+.5;if(hx>=0&&hx<=W){cx.strokeStyle='#fff';cx.lineWidth=1;cx.beginPath();cx.moveTo(hx,RULER-2);cx.lineTo(hx,H);cx.stroke();cx.fillStyle='#fff';cx.beginPath();cx.moveTo(hx-5,RULER-9);cx.lineTo(hx+5,RULER-9);cx.lineTo(hx,RULER-1);cx.fill()}
   if(V.loading){cx.fillStyle='#f2c25b';cx.font='12px system-ui';cx.fillText('⏳ audio yuklanmoqda…',W-170,RULER+8)}
+  if(V.mq){const q=V.mq,qx=Math.min(q.x0,q.x1),qy=Math.min(q.y0,q.y1),qw=Math.abs(q.x1-q.x0),qh=Math.abs(q.y1-q.y0);cx.fillStyle='rgba(255,255,255,.12)';cx.fillRect(qx,qy,qw,qh);cx.strokeStyle='rgba(255,255,255,.85)';cx.lineWidth=1;cx.strokeRect(qx+.5,qy+.5,qw,qh)}
   const sx=byId('dawsx');if(sx&&document.activeElement!==sx){sx.max=Math.max(60,Math.ceil(projEnd()+30));sx.value=V.sx}
   times();info();try{drSync()}catch(e){console.warn('dr',e)}}
  function clip(t,c,x,y,w,h){
-  const a=A.get(c.asset),sel=D.sel==c.id,mu=c.m||t.m;
+  const a=A.get(c.asset),sel=isSel(c),mu=c.m||t.m;
   cx.globalAlpha=mu?.45:1;cx.fillStyle=a&&a.missing?'#6a2b30':'#8a96a8';cx.beginPath();cx.roundRect?cx.roundRect(x,y,w,h,4):cx.rect(x,y,w,h);cx.fill();
   cx.fillStyle=t.col;cx.globalAlpha=(mu?.45:1)*.9;cx.fillRect(x,y,Math.max(0,w),3);cx.globalAlpha=mu?.45:1;
   if(a&&a.peaks){const P=a.peaks,sr=a.buf.sampleRate,mid=y+3+(h-3)/2,amp=(h-8)/2;cx.fillStyle='#1b222c';
@@ -11091,7 +11094,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   cx.globalAlpha=1;cx.fillStyle='#0f141b';cx.font='11px system-ui';cx.textBaseline='top';cx.save();cx.beginPath();cx.rect(x,y,w,h);cx.clip();cx.fillText((a&&a.missing?'⚠ yo‘q: ':'')+c.name,x+5,y+5);cx.restore();
   if(sel){cx.strokeStyle='#ffb84d';cx.lineWidth=2;cx.strokeRect(x+1,y+1,w-2,h-2);cx.lineWidth=1}else{cx.strokeStyle='rgba(0,0,0,.45)';cx.strokeRect(x+.5,y+.5,w-1,h-1)}}
  function times(){const p=D.ph,a=byId('dawt'),b=byId('dawb');if(a)a.textContent=fmtT(p);if(b)b.textContent=fmtB(p)}
- function info(){const e=byId('dawi');if(!e)return;const x=selC();e.textContent=x?(x.c.name+' · boshi '+fmtT(x.c.start)+' · uzunligi '+fmtT(x.c.dur)+' · trek: '+x.t.n):'No Object Selected'}
+ function info(){const e=byId('dawi');if(!e)return;const ma=selAll();if(ma.length>1){e.textContent=ma.length+' ta klip tanlandi · '+fmtT(Math.min(...ma.map(o=>o.c.start)))+' → '+fmtT(Math.max(...ma.map(o=>o.c.start+o.c.dur)));return}const x=selC();e.textContent=x?(x.c.name+' · boshi '+fmtT(x.c.start)+' · uzunligi '+fmtT(x.c.dur)+' · trek: '+x.t.n):'No Object Selected'}
  function meter(){const m=byId('dawm');if(!m||!AN)return;const a=new Uint8Array(AN.fftSize);AN.getByteTimeDomainData(a);let pk=0;for(let i=0;i<a.length;i++)pk=Math.max(pk,Math.abs(a[i]-128)/128);const g=m.getContext('2d');g.clearRect(0,0,m.width,m.height);g.fillStyle='#1a212c';g.fillRect(0,0,m.width,m.height);const w=m.width*Math.min(1,pk*1.3);const gg=g.createLinearGradient(0,0,m.width,0);gg.addColorStop(0,'#34d399');gg.addColorStop(.7,'#f2c25b');gg.addColorStop(1,'#e5484d');g.fillStyle=gg;g.fillRect(0,0,w,m.height)}
  /* ---------- treklar sarlavhasi ---------- */
  function buildHeads(){
@@ -11166,7 +11169,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  <button id=dawzi title="Kattalashtirish (H yoki +)">🔍＋</button><button id=dawzo title="Kichraytirish (G yoki −)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><span class=dsep></span>
  <button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
 </div>
-<div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · S — kesish · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
+<div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · S — kesish · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
 <div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div></div>
 <div class=dbot>
  <div class=dtp style="display:flex;gap:4px"><button id=dawl title="Cycle / Loop (L)">🔁</button><button id=dawhm title="Boshiga (Home)">⏮</button><button id=daws title="To‘xtatish">⏹</button><button id=dawp title="O‘ynash / Pauza (Space)">▶</button><button id=dawr title="Yozish — mikrofon (R)">●</button></div>
@@ -11209,7 +11212,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   const ep=byId('dawp');drMk();
  }
  function size(){if(!cv)return;const r=cv.parentElement.getBoundingClientRect();if(r.width<10)return;V.cw=Math.floor(r.width);V.ch=Math.floor(r.height);draw()}
- function locSel(){const x=selC();if(!x){msg2('Avval klipni tanlang — loop chegaralari shu klipga qo‘yiladi.');return}hist();D.loop.a=x.c.start;D.loop.b=x.c.start+Math.max(.05,x.c.dur);ui();draw();persist();msg2('⟦⟧ Locatorlar tanlovga o‘rnatildi: '+(D.loop.a/barL()+1).toFixed(2)+' → '+(D.loop.b/barL()+1).toFixed(2)+' bar (Cubase: P)')}
+ function locSel(){const L=selAll();if(!L.length){msg2('Avval klipni tanlang — loop chegaralari shu klipga qo‘yiladi.');return}hist();D.loop.a=Math.min(...L.map(o=>o.c.start));D.loop.b=Math.max(...L.map(o=>o.c.start+o.c.dur));if(D.loop.b-D.loop.a<.05)D.loop.b=D.loop.a+.05;ui();draw();persist();msg2('⟦⟧ Locatorlar tanlovga o‘rnatildi: '+(D.loop.a/barL()+1).toFixed(2)+' → '+(D.loop.b/barL()+1).toFixed(2)+' bar (Cubase: P)')}
  function zoom(k,ax){const x=ax==null?V.cw/2:ax,t=T(x);D.zx=Math.max(2,Math.min(800,D.zx*k));V.sx=Math.max(0,t-x/D.zx);draw();persist()}
  /* urinish */
  function hit(x,y){if(y<RULER)return null;const ti=Math.floor((y-RULER+V.sy)/D.zy);const t=D.tracks[ti];if(!t)return null;const tt=T(x);for(let i=t.clips.length-1;i>=0;i--){const c=t.clips[i];if(tt>=c.start&&tt<=c.start+c.dur)return{t,c,ti}}return{t,c:null,ti}}
@@ -11217,15 +11220,18 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   root.focus();const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
   if(e.button==1){V.drag={k:'pan',x:e.clientX,sx:V.sx};e.preventDefault();return}if(e.button!=0)return;
   if(y<RULER){const t=T(x);if(e.shiftKey||y<RULER*0.45&&Math.abs(x-X(D.loop.a))<8){V.drag={k:'loopa'}}else if(Math.abs(x-X(D.loop.b))<8&&y<RULER*.45){V.drag={k:'loopb'}}else if(e.shiftKey||e.altKey){V.drag={k:'loopn',t0:snapT(t)};D.loop.a=V.drag.t0;D.loop.b=V.drag.t0+.01}else{V.drag={k:'ph'};D.ph=Math.max(0,t);if(V.playing)startAt(D.ph)}draw();return}
-  const h=hit(x,y);if(!h)return;D.selT=h.t.id;heads.querySelectorAll('.dtr').forEach((d,i)=>d.classList.toggle('on',D.tracks[i]&&D.tracks[i].id==D.selT));
-  if(!h.c){D.sel=null;draw();return}
+  const add=e.shiftKey||e.ctrlKey||e.metaKey;
+  const h=hit(x,y);if(!h){if(V.tool=='sel'){V.drag={k:'mq',x0:x,y0:y,add,base:add?selAll().map(o=>o.c.id):[]};V.mq={x0:x,y0:y,x1:x,y1:y};if(!add){D.sel=null;D.ms=[]}draw()}return}D.selT=h.t.id;heads.querySelectorAll('.dtr').forEach((d,i)=>d.classList.toggle('on',D.tracks[i]&&D.tracks[i].id==D.selT));
+  if(!h.c){if(V.tool=='sel'){V.drag={k:'mq',x0:x,y0:y,add,base:add?selAll().map(o=>o.c.id):[]};V.mq={x0:x,y0:y,x1:x,y1:y};if(!add){D.sel=null;D.ms=[]}}else D.sel=null;draw();return}
   const c=h.c;
+  if(V.tool=='sel'&&add){const ids=new Set(selAll().map(o=>o.c.id));if(ids.has(c.id))ids.delete(c.id);else ids.add(c.id);D.ms=[...ids];D.sel=D.ms.length?D.ms[D.ms.length-1]:null;draw();return}
   if(V.tool=='split'){hist();splitAt(c,snapT(T(x)));return}
   if(V.tool=='erase'){hist();h.t.clips.splice(h.t.clips.indexOf(c),1);D.sel=null;draw();persist();return}
   if(V.tool=='mute'){hist();c.m=c.m?0:1;draw();persist();return}
-  D.sel=c.id;const xa=X(c.start),xb=X(c.start+c.dur);hist();
+  const grp=selAll();const inGrp=grp.length>1&&grp.some(o=>o.c===c);if(!inGrp){D.ms=[]}D.sel=c.id;const xa=X(c.start),xb=X(c.start+c.dur);hist();
   if(x-xa<7&&xb-xa>20)V.drag={k:'trimL',c,t:h.t,st:c.start,off:c.off,dur:c.dur,x0:x};
   else if(xb-x<7&&xb-xa>20)V.drag={k:'trimR',c,t:h.t,dur:c.dur,x0:x};
+  else if(inGrp){V.drag={k:'gmove',c,t:h.t,st:c.start,x0:x,list:grp.map(o=>({c:o.c,st:o.c.start}))}}
   else V.drag={k:'move',c,t:h.t,st:c.start,x0:x,y0:y,dup:e.altKey};
   if(V.drag.k=='move'&&e.altKey){const n=Object.assign({},c,{id:rid()});h.t.clips.push(n);V.drag.c=n;D.sel=n.id}
   draw()}
@@ -11236,22 +11242,26 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   if(d.k=='loopa'){D.loop.a=Math.min(snapT(T(x)),D.loop.b-.05);draw();return}
   if(d.k=='loopb'){D.loop.b=Math.max(snapT(T(x)),D.loop.a+.05);draw();return}
   if(d.k=='loopn'){const t=snapT(T(x));D.loop.a=Math.min(d.t0,t);D.loop.b=Math.max(d.t0,t)+(t==d.t0?.01:0);draw();return}
+  if(d.k=='mq'){V.mq.x1=x;V.mq.y1=y;const ta=T(Math.min(d.x0,x)),tb=T(Math.max(d.x0,x)),i0=Math.floor((Math.min(d.y0,y)-RULER+V.sy)/D.zy),i1=Math.floor((Math.max(d.y0,y)-RULER+V.sy)/D.zy);const ids=new Set(d.base);D.tracks.forEach((t,ti)=>{if(ti<i0||ti>i1)return;t.clips.forEach(c=>{if(c.start<tb&&c.start+c.dur>ta)ids.add(c.id)})});D.ms=[...ids];D.sel=D.ms.length?D.ms[0]:null;draw();return}
   const dx=(x-d.x0)/D.zx;
+  if(d.k=='gmove'){const delta=Math.max(-Math.min(...d.list.map(o=>o.st)),snapT(d.st+dx)-d.st);d.list.forEach(o=>{o.c.start=o.st+delta});draw();return}
   if(d.k=='move'){d.c.start=snapT(d.st+dx);const ti=Math.max(0,Math.min(D.tracks.length-1,Math.floor((y-RULER+V.sy)/D.zy)));const nt=D.tracks[ti];if(nt&&nt!==d.t){d.t.clips.splice(d.t.clips.indexOf(d.c),1);nt.clips.push(d.c);d.t=nt;D.selT=nt.id}}
   else if(d.k=='trimR'){const a=A.get(d.c.asset),mx=a&&a.buf?a.buf.duration-d.c.off:1e9;d.c.dur=Math.max(.02,Math.min(mx,snapT(d.c.start+d.dur+dx)-d.c.start))}
   else if(d.k=='trimL'){let ns=snapT(d.st+dx);ns=Math.max(d.st-d.off,Math.min(ns,d.st+d.dur-.02));const dd=ns-d.st;d.c.start=ns;d.c.off=d.off+dd;d.c.dur=d.dur-dd}
   draw()}
- function up(){const d=V.drag;if(!d)return;V.drag=null;if(d.k=='ph'&&V.playing)startAt(D.ph);if(d.k=='move'||d.k=='trimL'||d.k=='trimR'){if(V.playing)startAt(curP())}if(d.k=='loopa'||d.k=='loopb'||d.k=='loopn'){D.loop.on=d.k=='loopn'?true:D.loop.on;ui()}buildHeads();draw();persist()}
+ function up(){const d=V.drag;if(!d)return;V.drag=null;if(d.k=='mq'){V.mq=null;if(D.ms&&D.ms.length<2){D.ms=[]}ui();draw();return}if(d.k=='ph'&&V.playing)startAt(D.ph);if(d.k=='move'||d.k=='gmove'||d.k=='trimL'||d.k=='trimR'){if(V.playing)startAt(curP())}if(d.k=='loopa'||d.k=='loopb'||d.k=='loopn'){D.loop.on=d.k=='loopn'?true:D.loop.on;ui()}buildHeads();draw();persist()}
  function splitAt(c,t){if(t<=c.start+.01||t>=c.start+c.dur-.01){msg2('Kesish uchun audio ichidagi joyni tanlang.');return}const t0=D.tracks.find(x=>x.clips.includes(c));const d=t-c.start;const n=Object.assign({},c,{id:rid(),start:t,off:c.off+d,dur:c.dur-d});c.dur=d;t0.clips.push(n);D.sel=n.id;if(V.playing)startAt(curP());draw();persist()}
  function splitHead(){const p=D.ph,ins=c=>p>c.start+.01&&p<c.start+c.dur-.01;const x=selC();let list=[];if(x&&ins(x.c))list=[[x.t,x.c]];else D.tracks.forEach(t=>t.clips.forEach(c=>{if(ins(c))list.push([t,c])}));if(!list.length){msg2('Kesish uchun pleyer boshini audio ustiga qo‘ying.');return}hist();list.forEach(([t,c])=>splitAt(c,p))}
- function dup(){const x=selC();if(!x)return;hist();const n=Object.assign({},x.c,{id:rid(),start:x.c.start+x.c.dur});x.t.clips.push(n);D.sel=n.id;draw();persist()}
- function delSel(){const x=selC();if(!x)return;hist();x.t.clips.splice(x.t.clips.indexOf(x.c),1);D.sel=null;if(V.playing)startAt(curP());draw();persist()}
+ function dup(){const L=selAll();if(!L.length)return;hist();const a=Math.min(...L.map(o=>o.c.start)),b=Math.max(...L.map(o=>o.c.start+o.c.dur)),sp=L.length>1?b-a:L[0].c.dur;const ids=[];L.forEach(x=>{const n=Object.assign({},x.c,{id:rid(),start:x.c.start+sp});x.t.clips.push(n);ids.push(n.id)});D.sel=ids[0];D.ms=ids.length>1?ids:[];draw();persist()}
+ function delSel(){const L=selAll();if(!L.length)return;hist();L.forEach(x=>x.t.clips.splice(x.t.clips.indexOf(x.c),1));D.sel=null;D.ms=[];if(V.playing)startAt(curP());draw();persist()}
  function key(e){
   if(!document.body.classList.contains('dawon')||!D)return;const tg=e.target;if(tg&&tg.closest&&tg.closest('input,select,textarea,[contenteditable=true]')&&e.key!=' ')return;
   if(tg&&tg.closest&&tg.closest('#dlg,#pm,.mdl')&&!tg.closest('#dawv'))return;
   const k=e.key,ct=e.ctrlKey||e.metaKey;if(tg&&tg.closest&&tg.closest('#dawdr')&&!ct&&!e.altKey&&PADKEYS.includes(k.toLowerCase()))return;let h=true;
   if(k==' '){V.playing?stop():play()}
   else if(ct&&k.toLowerCase()=='z'&&!e.shiftKey)undo();else if(ct&&(k.toLowerCase()=='y'||(k.toLowerCase()=='z'&&e.shiftKey)))redo();
+  else if(ct&&k.toLowerCase()=='a'){const L=[];D.tracks.forEach(t=>t.clips.forEach(c=>L.push(c.id)));if(L.length){D.ms=L.length>1?L:[];D.sel=L[0];ui();draw();msg2('✓ Hammasi belgilandi: '+L.length+' klip')}}
+  else if(k=='Escape'&&(D.sel||(D.ms&&D.ms.length))){D.sel=null;D.ms=[];draw()}
   else if(ct&&k.toLowerCase()=='d')dup();
   else if(k=='Delete'||k=='Backspace')delSel();
   else if(k=='Home'){D.ph=0;V.sx=0;if(V.playing)startAt(0);draw()}
