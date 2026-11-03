@@ -11080,6 +11080,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   const hx=Math.round(X(D.ph))+.5;if(hx>=0&&hx<=W){cx.strokeStyle='#fff';cx.lineWidth=1;cx.beginPath();cx.moveTo(hx,RULER-2);cx.lineTo(hx,H);cx.stroke();cx.fillStyle='#fff';cx.beginPath();cx.moveTo(hx-5,RULER-9);cx.lineTo(hx+5,RULER-9);cx.lineTo(hx,RULER-1);cx.fill()}
   if(V.loading){cx.fillStyle='#f2c25b';cx.font='12px system-ui';cx.fillText('⏳ audio yuklanmoqda…',W-170,RULER+8)}
   if(V.mq){const q=V.mq,qx=Math.min(q.x0,q.x1),qy=Math.min(q.y0,q.y1),qw=Math.abs(q.x1-q.x0),qh=Math.abs(q.y1-q.y0);cx.fillStyle='rgba(255,255,255,.12)';cx.fillRect(qx,qy,qw,qh);cx.strokeStyle='rgba(255,255,255,.85)';cx.lineWidth=1;cx.strokeRect(qx+.5,qy+.5,qw,qh)}
+  if(V.alt&&V.cutx!=null){const xx=Math.round(X(V.cutx))+.5;cx.strokeStyle='#ff5a5a';cx.lineWidth=1;cx.setLineDash([4,3]);cx.beginPath();cx.moveTo(xx,RULER);cx.lineTo(xx,H);cx.stroke();cx.setLineDash([])}
   const sx=byId('dawsx');if(sx&&document.activeElement!==sx){sx.max=Math.max(60,Math.ceil(projEnd()+30));sx.value=V.sx}
   times();info();try{drSync()}catch(e){console.warn('dr',e)}}
  function clip(t,c,x,y,w,h){
@@ -11169,7 +11170,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  <button id=dawzi title="Kattalashtirish (H yoki +)">🔍＋</button><button id=dawzo title="Kichraytirish (G yoki −)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><span class=dsep></span>
  <button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
 </div>
-<div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · S — kesish · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
+<div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · S — kesish · Alt (bosib tur) — vaqtincha ✂ qaychi · Ctrl+Alt+sudrash — nusxa · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
 <div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div></div>
 <div class=dbot>
  <div class=dtp style="display:flex;gap:4px"><button id=dawl title="Cycle / Loop (L)">🔁</button><button id=dawhm title="Boshiga (Home)">⏮</button><button id=daws title="To‘xtatish">⏹</button><button id=dawp title="O‘ynash / Pauza (Space)">▶</button><button id=dawr title="Yozish — mikrofon (R)">●</button></div>
@@ -11208,6 +11209,13 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   dz.addEventListener('drop',e=>{dz.style.outline='';const f=[...(e.dataTransfer.files||[])];if(!f.length)return;e.preventDefault();e.stopPropagation();const r=cv.getBoundingClientRect();const y=e.clientY-r.top,x=e.clientX-r.left;let ti=Math.floor((y-RULER+V.sy)/D.zy);if(ti<0||ti>=D.tracks.length)ti=null;importFiles(f,ti,Math.max(0,snapT(T(x))))});
   /* klaviatura */
   addEventListener('keydown',key,true);
+  const CUR="url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28'><text x='2' y='22' font-size='20'>✂️</text></svg>\") 4 14, crosshair";
+  const altSet=on=>{if(!!V.alt===on)return;V.alt=on;if(cv)cv.style.cursor=on?CUR:'';const b=root.querySelector('[data-tool=split]');if(b)b.classList.toggle('on',on||V.tool=='split');if(!on){V.cutx=null;draw()}};
+  addEventListener('keydown',e=>{if(e.key!='Alt'||!document.body.classList.contains('dawon'))return;if(!e.ctrlKey&&!e.metaKey)altSet(true);e.preventDefault()},true);
+  addEventListener('keyup',e=>{if(e.key!='Alt')return;if(V.alt)e.preventDefault();altSet(false)},true);
+  addEventListener('blur',()=>altSet(false));document.addEventListener('visibilitychange',()=>{if(document.hidden)altSet(false)});
+  cv.addEventListener('mousemove',e=>{if(V.drag)return;if(e.altKey&&!e.ctrlKey&&!e.metaKey){altSet(true);const r=cv.getBoundingClientRect(),y=e.clientY-r.top;if(y>=RULER){V.cutx=snapT(T(e.clientX-r.left));draw()}}else if(V.alt)altSet(false)});
+  cv.addEventListener('mouseleave',()=>{if(V.cutx!=null){V.cutx=null;draw()}});
   new ResizeObserver(()=>size()).observe(cv.parentElement);
   const ep=byId('dawp');drMk();
  }
@@ -11216,7 +11224,8 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  function zoom(k,ax){const x=ax==null?V.cw/2:ax,t=T(x);D.zx=Math.max(2,Math.min(800,D.zx*k));V.sx=Math.max(0,t-x/D.zx);draw();persist()}
  /* urinish */
  function hit(x,y){if(y<RULER)return null;const ti=Math.floor((y-RULER+V.sy)/D.zy);const t=D.tracks[ti];if(!t)return null;const tt=T(x);for(let i=t.clips.length-1;i>=0;i--){const c=t.clips[i];if(tt>=c.start&&tt<=c.start+c.dur)return{t,c,ti}}return{t,c:null,ti}}
- function down(e){
+ function down(e){const _t=V.tool;if(e.altKey&&!e.ctrlKey&&!e.metaKey&&e.button==0&&cv&&(e.clientY-cv.getBoundingClientRect().top)>=RULER)V.tool='split';try{down1(e)}finally{V.tool=_t}}
+ function down1(e){
   root.focus();const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
   if(e.button==1){V.drag={k:'pan',x:e.clientX,sx:V.sx};e.preventDefault();return}if(e.button!=0)return;
   if(y<RULER){const t=T(x);if(e.shiftKey||y<RULER*0.45&&Math.abs(x-X(D.loop.a))<8){V.drag={k:'loopa'}}else if(Math.abs(x-X(D.loop.b))<8&&y<RULER*.45){V.drag={k:'loopb'}}else if(e.shiftKey||e.altKey){V.drag={k:'loopn',t0:snapT(t)};D.loop.a=V.drag.t0;D.loop.b=V.drag.t0+.01}else{V.drag={k:'ph'};D.ph=Math.max(0,t);if(V.playing)startAt(D.ph)}draw();return}
@@ -11224,8 +11233,8 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   const h=hit(x,y);if(!h){if(V.tool=='sel'){V.drag={k:'mq',x0:x,y0:y,add,base:add?selAll().map(o=>o.c.id):[]};V.mq={x0:x,y0:y,x1:x,y1:y};if(!add){D.sel=null;D.ms=[]}draw()}return}D.selT=h.t.id;heads.querySelectorAll('.dtr').forEach((d,i)=>d.classList.toggle('on',D.tracks[i]&&D.tracks[i].id==D.selT));
   if(!h.c){if(V.tool=='sel'){V.drag={k:'mq',x0:x,y0:y,add,base:add?selAll().map(o=>o.c.id):[]};V.mq={x0:x,y0:y,x1:x,y1:y};if(!add){D.sel=null;D.ms=[]}}else D.sel=null;draw();return}
   const c=h.c;
-  if(V.tool=='sel'&&add){const ids=new Set(selAll().map(o=>o.c.id));if(ids.has(c.id))ids.delete(c.id);else ids.add(c.id);D.ms=[...ids];D.sel=D.ms.length?D.ms[D.ms.length-1]:null;draw();return}
-  if(V.tool=='split'){hist();splitAt(c,snapT(T(x)));return}
+  if(V.tool=='sel'&&add&&!e.altKey){const ids=new Set(selAll().map(o=>o.c.id));if(ids.has(c.id))ids.delete(c.id);else ids.add(c.id);D.ms=[...ids];D.sel=D.ms.length?D.ms[D.ms.length-1]:null;draw();return}
+  if(V.tool=='split'){hist();const tt=snapT(T(x)),gl=selAll(),L=(gl.length>1&&gl.some(o=>o.c===c))?gl.map(o=>o.c):[c];let n=0;L.forEach(k=>{if(tt>k.start+.01&&tt<k.start+k.dur-.01){splitAt(k,tt);n++}});D.ms=[];if(!n)msg2('Kesish uchun audio ichidagi joyni tanlang.');return}
   if(V.tool=='erase'){hist();h.t.clips.splice(h.t.clips.indexOf(c),1);D.sel=null;draw();persist();return}
   if(V.tool=='mute'){hist();c.m=c.m?0:1;draw();persist();return}
   const grp=selAll();const inGrp=grp.length>1&&grp.some(o=>o.c===c);if(!inGrp){D.ms=[]}D.sel=c.id;const xa=X(c.start),xb=X(c.start+c.dur);hist();
