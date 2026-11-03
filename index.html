@@ -3936,6 +3936,8 @@ const css=document.createElement('style');css.textContent=`
 #trfo .pay .st{display:flex;gap:10px;margin:7px 0;align-items:flex-start}#trfo .pay .n{flex:none;width:22px;height:22px;border-radius:50%;background:#8b5cf6;color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center}
 #trfo .pay .cdn{font:700 19px ui-monospace,Consolas,monospace;letter-spacing:1px}#trfo .pay .cp{margin-left:8px;border-radius:7px;padding:1px 9px;font-size:12px}
 #trfo .pay input[type=text]{width:100%;font-family:ui-monospace,Consolas,monospace}#trfo .pay .row{display:flex;gap:8px;margin-top:5px}#trfo .pay .row input{flex:1}
+#trfo .pl{position:static;left:auto;right:auto;bottom:auto;z-index:auto;background:none;border:0;border-radius:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:stretch}@media(max-width:800px){#trfo .pl{grid-template-columns:1fr}}
+#trfo .cd{font:inherit;letter-spacing:normal;text-align:left;margin:0;color:inherit;user-select:auto;position:relative}
 #trfo .stb{display:inline-block;border-radius:999px;padding:2px 12px;font-size:12.5px;font-weight:700;margin-bottom:6px}#trfo .stb.ok{background:rgba(74,222,128,.18);color:#4ade80}#trfo .stb.tr{background:rgba(251,191,36,.18);color:#fbbf24}#trfo .stb.ex{background:rgba(239,68,68,.2);color:#f87171}
 #trfo .adl{margin-top:10px;font-size:12px;color:var(--mut);text-align:right}#trfo .adl a{cursor:pointer;text-decoration:underline}
 #lcad{position:fixed;inset:0;z-index:230;background:rgba(5,8,16,.8);display:grid;place-items:center;padding:12px;overflow:auto}#lcad[hidden]{display:none}
@@ -3965,7 +3967,7 @@ function drawPay(){if(!o)return;if(!payBox){payBox=document.createElement('div')
    if(p.d!=devId()){m.style.color='#f87171';m.textContent='❌ Bu kod boshqa qurilma uchun berilgan (so‘rov kodingiz: '+dv+').';return}
    if(p.x<=Date.now()){m.style.color='#f87171';m.textContent='❌ Kod muddati tugagan.';return}
    LS('daftar-lic',t);refresh();drawPay();msg('✅ '+(ST.plan=='std'?'Standart':'Pro')+' faollashdi — '+ST.left+' kun');}catch(e){m.style.color='#f87171';m.textContent='❌ '+e.message}};
- payBox.querySelector('#lcadm').onclick=adminOpen}
+ payBox.querySelector('#lcadm').onclick=adminOpen;try{onlineBlock()}catch(e){console.warn('onl',e)}}
 if(o){const ft=o.querySelector('.ft');if(ft)ft.innerHTML='⚠ Narxlar o‘zgarishi mumkin. · To‘lov hozircha <b>karta orqali, admin tasdig‘i bilan</b>. Karta ma‘lumotini Daftar saqlamaydi.';
  o.querySelectorAll('[data-t=pro],[data-t=std]').forEach(b=>b.onclick=()=>{drawPay();payBox.scrollIntoView({behavior:'smooth',block:'center'})});
  {const r=rek(),p1=o.querySelector('#trp1'),p2=o.querySelector('#trp2');if(p1)p1.innerHTML=money(r.s||25000).replace(' so‘m','')+' <small>so‘m / oy</small>';if(p2)p2.innerHTML=money(r.a).replace(' so‘m','')+' <small>so‘m / oy</small>'}
@@ -4011,6 +4013,32 @@ const gateFn=(name,f)=>function(){if(locked()){paywall(name);return}return f.app
 try{exportDocx=gateFn('Word eksport',exportDocx);exportXlsx=gateFn('Excel eksport',exportXlsx);exportTopicHtml=gateFn('HTML eksport',exportTopicHtml);openPrint=gateFn('PDF / chop etish',openPrint)}catch(e){console.warn('LIC wrap',e)}
 try{const t0=tggAfter;tggAfter=function(){if(locked()){msg('🔒 Telegramga yuborish — Pro xizmat (💎 Tariflar).');return}return t0.apply(this,arguments)}}catch(e){}
 {const aq=document.getElementById('aiq');if(aq){const f=aq.onclick;aq.onclick=function(){if(aiLocked()){paywall('AI Aqil qopi');return}return f.apply(this,arguments)}}}
+/* ---------- onlayn: server (Cloudflare Pages + D1 + Telegram bot) bilan avto-to'lov va avto-faollashtirish ---------- */
+let API=null,CFG=null;
+const apiBase=async()=>{if(API!==null)return API;API=false;if(!/^https?:/.test(location.protocol))return API;
+ const c=[];try{const r=await fetch('online.json',{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&typeof j.api=='string'&&j.api)c.push(j.api.replace(/\/+$/,''))}}catch(_){}
+ c.push('');
+ for(const b of c){if(b&&!/^https:\/\/[\w.-]+$/.test(b))continue;try{const r=await fetch(b+'/api/config',{cache:'no-store'});if(r.ok&&/json/.test(r.headers.get('content-type')||'')){const j=await r.json();if(j&&j.tariffs){CFG=j;return API=b}}}catch(_){}}
+ return API=false};
+const syncRek=()=>{if(!CFG||!CFG.card||!CFG.card.number)return;const T=CFG.tariffs||[],std=T.find(t=>t.plan=='std'),pro=T.find(t=>t.plan!='std');
+ const x={c:String(CFG.card.number).replace(/\D/g,''),o:CFG.card.holder||'',s:std?std.price:25000,a:pro?pro.price:49000,d:(pro||std||{days:30}).days};try{if(JSON.stringify(x)!==LS('daftar-rek'))LS('daftar-rek',JSON.stringify(x))}catch(_){}};
+async function autoActivate(quiet){const b=await apiBase();if(b===false||ST.st=='admin'||!sub)return false;
+ try{const r=await fetch(b+'/api/license?dev='+devId(),{cache:'no-store'});if(!r.ok)return false;const j=await r.json(),L=j&&j.license;if(!L||!L.token)return false;
+  const p=await verify(L.token);if(!p||p.d!=devId()||p.x<=Date.now())return false;
+  const cur=LS('daftar-lic');let cx=0;if(cur){try{cx=JSON.parse(td.decode(unb(cur.split('.')[0]))).x||0}catch(_){}}
+  if(p.x<=cx&&ST.st=='active')return false;
+  LS('daftar-lic',L.token);refresh();if(payBox&&o&&!o.hidden)drawPay();if(!quiet||true)msg('✅ To‘lov tasdiqlandi — '+(ST.plan=='std'?'Standart':'Pro')+' faollashdi ('+ST.left+' kun). Rahmat!');return true}catch(_){return false}}
+function onlineBlock(){if(API===false||API===null||!CFG||!payBox)return;const bot=CFG.botUsername,dv=devId(),T=CFG.tariffs||[];
+ const old=payBox.querySelector('.onl');if(old)old.remove();
+ const box=document.createElement('div');box.className='onl';box.style.cssText='border:1px solid #22c55e;background:rgba(34,197,94,.08);border-radius:12px;padding:10px 12px;margin:8px 0 12px';
+ box.innerHTML=bot?`<b>🤖 Telegram bot orqali — tez va avtomatik</b><div style="font-size:12.5px;margin:4px 0 8px;color:var(--mut)">Tarifni tanlang → botda karta va summa chiqadi → chekni yuboring → admin tasdiqlagach <b>Daftar o‘zi faollashadi</b> (kod nusxalash shart emas). Qurilma kodingiz botga avtomatik o‘tadi.</div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><a class=p href="https://t.me/${esc2(bot)}?start=${dv}" target=_blank rel=noopener style="text-decoration:none;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:9px;padding:7px 14px;font-weight:700">✈ Telegram’da to‘lash${T.length?' ('+T.map(t=>esc2(t.name)+' '+money(t.price)).join(' · ')+')':''}</a><button id=lcchk>🔄 Tekshirish</button></div><div id=lcchm style="font-size:12px;margin-top:5px;color:var(--mut)"></div>`
+ :`<b>🤖 Onlayn to‘lov</b><div style="font-size:12.5px;color:var(--mut)">Admin Telegram botni hali ulamagan. Pastdagi usuldan foydalaning.</div>`;
+ payBox.querySelector('h3').after(box);
+ const bl=box.querySelector('a.p');if(bl)bl.onclick=()=>LS('daftar-paywait',String(Date.now()));const cb=box.querySelector('#lcchk');if(cb)cb.onclick=async()=>{const m=box.querySelector('#lcchm');m.textContent='Tekshirilmoqda…';const ok=await autoActivate();if(!ok)m.textContent='Hali tasdiqlanmagan. Admin chekni ko‘rgach o‘zi faollashadi (bu oyna ochiq tursa ham bo‘ladi).'};
+ const al=payBox.querySelector('.adl');if(al&&!al.querySelector('.onadm')){const a=document.createElement('a');a.className='onadm';a.textContent='🌐 Onlayn admin';a.style.marginLeft='12px';a.href=(API||'')+'/admin.html';a.target='_blank';al.prepend(a)}}
+(async()=>{const b=await apiBase();if(b===false)return;syncRek();refresh();if(o&&!o.hidden)drawPay();
+ if(ST.st!='admin'){autoActivate(true);let n=0;setInterval(()=>{n++;if(ST.st=='admin')return;const open=o&&!o.hidden,wait=(+LS('daftar-paywait')||0)>Date.now()-72e5;if(open||wait||n%30==0)autoActivate(true)},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ST.st!='admin')autoActivate(true)})}})();
 /* ---------- boshlash ---------- */
 refresh();setInterval(refresh,6e4);
 (async()=>{const t=LS('daftar-lic');if(t&&sub){try{const p=await verify(t);if(!p||p.d!=devId()){LS('daftar-lic',null);refresh()}}catch(_){}}})();
