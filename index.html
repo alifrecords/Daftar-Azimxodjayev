@@ -11163,15 +11163,15 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  <button id=dawun title="Bekor qilish (Ctrl+Z)">↶</button><button id=dawre title="Qaytarish (Ctrl+Y)">↷</button><span class=dsep></span>
  <button data-tool=sel title="Tanlash (1)">⬉ Tanlash</button><button data-tool=split title="Kesish (2) — bosilgan joydan bo‘ladi">✂ Kesish</button><button data-tool=erase title="O‘chirish (3)">⌫ O‘chirgich</button><button data-tool=mute title="Ovozsiz (4)">🔇 Mute</button><span class=dsep></span>
  <button id=dawsn title="Tarmoqqa yopishish">🧲 Snap</button><select id=dawg title="Tarmoq turi"><option value=bar>Bar<option value=half>1/2<option value=beat>1/4<option value=eighth>1/8<option value=sixteenth>1/16<option value=off>Off</select><span class=dsep></span>
- <button id=dawzi title="Kattalashtirish (+)">🔍＋</button><button id=dawzo title="Kichraytirish (−)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><span class=dsep></span>
+ <button id=dawzi title="Kattalashtirish (H yoki +)">🔍＋</button><button id=dawzo title="Kichraytirish (G yoki −)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><span class=dsep></span>
  <button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
 </div>
-<div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · S — kesish · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
+<div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · S — kesish · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
 <div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div></div>
 <div class=dbot>
  <div class=dtp style="display:flex;gap:4px"><button id=dawl title="Cycle / Loop (L)">🔁</button><button id=dawhm title="Boshiga (Home)">⏮</button><button id=daws title="To‘xtatish">⏹</button><button id=dawp title="O‘ynash / Pauza (Space)">▶</button><button id=dawr title="Yozish — mikrofon (R)">●</button></div>
  <div class=dtime id=dawt>0:00:000</div><div class=dbars id=dawb>001.1.000</div><canvas id=dawm width=90 height=10 title="Master daraja"></canvas>
- <span class=dlbl>Loop</span><input type=number id=dawla step=.25 title="Loop boshlanishi (bar)"><input type=number id=dawlb step=.25 title="Loop oxiri (bar)">
+ <span class=dlbl>Loop</span><input type=number id=dawla step=.25 title="Loop boshlanishi (bar)"><input type=number id=dawlb step=.25 title="Loop oxiri (bar)"><button id=dawls title="Loop chegaralari = tanlangan klip (P)">⟦⟧ Tanlovga (P)</button>
  <span class=dlbl>Tempo</span><input type=number id=dawbpm min=30 max=300 step=1><button id=dawtap title="Tap tempo">Tap</button>
  <select id=dawts title="O‘lchov"><option value=2>2/4<option value=3>3/4<option value=4>4/4<option value=5>5/4<option value=6>6/4</select>
  <button id=dawc title="Metronom (C)">🎼 Click</button>
@@ -11183,7 +11183,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   q('dawun').onclick=undo;q('dawre').onclick=redo;
   root.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{V.tool=b.dataset.tool;ui()});
   q('dawsn').onclick=()=>{D.snap=!D.snap;ui();persist()};q('dawg').onchange=e=>{D.grid=e.target.value;persist()};
-  q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
+  q('dawls').onclick=()=>locSel();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
   const addT=()=>{hist();const t=addTrack();D.selT=t.id;buildHeads();draw();persist()};q('dawat').onclick=addT;q('dawat2').onclick=addT;q('dawdm').onclick=()=>menu(q('dawdm'),[{t:'🥁 Trap beat',fn:()=>addDrum('trap')},{t:'🥁 Boom Bap',fn:()=>addDrum('boombap')},{t:'🥁 House',fn:()=>addDrum('house')},{t:'🥁 Drill',fn:()=>addDrum('drill')},{t:'🥁 Bo‘sh pattern',fn:()=>addDrum('empty')}]);
   q('dawim').onclick=()=>q('dawfile').click();q('dawfile').onchange=e=>{const f=[...e.target.files];e.target.value='';const tr=selTrack();importFiles(f,tr?D.tracks.indexOf(tr):null,tr?D.ph:null)};
   q('dawex').onclick=()=>mixdown().catch(e=>{console.warn(e);msg2('❌ Miks tayyorlanmadi: '+(e&&e.message||'xato'))});
@@ -11199,7 +11199,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   cv.addEventListener('mousedown',down);addEventListener('mousemove',move);addEventListener('mouseup',up);
   cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(y>=RULER){D.ph=Math.max(0,T(x));if(V.playing)startAt(D.ph);draw()}});
   cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect();if(e.ctrlKey||e.metaKey){zoom(e.deltaY<0?1.15:1/1.15,e.clientX-r.left)}else if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)){V.sx=Math.max(0,V.sx+(e.deltaX||e.deltaY)/D.zx);draw()}else{V.sy=Math.max(0,Math.min(Math.max(0,D.tracks.length*D.zy-(V.ch-RULER)+30),V.sy+e.deltaY));scrollSync();draw()}},{passive:false});
-  cv.addEventListener('contextmenu',e=>{e.preventDefault();const r=cv.getBoundingClientRect();const h=hit(e.clientX-r.left,e.clientY-r.top);if(h&&h.c){D.sel=h.c.id;D.selT=h.t.id;draw();menu(cv,[{t:'✂ Shu joydan kesish',fn:()=>splitAt(h.c,snapT(T(e.clientX-r.left)))},{t:'📑 Nusxa (Ctrl+D)',fn:dup},{t:h.c.m?'🔊 Ovozni yoqish':'🔇 Ovozsiz qilish',fn:()=>{hist();h.c.m=h.c.m?0:1;draw();persist()}},{t:'🗑 O‘chirish',fn:()=>delSel()}])}});
+  cv.addEventListener('contextmenu',e=>{e.preventDefault();const r=cv.getBoundingClientRect();const h=hit(e.clientX-r.left,e.clientY-r.top);if(h&&h.c){D.sel=h.c.id;D.selT=h.t.id;draw();menu(cv,[{t:'✂ Shu joydan kesish',fn:()=>splitAt(h.c,snapT(T(e.clientX-r.left)))},{t:'📑 Nusxa (Ctrl+D)',fn:dup},{t:'⟦⟧ Locatorlar = tanlov (P)',fn:locSel},{t:h.c.m?'🔊 Ovozni yoqish':'🔇 Ovozsiz qilish',fn:()=>{hist();h.c.m=h.c.m?0:1;draw();persist()}},{t:'🗑 O‘chirish',fn:()=>delSel()}])}});
   /* fayl tashlash */
   const dz=cv.parentElement;dz.addEventListener('dragover',e=>{if([...(e.dataTransfer&&e.dataTransfer.types||[])].includes('Files')){e.preventDefault();dz.style.outline='2px dashed #7c5cff'}});dz.addEventListener('dragleave',()=>dz.style.outline='');
   dz.addEventListener('drop',e=>{dz.style.outline='';const f=[...(e.dataTransfer.files||[])];if(!f.length)return;e.preventDefault();e.stopPropagation();const r=cv.getBoundingClientRect();const y=e.clientY-r.top,x=e.clientX-r.left;let ti=Math.floor((y-RULER+V.sy)/D.zy);if(ti<0||ti>=D.tracks.length)ti=null;importFiles(f,ti,Math.max(0,snapT(T(x))))});
@@ -11209,6 +11209,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   const ep=byId('dawp');drMk();
  }
  function size(){if(!cv)return;const r=cv.parentElement.getBoundingClientRect();if(r.width<10)return;V.cw=Math.floor(r.width);V.ch=Math.floor(r.height);draw()}
+ function locSel(){const x=selC();if(!x){msg2('Avval klipni tanlang — loop chegaralari shu klipga qo‘yiladi.');return}hist();D.loop.a=x.c.start;D.loop.b=x.c.start+Math.max(.05,x.c.dur);ui();draw();persist();msg2('⟦⟧ Locatorlar tanlovga o‘rnatildi: '+(D.loop.a/barL()+1).toFixed(2)+' → '+(D.loop.b/barL()+1).toFixed(2)+' bar (Cubase: P)')}
  function zoom(k,ax){const x=ax==null?V.cw/2:ax,t=T(x);D.zx=Math.max(2,Math.min(800,D.zx*k));V.sx=Math.max(0,t-x/D.zx);draw();persist()}
  /* urinish */
  function hit(x,y){if(y<RULER)return null;const ti=Math.floor((y-RULER+V.sy)/D.zy);const t=D.tracks[ti];if(!t)return null;const tt=T(x);for(let i=t.clips.length-1;i>=0;i--){const c=t.clips[i];if(tt>=c.start&&tt<=c.start+c.dur)return{t,c,ti}}return{t,c:null,ti}}
@@ -11259,6 +11260,8 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   else if(!ct&&k.toLowerCase()=='l'){byId('dawl').click()}
   else if(!ct&&k.toLowerCase()=='c'){byId('dawc').click()}
   else if(!ct&&k.toLowerCase()=='r'){byId('dawr').click()}
+  else if(!ct&&!e.altKey&&!e.shiftKey&&k.toLowerCase()=='p'){locSel()}
+  else if(!ct&&!e.altKey&&!e.shiftKey&&k.toLowerCase()=='h'){zoom(1.25)}else if(!ct&&!e.altKey&&!e.shiftKey&&k.toLowerCase()=='g'){zoom(.8)}
   else if(k=='+'||k=='='){zoom(1.25)}else if(k=='-'){zoom(.8)}
   else if(!ct&&'1234'.includes(k)&&k.length==1){V.tool=['sel','split','erase','mute'][+k-1];ui()}
   else h=false;
