@@ -49,3 +49,10 @@ Daftar ma'lumotlari qurilmaning **o'zida** (brauzer/ilova xotirasi, IndexedDB + 
 ## Eslatma
 - Litsenziya imzolangan va qurilmada oflayn tekshiriladi; **bekor qilish** (revoke) muddati tugagunicha qurilmadagi nusxaga ta'sir qilmaydi.
 - Muammo: "D1 ulanmagan" → 2-bo'lim va Retry deployment; "DAFTAR_PRIV o'rnatilmagan" → 3-bo'lim.
+
+## 📥 Telegram bazasi (onlayn)
+1. Botni Telegram kanalingizga **administrator** qilib qo‘shing.
+2. Admin panelda «Botni ulash» tugmasini **qayta** bosing (webhook `channel_post` yangilanishlarini oladi).
+3. Saytda 📥 tugmasi → GitHub tokeningizni bir marta kiriting (faqat admin ko‘radi).
+4. Filtr/manbalar, «Jadvalga», «Ko‘rildi» — exe bilan bir xil. Fayllar Telegramda qoladi (limit ~20 MB).
+5. Birinchi yuklashda eski xabarlar olinmaydi — faqat ulangandan keyingilari.

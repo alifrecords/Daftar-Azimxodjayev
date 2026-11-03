@@ -10,7 +10,7 @@ export const onRequestPost = adminOnly(async ({ request, env }) => {
     let me; try { me = await tg(env, "getMe"); } catch (e) { return json({ error: "Telegram tokenni qabul qilmadi: " + e.message }, 400); }
     const secret = b64u(crypto.getRandomValues(new Uint8Array(24)));
     await kvSet(db, "bot_secret", secret);
-    await tg(env, "setWebhook", { url: origin + "/api/tg/hook", secret_token: secret, allowed_updates: ["message", "callback_query"], drop_pending_updates: true });
+    await tg(env, "setWebhook", { url: origin + "/api/tg/hook", secret_token: secret, allowed_updates: ["message", "edited_message", "channel_post", "edited_channel_post", "callback_query"], drop_pending_updates: true });
     await kvSet(db, "bot_username", me.username);
     try { await tg(env, "setMyCommands", { commands: [{ command: "start", description: "Daftar tarifini sotib olish" }, { command: "id", description: "Chat ID" }] }); } catch (_) {}
     return json({ ok: true, username: me.username });

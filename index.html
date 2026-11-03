@@ -4043,7 +4043,7 @@ function onlineBlock(){if(API===false||API===null||!CFG||!payBox)return;const bo
 refresh();setInterval(refresh,6e4);
 (async()=>{const t=LS('daftar-lic');if(t&&sub){try{const p=await verify(t);if(!p||p.d!=devId()){LS('daftar-lic',null);refresh()}}catch(_){}}})();
 if(!LS('daftar-welcome')){LS('daftar-welcome','1');setTimeout(()=>msg('🎁 Pro xizmatlar '+TRIAL_D+' kun bepul sinov. Keyin to‘lov va admin tasdig‘i kerak (💎 Tariflar).'),2500)}
-return{get st(){return ST},locked,aiLocked,refresh,verify,devId:()=>fmtDev(devId()),paywall,adminOpen};
+return{get st(){return ST},locked,aiLocked,refresh,verify,devId:()=>fmtDev(devId()),paywall,adminOpen,apiNow:()=>API,apiBase};
 })();
 
 /* ===== f5k: Key Commands, sariq davlatlar, ustun/qator surish ===== */
@@ -4458,7 +4458,13 @@ const st={msgs:[],on:false,keep:false,ack:true,allow:'',err:'',tok:false,lastOK:
 const KI={text:'💬',photo:'🖼',doc:'📄',voice:'🎤',audio:'🎵',video:'🎬'};
 const fm=t=>{const d=new Date(t*1000),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes())};
 const WK=['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'],TN={channel:'kanal',supergroup:'guruh',group:'guruh',private:'shaxsiy'};
-const url=(f,dl)=>'/__data/tginfile?n='+encodeURIComponent(f)+(dl?'&dl=1':'');
+/* onlayn rejim: exe bo'lmasa, Cloudflare serveri (/api/inbox/*) admin tokeni bilan */
+const lsg=k=>{try{return localStorage.getItem(k)||''}catch(_){return ''}};
+const onl=()=>!PD.on&&typeof LIC!='undefined'&&LIC.apiNow()!==false&&LIC.apiNow()!==null;
+const ibase=()=>(LIC.apiNow()||'')+'/api/inbox/';
+const TMAP={tginlist:'list',tgincfg:'cfg',tginact:'act',tgindiag:'diag',tgbots:'bots',tgbotadd:'botadd',tgbottoggle:'hookdel',tgbotdel:'hookdel',tginhookdel:'hookdel'};
+function tf(name,opt){if(PD.on)return fetch('/__data/'+name,opt);opt=Object.assign({},opt||{});opt.headers=Object.assign({},opt.headers||{},{Authorization:'Bearer '+lsg('dfa-token')});return fetch(ibase()+TMAP[name],opt)}
+const url=(f,dl)=>PD.on?'/__data/tginfile?n='+encodeURIComponent(f)+(dl?'&dl=1':''):ibase()+'file?n='+encodeURIComponent(f)+(dl?'&dl=1':'');
 let known=null,glowT=0;
 function beep(){try{const A=new (window.AudioContext||window.webkitAudioContext)(),o=A.createOscillator(),g=A.createGain();o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(A.destination);o.start();o.stop(A.currentTime+.18);setTimeout(()=>A.close(),400)}catch(_){}}
 function notify(j){if(!btn)return;const ids=new Set((j.msgs||[]).map(m=>m.id));
@@ -4468,9 +4474,9 @@ function notify(j){if(!btn)return;const ids=new Set((j.msgs||[]).map(m=>m.id));
  if(j.busy&&!st.busyNow){st.busyNow=true;msg('⬇ Telegramdan xabar kelmoqda…')}if(!j.busy)st.busyNow=false;
  if(j.busy)st.busyT=Date.now()+2500;btn.classList.toggle('tgbusy',Date.now()<(st.busyT||0)&&Date.now()>glowT);if(Date.now()>glowT)btn.classList.remove('tgnew');
  btn.title=j.busy?'⬇ Xabar qabul qilinmoqda…':j.err?'❌ '+j.err:st.on?'🟢 Telegram bazasi: qabul qilinmoqda':'Telegram bazasi'}
-async function load(){try{const j=await (await fetch('/__data/tginlist')).json();if(!j.ok)return;const sg=JSON.stringify([j.msgs,j.on,j.keep,j.ack,j.allow,j.err,j.tok,j.lastOK,j.skipped,j.seen,j.busy]);st.msgs=j.msgs||[];st.on=j.on;st.keep=j.keep;st.ack=j.ack;st.allow=j.allow;st.err=j.err||'';st.tok=j.tok;st.lastOK=j.lastOK;st.skipped=j.skipped||{};st.seen=j.seen||0;st.ign=j.ign||0;st.busy=!!j.busy;notify(j);badge();autoPlace();if(ov&&!ov.hidden&&(!st.dgT||Date.now()-st.dgT>20000))diag();if(ov&&!ov.hidden&&sg!==st.sg)draw();st.sg=sg}catch(_){}}
-async function cfg(p){Object.assign(st,p);try{await fetch('/__data/tgincfg',{method:'POST',body:JSON.stringify({on:st.on,keep:st.keep,ack:st.ack,allow:st.allow})})}catch(_){}}
-async function act(a,ids){try{await fetch('/__data/tginact',{method:'POST',body:JSON.stringify({a,ids})})}catch(_){}await load()}
+async function load(){try{const j=await (await tf('tginlist')).json();if(!j.ok){if(!PD.on&&j.error=='auth'){st.err='Admin tokeni noto‘g‘ri yoki eskirgan (📥 ni qayta bosib kiriting)';st.tok=false;try{localStorage.removeItem('dfa-token')}catch(_){}badge();if(ov&&!ov.hidden)draw()}return}if(!PD.on&&!lsg('daftar-tgonl-init')){(j.msgs||[]).forEach(m=>placed.add(m.id));savePlaced();try{localStorage.setItem('daftar-tgonl-init','1')}catch(_){}}const sg=JSON.stringify([j.msgs,j.on,j.keep,j.ack,j.allow,j.err,j.tok,j.lastOK,j.skipped,j.seen,j.busy]);st.msgs=j.msgs||[];st.on=j.on;st.keep=j.keep;st.ack=j.ack;st.allow=j.allow;st.err=j.err||'';st.tok=j.tok;st.lastOK=j.lastOK;st.skipped=j.skipped||{};st.seen=j.seen||0;st.ign=j.ign||0;st.busy=!!j.busy;notify(j);badge();autoPlace();if(ov&&!ov.hidden&&(!st.dgT||Date.now()-st.dgT>20000))diag();if(ov&&!ov.hidden&&sg!==st.sg)draw();st.sg=sg}catch(_){}}
+async function cfg(p){Object.assign(st,p);try{await tf('tgincfg',{method:'POST',body:JSON.stringify({on:st.on,keep:st.keep,ack:st.ack,allow:st.allow})})}catch(_){}}
+async function act(a,ids){try{await tf('tginact',{method:'POST',body:JSON.stringify({a,ids})})}catch(_){}await load()}
 function tokSync(){try{if(typeof svCfg=='function')return svCfg()}catch(_){}}
 
 let auto=true,placing=false;const placed=new Set();
@@ -4519,14 +4525,14 @@ function dgHtml(){const d=st.dg;if(!d||!d.tok)return '';let c='#12351f',t='';con
  else if(grp&&!adm&&!d.readAll){c='#4a3510';t='⚠ <b>Bot «'+esc(d.chatN||'guruh')+'» guruhida administrator emas</b> va Telegramning «Privacy Mode» yoqilgan — shuning uchun guruhdagi oddiy xabarlar va fayllar botga <b>kelmaydi</b> (Telegram qoidasi).<br>✅ <b>Yechim:</b> guruh → a’zolar → <b>@'+esc(d.bot||'bot')+'</b> ni <b>administrator</b> qiling. (Yoki @BotFather → /mybots → bot → Bot Settings → Group Privacy → Turn off, so‘ng botni guruhdan chiqarib qayta qo‘shing.) Shundan keyin yangi yuborilgan xabarlar shu yerda paydo bo‘ladi.'}
  else t='✅ Bot '+(d.chatN?'«'+esc(d.chatN)+'» ':'')+'xabarlarni olishi mumkin'+(adm?' (administrator)':'')+(d.pending?' · kutilayotgan: '+d.pending:'')+'. Qabul qilingan: '+(st.seen||0)+' · saqlangan: '+st.msgs.length+(st.ign?' · xizmat xabari (o‘tkazildi): '+st.ign:'')+'.';
  return '<div class="tiw" style="background:'+c+';padding:6px 10px;margin:4px 0;border-radius:6px;font-size:12px;line-height:1.45">'+t+' <button class="tdl" id="ti_dgr" title="Qayta tekshirish">🔎</button></div>'}
-async function diag(){st.dgT=Date.now();try{const j=await (await fetch('/__data/tgindiag')).json();const sg=JSON.stringify(j);if(sg!==st.dgS){st.dgS=sg;st.dg=j;if(ov&&!ov.hidden)draw()}}catch(_){}}
+async function diag(){st.dgT=Date.now();try{const j=await (await tf('tgindiag')).json();const sg=JSON.stringify(j);if(sg!==st.dgS){st.dgS=sg;st.dg=j;if(ov&&!ov.hidden)draw()}}catch(_){}}
 
 /* ---------- Manbalar (10 tagacha chat/kanal) va qo'shimcha botlar (9 tagacha) ---------- */
 const SMAX=10,nzm=x=>String(x||'').toLowerCase().replace(/[\s_\-@.]/g,'');
 const allowArr=()=>String(st.allow||'').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
 function chatsInfo(){const mp=new Map();st.msgs.forEach(m=>{if(!m.chat)return;let c=mp.get(m.chat);if(!c){c={id:m.chat,n:m.chatn||m.chat,t:m.chatt||'',bots:new Set(),cnt:0,last:0};mp.set(m.chat,c)}c.cnt++;if(m.t>c.last)c.last=m.t;if(m.bot)c.bots.add(m.bot);if(m.chatn)c.n=m.chatn});return[...mp.values()].sort((a,b)=>b.last-a.last)}
 const matchA=(x,c)=>{x=x.replace(/^(https?:\/\/)?(t\.me\/|telegram\.me\/)?@?/,'').replace(/\/+$/,'');return x==c.id||x==String(c.id).replace(/^-100/,'')||nzm(x)==nzm(c.n)};
-async function loadBots(){try{const j=await (await fetch('/__data/tgbots')).json();if(j&&j.ok){const sg=JSON.stringify(j);if(sg!==st.botsS){st.botsS=sg;st.bots=j;if(ov&&!ov.hidden&&st.pan&&!(document.activeElement&&/^ti_(badd|sadd)$/.test(document.activeElement.id)))draw()}}}catch(_){}}
+async function loadBots(){try{const j=await (await tf('tgbots')).json();if(j&&j.ok){const sg=JSON.stringify(j);if(sg!==st.botsS){st.botsS=sg;st.bots=j;if(ov&&!ov.hidden&&st.pan&&!(document.activeElement&&/^ti_(badd|sadd)$/.test(document.activeElement.id)))draw()}}}catch(_){}}
 function srcHtml(){const cs=chatsInfo(),a=allowArr(),B=st.bots,nb=B?1+(B.bots||[]).length:1;
  let h='<details id="ti_src"'+(st.pan?' open':'')+'><summary>🔗 Manbalar va botlar · manba: '+(a.length?a.length:'hammasi ('+cs.length+')')+' / '+SMAX+' · botlar: '+nb+' / '+(1+(B?B.max:9))+'</summary><div class="tsr">';
  h+='<div class="tsh">Manbalar — qaysi guruh/kanal/chatdan qabul qilinadi (belgilanganlar; hech biri belgilanmagan = hammasi)</div>';
@@ -4554,15 +4560,15 @@ function wireSrc(){const g=s=>ov.querySelector(s);
   if(a.some(x=>nzm(x)==nzm(v))){msg('Bu manba allaqachon qo‘shilgan');return}a.push(v);await cfg({allow:a.join(', ')});await load();draw();msg('🔗 Manba qo‘shildi: '+v)};
  if(g('#ti_sab'))g('#ti_sab').onclick=add;if(g('#ti_sadd'))g('#ti_sadd').onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();add()}};
  const badd=async()=>{const i=g('#ti_badd'),t=(i.value||'').trim();if(!t)return;const bt=g('#ti_bab');bt.disabled=true;bt.textContent='⏳';
-  try{const j=await (await fetch('/__data/tgbotadd',{method:'POST',body:JSON.stringify({tok:t})})).json();if(j.ok){msg('🤖 Bot ulandi: '+j.name+'. Qabul yoqilgan bo‘lsa, u ham xabar oladi');st.pan=true;await loadBots()}else msg('❌ '+(j.err||'Bot ulanmadi'))}catch(_){msg('❌ Bot ulanmadi')}
+  try{const j=await (await tf('tgbotadd',{method:'POST',body:JSON.stringify({tok:t})})).json();if(j.ok){msg('🤖 Bot ulandi: '+j.name+'. Qabul yoqilgan bo‘lsa, u ham xabar oladi');st.pan=true;await loadBots()}else msg('❌ '+(j.err||'Bot ulanmadi'))}catch(_){msg('❌ Bot ulanmadi')}
   bt.disabled=false;bt.textContent='Ulash';draw()};
  if(g('#ti_bab'))g('#ti_bab').onclick=badd;if(g('#ti_badd'))g('#ti_badd').onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();badd()}};
- ov.querySelectorAll('.tbo').forEach(cb=>cb.onchange=async()=>{await fetch('/__data/tgbottoggle',{method:'POST',body:JSON.stringify({i:+cb.dataset.i,on:cb.checked})});loadBots()});
- ov.querySelectorAll('.tbd').forEach(b=>b.onclick=async()=>{if(!confirm('Bu bot olib tashlansinmi? (Saqlangan xabarlar qoladi)'))return;await fetch('/__data/tgbotdel',{method:'POST',body:JSON.stringify({i:+b.dataset.i})});await loadBots();draw()})}
+ ov.querySelectorAll('.tbo').forEach(cb=>cb.onchange=async()=>{await tf('tgbottoggle',{method:'POST',body:JSON.stringify({i:+cb.dataset.i,on:cb.checked})});loadBots()});
+ ov.querySelectorAll('.tbd').forEach(b=>b.onclick=async()=>{if(!confirm('Bu bot olib tashlansinmi? (Saqlangan xabarlar qoladi)'))return;await tf('tgbotdel',{method:'POST',body:JSON.stringify({i:+b.dataset.i})});await loadBots();draw()})}
 setInterval(()=>{if(PD.on&&ov&&!ov.hidden&&st.pan)loadBots()},4000);
 function draw(){if(!ov)return;const L=filt(),tags=[...new Set(st.msgs.flatMap(m=>m.tags||[]))].sort();
  const body=ov.querySelector('.tib');const keepScroll=body?body.scrollTop:0;
- const stat=!st.tok?'⚠ Avval ✈ tugmasidan bot tokenini kiriting':st.err?'❌ '+esc(st.err):st.busy?'⬇ Xabar kelmoqda…':st.on?'🟢 Qabul qilinmoqda'+(st.lastOK?' · oxirgi xabar: '+fm(st.lastOK):''):'⚪ O‘chiq';
+ const stat=!st.tok?(PD.on?'⚠ Avval ✈ tugmasidan bot tokenini kiriting':st.err?'❌ '+esc(st.err):'⚠ Onlayn server: admin sahifada Telegram botni ulang'):st.err?'❌ '+esc(st.err):st.busy?'⬇ Xabar kelmoqda…':st.on?'🟢 Qabul qilinmoqda'+(st.lastOK?' · oxirgi xabar: '+fm(st.lastOK):''):'⚪ O‘chiq';
  ov.innerHTML='<div class="tic"><div class="tih"><b>📥 Telegram bazasi</b><span class="tis">'+stat+'</span><button class="tix" title="Yopish (Esc)">✕</button></div>'
  +'<div class="tio"><label><input type="checkbox" id="ti_on"'+(st.on?' checked':'')+'> Qabul qilish yoqilgan</label>'
  +'<label title="Yoqilsa dastur o‘zi yopilib ketmaydi va xabarlarni fonda qabul qilib turadi"><input type="checkbox" id="ti_keep"'+(st.keep?' checked':'')+'> Dastur yopilmasin</label>'
@@ -4578,9 +4584,9 @@ function draw(){if(!ov)return;const L=filt(),tags=[...new Set(st.msgs.flatMap(m=
  +'<div class="tib">'+(L.length?L.map(m=>{const ex=m.file?(m.kind=='photo'?'<a href="'+url(m.file)+'" target="_blank"><img src="'+url(m.file)+'" loading="lazy"></a>':m.kind=='voice'||m.kind=='audio'?'<audio controls preload="none" src="'+url(m.file)+'"></audio>':m.kind=='video'?'<video controls preload="none" src="'+url(m.file)+'"></video>':'')+'<a class="tid" href="'+url(m.file,1)+'">⬇ '+esc(m.fname||'fayl')+(m.size?' ('+(m.size>1048576?(m.size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(m.size/1024))+' KB')+')':'')+'</a>':'';
   return '<div class="tir'+(m.done?' dn':'')+'" data-id="'+esc(m.id)+'"><input type="checkbox" class="tic1"'+(st.sel.has(m.id)?' checked':'')+'><div class="tim"><div class="tmh">'+(KI[m.kind]||'💬')+' <b>'+esc(m.from||'?')+'</b> <span>'+esc(m.chatn||'')+' · '+fm(m.t)+(m.bot?' · '+esc(m.bot):'')+'</span></div>'+(m.text?'<div class="tmt">'+esc(m.text)+'</div>':'')+ex+(isImg(m)?'<div><button class="tdl tpi" data-pi="'+esc(m.id)+'" title="Rasmni jadvalga qo‘yish (tanlangan katak yoniga)">🖼 Rasmni jadvalga</button></div>':'')+(m.kind=='video'&&m.file?'<div><button class="tdl tvi" data-vi="'+esc(m.id)+'" title="Videoni format va hajm bo‘yicha qayta ishlash, katakka qo‘yish">🎬 Videoga ishlov (format · hajm)</button></div>':'')+((m.tags||[]).length?'<div class="tmg">'+m.tags.map(t=>'<i data-tg="'+esc(t)+'">#'+esc(t)+'</i>').join('')+'</div>':'')+'</div></div>'}).join(''):'<div class="tie">Hozircha xabar yo‘q.<br>Botni kanalga <b>administrator</b> qilib qo‘shing (yoki guruhga qo‘shib, Privacy Mode ni o‘chiring, yoki botga shaxsiy yozing) va u yerga biror narsa yuboring — shu yerda paydo bo‘ladi.</div>')+'</div></div>';
  const nb=ov.querySelector('.tib');if(nb)nb.scrollTop=keepScroll;wire()}
-function wire(){const g=s=>ov.querySelector(s);{const a=g('#ti_dgr');if(a)a.onclick=()=>diag();const h=g('#ti_hk');if(h)h.onclick=async()=>{await fetch('/__data/tginhookdel',{method:'POST'});diag()}}
+function wire(){const g=s=>ov.querySelector(s);{const a=g('#ti_dgr');if(a)a.onclick=()=>diag();const h=g('#ti_hk');if(h)h.onclick=async()=>{await tf('tginhookdel',{method:'POST'});diag()}}
  g('.tix').onclick=close;
- g('#ti_on').onchange=async e=>{if(e.target.checked){await tokSync()}await cfg({on:e.target.checked});load()};
+ g('#ti_on').onchange=async e=>{if(e.target.checked&&PD.on){await tokSync()}await cfg({on:e.target.checked});load()};
  g('#ti_auto').onchange=e=>{auto=e.target.checked;try{localStorage.setItem('daftar-tgauto',auto?'1':'0')}catch(_){}if(auto)autoPlace()};
  g('#ti_keep').onchange=e=>cfg({keep:e.target.checked});g('#ti_ack').onchange=e=>cfg({ack:e.target.checked});
  g('#ti_allow').onchange=e=>cfg({allow:e.target.value});
@@ -4608,15 +4614,16 @@ async function run(a){const L=picked();if(!L.length){msg('Avval xabarlarni belgi
   render();save();
   await act('done',L.map(m=>m.id));st.sel.clear();close();return}
  if(a=='img1'){return}}
-function open(){if(!PD.on){msg('📥 Telegram bazasi faqat kompyuter (exe) versiyada ishlaydi');return}
+function askTok(){dialog('🔐 Telegram bazasi — admin tokeni','<p style="font-size:13px;margin:0 0 8px">Onlayn Telegram bazasi faqat <b>admin</b> uchun. Onlayn admin sahifasiga kirishda ishlatadigan <b>GitHub tokenini</b> kiriting (faqat shu brauzerda saqlanadi).</p><input id=tgtk type=password placeholder="github_pat_…" style="width:100%;font-family:monospace">',async()=>{const t=(document.querySelector('#tgtk')||{}).value||'';if(!t.trim())return;try{localStorage.setItem('dfa-token',t.trim())}catch(_){}try{const r=await fetch(ibase()+'list',{headers:{Authorization:'Bearer '+t.trim()}});if(r.status==401){try{localStorage.removeItem('dfa-token')}catch(_){}msg('❌ Token noto‘g‘ri yoki repoga yozish huquqi yo‘q');return}}catch(_){}open()},'Kirish')}
+function open(){if(!PD.on){if(!onl()){msg('📥 Telegram bazasi: onlayn server ulanmagan (ONLAYN-SOZLASH.md) yoki kompyuter (exe) versiyani ishlating');return}if(!lsg('dfa-token')){askTok();return}}
  if(!ov){ov=document.createElement('div');ov.id='tgdbx';ov.hidden=true;document.body.appendChild(ov);ov.addEventListener('mousedown',e=>{if(e.target===ov)close()})}
  ov.hidden=false;load().then(draw);loadBots();draw()}
 function close(){if(ov)ov.hidden=true}
 const css=document.createElement('style');css.textContent='#tgdbx #ti_src{margin:4px 0;border:1px solid #33384f;border-radius:8px;background:#1b1e2c}#tgdbx #ti_src summary{cursor:pointer;padding:6px 10px;font-size:12px;color:#aeb8e0}#tgdbx .tsr{padding:4px 10px 8px;max-height:230px;overflow:auto}#tgdbx .tsh{color:#8d97b5;font-size:11px;margin:6px 0 3px}#tgdbx .tsrow{display:flex;gap:8px;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid #262a3d}#tgdbx .tsrow i{background:#262d4a;border-radius:8px;padding:0 7px;font-style:normal;font-size:11px;color:#9fb4ff}#tgdbx .tsrow span{color:#8d97b5;font-size:11px;margin-left:auto}#tgdbx .tsrow span+span{margin-left:0}#tgdbx .tsrow input[type=text],#tgdbx .tsrow input:not([type]),#tgdbx .tsrow input[type=password]{flex:1;min-width:0}'+'@keyframes tgp{0%,100%{box-shadow:0 0 0 0 #a3ff12cc}50%{box-shadow:0 0 16px 7px #a3ff1299}}#tgdbb.tgbusy,#tgdbb.tgnew{animation:tgp .6s infinite;background:#a3ff12!important;color:#111!important;border-color:#fff!important}#tgdbb.tgnew{background:#ff2bd6!important;color:#fff!important}@keyframes tgs{0%,100%{box-shadow:0 0 0 0 #00e5ffcc}50%{box-shadow:0 0 16px 7px #00e5ff99}}#tgg.tgsend{animation:tgs .8s infinite;background:#00e5ff!important;color:#001!important}'+'#tgdbx{position:fixed;inset:0;z-index:99990;background:#000a;display:flex;align-items:center;justify-content:center}#tgdbx[hidden]{display:none}#tgdbx .tic{background:#17181b;color:#e8e8ea;border:1px solid #3a3b40;border-radius:12px;width:min(920px,96vw);height:min(86vh,760px);display:flex;flex-direction:column;box-shadow:0 20px 60px #000c}#tgdbx .tih{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #2c2d31}#tgdbx .tih b{font-size:16px}#tgdbx .tis{color:#9a9ca3;font-size:12px;margin-left:auto}#tgdbx .tix{background:none;border:0;color:#aaa;font-size:18px;cursor:pointer}#tgdbx .tio,#tgdbx .tif,#tgdbx .tia{display:flex;gap:10px;align-items:center;padding:8px 14px;flex-wrap:wrap;border-bottom:1px solid #232428}#tgdbx input[type=text],#tgdbx input:not([type]),#tgdbx select{background:#0f1012;color:#e8e8ea;border:1px solid #34353a;border-radius:6px;padding:5px 8px;font:inherit}#tgdbx #ti_allow,#tgdbx #ti_q{flex:1;min-width:180px}#tgdbx button{background:#26272c;color:#e8e8ea;border:1px solid #3a3b40;border-radius:6px;padding:5px 10px;cursor:pointer;font:inherit}#tgdbx button:hover{border-color:#e5484d}#tgdbx button.tdl:hover{background:#5a1d20}#tgdbx .tia .tis{margin-left:auto}#tgdbx .tib{flex:1;overflow:auto;padding:6px 14px}#tgdbx .tir{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #232428}#tgdbx .tir.dn{opacity:.55}#tgdbx .tim{flex:1;min-width:0}#tgdbx .tmh{font-size:12px;color:#9a9ca3}#tgdbx .tmh b{color:#e8e8ea;font-size:13px}#tgdbx .tmt{white-space:pre-wrap;word-break:break-word;margin:3px 0;font-size:14px}#tgdbx img{max-width:260px;max-height:200px;border-radius:8px;display:block;margin:4px 0}#tgdbx video{max-width:300px;border-radius:8px;display:block;margin:4px 0}#tgdbx audio{display:block;margin:4px 0;max-width:300px}#tgdbx .tid{display:inline-block;color:#6cb6ff;font-size:12px;margin:2px 0;text-decoration:none}#tgdbx .tmg i{font-style:normal;color:#f0b429;font-size:12px;margin-right:8px;cursor:pointer}#tgdbx .tie{text-align:center;color:#9a9ca3;padding:50px 20px;line-height:1.7}#tgdbb.on{color:#4ade80}';document.head.appendChild(css);
-{const b=document.createElement('button');b.id='tgdbb';b.textContent='📥';b.title='Telegram bazasi — Telegramdan kelgan ma‘lumotlar (faqat kompyuter versiya)';b.hidden=true;btn=b;const a=$('#tgg');(a||$('#igb')).after(b);b.onclick=open;
- setInterval(()=>{if(PD.on){b.hidden=false}},1500);setInterval(()=>{if(PD.on&&(st.on||(ov&&!ov.hidden)))load()},1000);setTimeout(()=>{if(PD.on)load()},3000)}
+{const b=document.createElement('button');b.id='tgdbb';b.textContent='📥';b.title='Telegram bazasi — Telegram kanal/guruhdan kelgan ma‘lumotlar';b.hidden=true;btn=b;const a=$('#tgg');(a||$('#igb')).after(b);b.onclick=open;
+ setInterval(()=>{if(PD.on||(onl()&&lsg('dfa-token'))){b.hidden=false}else if(onl()){b.hidden=false}},1500);setInterval(()=>{if(!PD.on&&onl()&&lsg('dfa-token')&&!document.hidden)load()},10000);setTimeout(()=>{if(!PD.on&&onl()&&lsg('dfa-token'))load()},4000);setInterval(()=>{if(PD.on&&(st.on||(ov&&!ov.hidden)))load()},1000);setTimeout(()=>{if(PD.on)load()},3000)}
 document.addEventListener('keydown',e=>{if(e.key=='Escape'&&ov&&!ov.hidden){e.stopPropagation();close()}},true);
-return {open,close,load,st,chats:()=>chatsInfo()};
+return {open,close,load,st,url,chats:()=>chatsInfo()};
 })();
 
 /* ===== Malumotlar/Baza papkasi nusxa qo'yilganda platformada avtomatik shakllanishi ===== */
@@ -6761,7 +6768,7 @@ function hook(){if(typeof importAny!='function'||importAny.__dw)return;const old
  try{if(!/\.pdf/.test(fpick.accept))fpick.accept+=',.doc,.pdf,.rtf'}catch(_){}}
 /* ---------- Telegram bazasi: hujjat tugmalari ---------- */
 const DOCX_E=new Set(['docx','doc','docm','rtf','txt','md','html','htm','mht','mhtml','xlsx','xls','xlsm','xlsb','ods','csv','tsv','pdf']);
-const urlOf=(f,dl)=>'/__data/tginfile?n='+encodeURIComponent(f)+(dl?'&dl=1':'');
+const urlOf=(f,dl)=>typeof TGI!='undefined'&&TGI.url?TGI.url(f,dl):'/__data/tginfile?n='+encodeURIComponent(f)+(dl?'&dl=1':'');
 async function tgOpen(m,mode){const name=m.fname||m.file.split('/').pop();let buf;try{const r=await fetch(urlOf(m.file));if(!r.ok)throw 0;buf=await r.arrayBuffer()}catch(_){msg('❌ Fayl o‘qilmadi: '+name);return}
  const ext=extOf(name);const o={dl:()=>{const a=document.createElement('a');a.href=urlOf(m.file,1);a.download=name;document.body.append(a);a.click();a.remove()},done:()=>{markPl(m.id);try{TGI.st.msgs&&fetch('/__data/tginact',{method:'POST',body:JSON.stringify({a:'done',ids:[m.id]})})}catch(_){}}};
  if(ext=='pdf')o.pdfUrl=urlOf(m.file);

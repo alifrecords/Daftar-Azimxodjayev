@@ -1,5 +1,6 @@
 // Telegram webhook. Xaridor: /start <qurilma kodi> → tarif → karta → chek → admin tasdiqlaydi → Daftar o'zi faollashadi.
 import { guard, json, kvGet, kvSet, getSettings, saveSettings, normDev, DEV_RE } from "../_db.js";
+import { storeInbox } from "../_inbox.js";
 import { tg, send, esc, fmtSum, fmtDev, createPayment, approvePayment, rejectPayment, issue, adminChat } from "../_daftar.js";
 
 const session = async (db, uid) => (await db.prepare("SELECT * FROM df_sessions WHERE uid = ?").bind(uid).first()) || { uid, dev: null, tariff: null, step: null };
@@ -76,6 +77,7 @@ async function onAdminCommand(env, msg, cmd, arg) {
 }
 async function handle(env, u) {
   const db = env.DB;
+  if (await storeInbox(env, u)) return; // kanal/guruh postlari va admin chatiga yuborilgan materiallar → Telegram bazasi
   if (u.callback_query) { const cb = u.callback_query, [a, v] = String(cb.data || "").split(":"); if (a === "plan") return onPlan(env, cb, v); if (a === "ok" || a === "no") return onDecision(env, cb, a, v); return; }
   const msg = u.message; if (!msg || !msg.chat || msg.chat.type !== "private" || !msg.from) return;
   const text = (msg.text || "").trim();

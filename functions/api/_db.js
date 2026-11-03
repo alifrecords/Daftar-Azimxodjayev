@@ -23,6 +23,8 @@ export async function ensureSchema(db) {
     db.prepare("CREATE INDEX IF NOT EXISTS df_payments_status ON df_payments(status, created)"),
     db.prepare("CREATE TABLE IF NOT EXISTS df_sessions (uid INTEGER PRIMARY KEY, dev TEXT, tariff TEXT, step TEXT, ts INTEGER)"),
     db.prepare("CREATE TABLE IF NOT EXISTS df_fail (ip TEXT, ts INTEGER)"),
+    db.prepare("CREATE TABLE IF NOT EXISTS df_inbox (id TEXT PRIMARY KEY, bot TEXT, t INTEGER, sender TEXT, chat TEXT, chatn TEXT, chatt TEXT, kind TEXT, text TEXT, file_id TEXT, fname TEXT, size INTEGER, tags TEXT, done INTEGER NOT NULL DEFAULT 0)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS df_inbox_t ON df_inbox(t)"),
   ]);
   ready = true;
 }
