@@ -56,3 +56,10 @@ Daftar ma'lumotlari qurilmaning **o'zida** (brauzer/ilova xotirasi, IndexedDB + 
 3. Saytda 📥 tugmasi → GitHub tokeningizni bir marta kiriting (faqat admin ko‘radi).
 4. Filtr/manbalar, «Jadvalga», «Ko‘rildi» — exe bilan bir xil. Fayllar Telegramda qoladi (limit ~20 MB).
 5. Birinchi yuklashda eski xabarlar olinmaydi — faqat ulangandan keyingilari.
+
+## 📁 Qurilmadagi ma'lumot papkasi (o'rnatilgan ilova)
+- Ilova o'rnatilgach (yoki «Saqlash joyi» oynasidan) **Papka yaratish** → oyna Hujjatlar (Documents) da ochiladi, ichida `Daftar-Azimxodjayev-Malumot` yaratiladi.
+- Ichida: `daftar-zaxira.json` (tiklash manbai), `.html` nusxa, dars fayllari, `malumot-haqida.txt` (joy, vaqt, qurilma).
+- Ilova har ochilganda papkadan tiklaydi; ruxsat so'ralsa, pastdagi ko'k panelda «Ulanish».
+- Faqat kompyuterdagi Chrome/Edge. Telefonda brauzer papka bermaydi — «Zaxira faylini saqlash / tiklash» ishlatiladi.
+- Chrome Documents papkasining o'zini tanlatmaydi: uning ichida yangi papka yarating.

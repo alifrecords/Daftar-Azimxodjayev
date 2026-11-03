@@ -11479,6 +11479,76 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  window.__daw={create,get:()=>D,A,play,stop,importFiles,mixdown,V,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
 })();
 
+/* ===== f6zq: ilova o'rnatilganda qurilmada «Ma'lumot papkasi» — yaratish, yozuv, har ochilishda tiklash ===== */
+(()=>{
+ const REC='daftar-datafolder',SUB='Daftar-Azimxodjayev-Malumot';
+ const standalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true}catch(_){return false}};
+ const can=()=>!!window.showDirectoryPicker;
+ const lsg=k=>{try{return localStorage.getItem(k)}catch(_){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
+ const rec=()=>{try{return JSON.parse(lsg(REC)||'null')}catch(_){return null}};
+ const devName=()=>{const u=navigator.userAgent;let os=/Windows/.test(u)?'Windows':/Android/.test(u)?'Android':/iPhone|iPad/.test(u)?'iOS':/Mac/.test(u)?'macOS':/Linux/.test(u)?'Linux':'qurilma';let br=/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/Chrome\//.test(u)?'Chrome':/Safari\//.test(u)?'Safari':/Firefox\//.test(u)?'Firefox':'brauzer';return os+' · '+br+' · '+location.host};
+ const fmt=t=>{const d=new Date(t);return d.toLocaleDateString('uz')+' '+d.toLocaleTimeString('uz',{hour:'2-digit',minute:'2-digit'})};
+ const readMeta=()=>{const r=rec();return r?`Papka nomi: ${r.name}\nYaratilgan papka (ichida): ${r.parent||'—'}\nYaratilgan vaqt: ${fmt(r.at)}\nQurilma: ${r.dev}\nO'rnatilgan ilova: ${r.app?'ha':'yo\'q (brauzer oynasi)'}`:''};
+ /* papka ichiga tushuntirish yozuvini qo'yish */
+ async function writeReadme(dh){const r=rec();const t=`DAFTAR AZIMXODJAYEV — MA'LUMOT PAPKASI\n======================================\nBu papka Daftar ilovasi tomonidan shu qurilmada yaratilgan.\n\n${readMeta()}\n\nIchida:\n  daftar-zaxira.json — butun daftar (ilova ochilganda aynan shundan tiklanadi)\n  daftar-zaxira.html — o'sha ma'lumotning ochib ko'riladigan nusxasi\n  <fan nomi>/<dars>.html — har bir dars alohida fayl\n  malumot-haqida.txt — shu yozuv\n\nPapkani o'chirmang va ichidagi daftar-zaxira.json ni qo'lda tahrirlamang.\nBoshqa qurilmaga o'tkazish: papkani nusxalab, Daftarda «Saqlash joyi → Papkani ulash» orqali tanlang.\n`;try{await dirPut(dh,'malumot-haqida.txt',t)}catch(_){}}
+ /* ---- papka yaratish ustasi ---- */
+ async function pickAndCreate(){
+  if(!can()){return noFolder()}
+  let parent;
+  try{parent=await showDirectoryPicker({id:'daftar-data',mode:'readwrite',startIn:'documents'})}
+  catch(e){if(e.name=='AbortError')return false;
+   try{dialog('Papka tanlab bo‘lmadi','<p>Brauzer bu papkani tanlashga ruxsat bermadi ('+esc(e.name)+').</p><p>Chrome/Edge tizimning <b>Hujjatlar (Documents)</b> papkasini <u>o‘zini</u> tanlashga ruxsat bermaydi, lekin <b>uning ichidagi</b> papkani beradi. Tanlash oynasida «Yangi papka» tugmasi bilan Documents ichida masalan <b>Daftar</b> nomli papka yarating va uni tanlang.</p>',()=>{pickAndCreate()},'Qayta urinish')}catch(_){}return false}
+  let dh;try{dh=await parent.getDirectoryHandle(SUB,{create:true})}catch(e){dh=parent}
+  DV.dir=dh;DV.dok=true;DV.hash={};await idbKV('put','dir',dh);
+  const r={name:dh.name,parent:parent.name,at:Date.now(),dev:devName(),app:standalone()};lss(REC,JSON.stringify(r));
+  try{commit();save()}catch(_){}
+  await dirWrite(true);await writeReadme(dh);badge2();
+  return r}
+ const noFolder=()=>{try{dialog('Bu qurilmada papkaga yozib bo‘lmaydi','<p>Telefon brauzerlari (Android Chrome, iPhone Safari) saytga qurilma papkasini ochmaydi — bu brauzerning cheklovi, Daftar uni chetlab o‘ta olmaydi.</p><p>O‘rniga:</p><ul style="line-height:1.7"><li><b>Ma’lumot ilova ichidagi xotirada</b> saqlanadi va har ochilganda tiklanadi.</li><li>«<b>📱 Zaxira faylini saqlash</b>» tugmasi bilan faylni <b>Fayllar / Yuklamalar / Drive</b>ga saqlang, keyin «<b>Zaxiradan tiklash</b>» bilan qaytaring.</li><li>Kompyuterda (Chrome/Edge) to‘liq papka rejimi ishlaydi.</li></ul>',()=>{},'Tushunarli')}catch(_){}return false};
+ async function wizard(){
+  if(!can())return noFolder();
+  const h=`<p>Daftar ma’lumotlari shu qurilmada <b>alohida papkada</b> saqlanadi va ilova har ochilganda <b>shu papkadan tiklanadi</b>.</p>
+  <ol style="line-height:1.7"><li>«<b>Papkani tanlash</b>» ni bosing — oyna <b>Hujjatlar (Documents)</b> da ochiladi.</li><li>Kerak bo‘lsa «Yangi papka» bilan Documents ichida <b>Daftar</b> papkasini yarating va tanlang.</li><li>Ichida <code>${SUB}</code> papkasi avtomatik yaratiladi va uning joyi shu yerda yozib qo‘yiladi.</li></ol>
+  <p class=m style="font-size:12px;opacity:.8">Brauzer to‘liq yo‘lni (C:\\Users\\…) bermaydi — shuning uchun papka nomi va qaysi papka ichida ekani yoziladi. Ruxsatni «Har safar ruxsat berish» deb qoldirsangiz, qayta so‘ralmaydi.</p>`;
+  try{dialog('📁 Ma’lumot papkasini yaratish',h,async()=>{const r=await pickAndCreate();if(r)done(r);return false},'Papkani tanlash')}catch(_){}}
+ function done(r){try{dialog('✅ Ma’lumot papkasi tayyor',`<table style="border-collapse:collapse;line-height:1.7"><tr><td><b>Papka:</b></td><td>${esc(r.name)}</td></tr><tr><td><b>Ichida:</b></td><td>${esc(r.parent)}</td></tr><tr><td><b>Vaqt:</b></td><td>${fmt(r.at)}</td></tr><tr><td><b>Qurilma:</b></td><td>${esc(r.dev)}</td></tr></table><p>Fayl tizimida: <b>${esc(r.parent)} → ${esc(r.name)}</b>. Ichida <code>malumot-haqida.txt</code> bor. Endi har o‘zgarish shu papkaga yoziladi va ilova ochilganda shundan tiklanadi.</p>`,()=>{},'Yopish')}catch(_){}}
+ /* ---- har ochilganda tiklash ---- */
+ async function readJson(dh){try{const f=await (await dh.getFileHandle('daftar-zaxira.json')).getFile();if(!f.size)return null;return JSON.parse(await f.text())}catch(_){return null}}
+ let bar=null;
+ function showBar(txt,fn){if(bar)bar.remove();bar=document.createElement('div');bar.style.cssText='position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;background:#1d4ed8;color:#fff;padding:10px 14px;border-radius:10px;font:14px system-ui;box-shadow:0 4px 18px #0005;display:flex;gap:10px;align-items:center;max-width:92vw';const s=document.createElement('span');s.textContent=txt;const b=document.createElement('button');b.textContent='Ulanish';b.style.cssText='padding:6px 12px;border:0;border-radius:8px;cursor:pointer;font-weight:600';b.onclick=async()=>{await fn();};const x=document.createElement('button');x.textContent='✕';x.style.cssText='background:none;border:0;color:#fff;cursor:pointer;font-size:16px';x.onclick=()=>{bar.remove();bar=null};bar.append(s,b,x);document.body.append(bar)}
+ async function restoreFromDir(auto){
+  if(!DV.dir)return false;
+  const d=await readJson(DV.dir);if(!d||!Array.isArray(d.subjects)||!d.subjects.length)return false;
+  const loc=(typeof D!='undefined'&&D&&D.ts)||0;
+  const cnt=x=>{let n=0;try{(x.subjects||[]).forEach(s=>(s.topics||[]).forEach(t=>{n+=((t.note||'').replace(/<[^>]*>/g,'').trim().length>0)?1:0;(t.sheets||[]).forEach(sh=>{Object.values(sh.cells||{}).forEach(c=>{if(c&&(c.v||c.img))n++})})}))}catch(_){}return n};
+  if(d.ts>loc+1000||(cnt(D)===0&&cnt(d)>0)){adopt(d,'ma’lumot papkasidagi oxirgi versiya ('+DV.dir.name+')');return true}
+  return false}
+ async function boot(){
+  if(!can())return;
+  await new Promise(r=>setTimeout(r,900));
+  try{
+   if(!DV.dir)DV.dir=await idbKV('get','dir');
+   if(DV.dir){
+    let p='prompt';try{p=await DV.dir.queryPermission({mode:'readwrite'})}catch(_){}
+    if(p=='granted'){DV.dok=true;await restoreFromDir(true);badge2();return}
+    showBar('📁 Ma’lumot papkasiga qayta ulanish kerak (ruxsat).',async()=>{try{const g=await DV.dir.requestPermission({mode:'readwrite'});if(g=='granted'){DV.dok=true;const ok=await restoreFromDir();if(!ok){try{commit();save()}catch(_){}await dirWrite(true)}if(bar){bar.remove();bar=null}msg('📁 Papkaga ulandi'+(ok?' va ma’lumot tiklandi.':'.'));badge2()}else msg('Ruxsat berilmadi.')}catch(e){msg('Ulanib bo‘lmadi: '+(e.name||e))}});
+    return}
+   /* papka hali yo'q: o'rnatilgan ilova ochilganda bir marta taklif qilamiz */
+   if(standalone()&&!lsg('daftar-datafolder-ask'))showBar('📁 Ma’lumot papkasi yaratilmagan — Hujjatlar ichida yarating.',async()=>{lss('daftar-datafolder-ask','1');if(bar){bar.remove();bar=null}wizard()});
+  }catch(_){}}
+ /* o'rnatish tugagach darhol ustani ko'rsatamiz (ilova hali brauzer oynasida bo'lsa ham) */
+ addEventListener('appinstalled',()=>{setTimeout(()=>{if(!DV.dir&&can())wizard()},1500)});
+ /* ---- «Saqlash joyi» oynasiga qurilma yozuvi va tugmalar ---- */
+ window.DAFTAR_DATAFOLDER={wizard,rec,readMeta,boot,restoreFromDir,pickAndCreate,can,standalone};
+  if(typeof openStorage!='undefined'){const o=openStorage;openStorage=function(){o.apply(this,arguments);try{const b=document.querySelector('#dbd');if(!b)return;const r=rec();const sec=document.createElement('div');sec.className='sx';
+   sec.innerHTML='<b>📁 Qurilmadagi ma’lumot papkasi (o‘rnatilgan ilova)</b><span class=m>'+(r?'Papka: <b>'+esc(r.parent)+' → '+esc(r.name)+'</b><br>Yaratilgan: '+fmt(r.at)+'<br>Qurilma: '+esc(r.dev):can()?'Hali yaratilmagan.':'Bu qurilmada brauzer papkaga ruxsat bermaydi (telefon). Zaxira fayli ishlating.')+'</span><div class=row3>'+(can()?'<button id=sx_wz>'+(r?'Boshqa papka tanlash':'📁 Papka yaratish')+'</button>':'')+'<button id=sx_rf>📂 Zaxiradan tiklash (fayl)</button></div>';
+   b.prepend(sec);const w=sec.querySelector('#sx_wz');if(w)w.onclick=()=>wizard();
+   sec.querySelector('#sx_rf').onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='.json,.html,application/json,text/html';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const tx=await f.text();let js=tx;if(!/\.json$/i.test(f.name)){const m=tx.match(/<script type=application\/json id=daftar-backup>([\s\S]*?)<\/script>/);if(!m)throw new Error('format');js=m[1]}const d=JSON.parse(js);if(d.part)mergePart(d,f.name);else restoreState(d,f.name)}catch(e){msg('Faylni ochib bo‘lmadi: '+(e.message||e))}};i.click()}}catch(_){}}}
+ /* telefonda qiladigani: doimiy xotira so'rash */
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+ if(document.readyState=='complete')boot();else addEventListener('load',boot);
+})();
+
 loadTopic();applyView();pushRecent();gw.focus();
 addEventListener('pagehide',()=>{if(PD.on)pdSave()});setInterval(pdBadge,5000);
 </script><script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script><style>#acb{display:none!important}</style></body></html>
