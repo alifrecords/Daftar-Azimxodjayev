@@ -10817,27 +10817,1112 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  window.__rbn={ST,build:go,act};
 })();
 
-/* ===== f6zi: «📲 Ilova sifatida o'rnatish» tugmasi (PWA) ===== */
-(()=>{
- const standalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true}catch(_){return false}};
- if(standalone())return;
- let ev=window._ip||null;addEventListener('beforeinstallprompt',e=>{ev=e});
- addEventListener('appinstalled',()=>{const b=document.getElementById('pwab');if(b)b.remove();try{msg('✅ Daftar ilova sifatida o‘rnatildi. Endi Ish stoli yoki Start menyusidan oching.')}catch(_){}});
- function open(){
-  if(ev&&ev.prompt){const e=ev;ev=null;e.prompt();return}
-  const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua),and=/Android/.test(ua),edge=/Edg\//.test(ua),sec=location.protocol=='https:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-  let h='';
-  if(!sec)h='<p>⚠ Ilova sifatida o‘rnatish faqat <b>https</b> manzilda ishlaydi. Hozirgi manzil: <code>'+location.protocol+'//'+location.host+'</code>.</p>';
-  else if(ios)h='<ol style="line-height:1.7"><li>Safari’da pastdagi <b>Ulashish</b> (⬆) tugmasini bosing.</li><li><b>«Bosh ekranga qo‘shish»</b> ni tanlang.</li><li><b>Qo‘shish</b> ni bosing.</li></ol>';
-  else if(and)h='<ol style="line-height:1.7"><li>Chrome’da yuqori o‘ngdagi <b>⋮</b> menyusini oching.</li><li><b>«Ilovani o‘rnatish»</b> yoki <b>«Bosh ekranga qo‘shish»</b> ni tanlang.</li></ol>';
-  else h='<ol style="line-height:1.7"><li>Manzil qatorining o‘ng chetidagi <b>o‘rnatish belgisi (⊕)</b> ni bosing,</li><li>yoki '+(edge?'<b>⋯ → Ilovalar → Bu saytni ilova sifatida o‘rnatish</b>':'<b>⋮ → Cast, save, and share → Install page as app</b> (yoki «Daftar’ni o‘rnatish»)')+'.</li><li><b>O‘rnatish</b> ni bosing.</li></ol>';
-  h+='<p class=m style="font-size:12px;opacity:.8;margin-top:8px">Belgi ko‘rinmasa: sahifani bir marta yangilang va 1–2 daqiqa kuting. Ma’lumotlaringiz brauzerdagi bilan bir xil xotirada qoladi. Boshqa manzildan o‘rnatsangiz, avval «Boshqacha saqlash» qiling.</p>';
-  try{dialog('📲 Ilova sifatida o‘rnatish',h,()=>{},'Yopish')}catch(_){}}
- function mount(){if(document.getElementById('pwab'))return true;const b=document.createElement('button');b.id='pwab';b.textContent='📲 Ilova sifatida o‘rnatish';b.title='Daftar’ni brauzer belgilarisiz, alohida oyna sifatida o‘rnatish';b.onclick=open;
-  const g=[...document.querySelectorAll('#rbn .rbb[data-t=kor] .rbg')].find(x=>x.dataset.g=='Oyna');
-  if(g){g.querySelector('.rgi').append(b);b.dataset.rid='pwab';return true}
-  const hd=document.getElementById('hd');if(hd&&!document.getElementById('rbn')&&document.readyState=='complete'){hd.append(b);return true}return false}
- let n=0;const t=setInterval(()=>{if(mount()||++n>30)clearInterval(t)},400);
+/* DAW va boshqa interfeys matnlari uchun oflayn RU/EN lug‘at (f6zl tarjimoniga qo‘shiladi) */
+(function(){
+ const U=window.__ui;if(!U||!U.D)return;
+ const X={"Ehtimol":["Вероятность","Probability"],"Siljish (nudge)":["Сдвиг (nudge)","Nudge"],"Ovoz tili":["Язык озвучивания","Voice language"],
+"Klip chetini cho‘zish rejimi": [
+"Режим растягивания края клипа",
+"Clip sizing mode"
+],
+"Oddiy o‘lcham": [
+"Обычное изменение размера",
+"Normal Sizing"
+],
+"Time stretch: tovush balandligi o‘zgarmasin (o‘chirilsa — tape kabi)": [
+"Time stretch: сохранять высоту тона (выключено — как лента)",
+"Time stretch: keep pitch (off — tape style)"
+],
+"balandlik saqlansin": [
+"сохранять высоту",
+"keep pitch"
+],
+"Kesish (2) — bosilgan joydan bo‘ladi": [
+"Разрезать (2) — в месте клика",
+"Split (2) — at the click position"
+],
+"Kesish": [
+"Разрезать",
+"Split"
+],
+"O‘chirish (3)": [
+"Ластик (3)",
+"Erase (3)"
+],
+"O‘chirgich": [
+"Ластик",
+"Eraser"
+],
+"Ovozsiz (4)": [
+"Без звука (4)",
+"Mute (4)"
+],
+"Tarmoqqa yopishish": [
+"Привязка к сетке",
+"Snap to grid"
+],
+"Tarmoq turi": [
+"Тип сетки",
+"Grid type"
+],
+"Kattalashtirish (H yoki +)": [
+"Увеличить (H или +)",
+"Zoom in (H or +)"
+],
+"Kichraytirish (G yoki −)": [
+"Уменьшить (G или −)",
+"Zoom out (G or −)"
+],
+"Hammasini sig‘dirish": [
+"Вписать всё",
+"Fit all"
+],
+"Sig‘dir": [
+"Вписать",
+"Fit"
+],
+"Treklarni balandroq qilish (Ctrl+↓ yoki Alt+g‘ildirak)": [
+"Увеличить высоту треков (Ctrl+↓ или Alt+колесо)",
+"Taller tracks (Ctrl+↓ or Alt+wheel)"
+],
+"Treklarni pastroq qilish (Ctrl+↑ yoki Alt+g‘ildirak)": [
+"Уменьшить высоту треков (Ctrl+↑ или Alt+колесо)",
+"Shorter tracks (Ctrl+↑ or Alt+wheel)"
+],
+"Hamma treklarni bir ko‘rinishga sig‘dirish": [
+"Вписать все треки в окно",
+"Fit all tracks in view"
+],
+"Treklar": [
+"Треки",
+"Tracks"
+],
+"Hamma narsani ekranga sig‘dirish — vaqt va treklar (Ctrl+Shift+A)": [
+"Вписать всё в экран — время и треки (Ctrl+Shift+A)",
+"Fit everything to screen — time and tracks (Ctrl+Shift+A)"
+],
+"Hammasi": [
+"Всё",
+"All"
+],
+"Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv": [
+"Библиотека звуков: кино, театр FX, сэмплы для аранжировки (офлайн) и онлайн-поиск",
+"Sound library: cinema, theatre FX, arrangement samples (offline) and online search"
+],
+"Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)": [
+"Библиотека эффектов: reverb, delay, distortion, EQ… (выбранный трек или Master)",
+"Effects library: reverb, delay, distortion, EQ… (selected track or Master)"
+],
+"MixConsole — kanal qatorlari, balans (F3)": [
+"MixConsole — каналы и баланс (F3)",
+"MixConsole — channel strips and balance (F3)"
+],
+"Studio Setup: audio qurilma, kechikish, yozish (F4)": [
+"Studio Setup: аудиоустройство, задержка, запись (F4)",
+"Studio Setup: audio device, latency, recording (F4)"
+],
+"AI Studio: tahlil + avto-zanjir (EQ, kompressor, master)": [
+"AI Studio: анализ + авто-цепочка (EQ, компрессор, мастер)",
+"AI Studio: analysis + auto chain (EQ, compressor, master)"
+],
+"Pro vositalar: Stem, Spectral, Automation, Bus, Sidechain, Export": [
+"Pro-инструменты: Stem, Spectral, Automation, Bus, Sidechain, Export",
+"Pro tools: Stem, Spectral, Automation, Bus, Sidechain, Export"
+],
+"Yangi audio trek qo‘shish": [
+"Добавить новый аудиотрек",
+"Add a new audio track"
+],
+"Trek": [
+"Трек",
+"Track"
+],
+"Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar": [
+"Драм-машина + сэмплер (BeatBox 16): 16 падов, степ-секвенсор, swing, эффекты",
+"Drum machine + sampler (BeatBox 16): 16 pads, step sequencer, swing, effects"
+],
+"Audio faylni import qilish (yoki shu yerga tashlang)": [
+"Импорт аудиофайла (или перетащите сюда)",
+"Import an audio file (or drop it here)"
+],
+"Hamma treklarni birlashtirib WAV sifatida yuklash": [
+"Свести все треки и скачать как WAV",
+"Mix down all tracks and download as WAV"
+],
+"Miks (WAV)": [
+"Микс (WAV)",
+"Mix (WAV)"
+],
+"Space — o‘ynash · Ctrl+Shift+A — hammasini ekranga sig‘dirish · Ctrl+↑/↓ yoki Alt+g‘ildirak — trek balandligi · S — kesish · Alt (bosib tur) — vaqtincha ✂ qaychi · Ctrl+Alt+sudrash — nusxa · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab": [
+"Space — воспроизведение · Ctrl+Shift+A — вписать всё · Ctrl+↑/↓ или Alt+колесо — высота трека · S — разрезать · Alt (удерживать) — временно ✂ ножницы · Ctrl+Alt+перетаскивание — копия · перетаскивание с пустого места — выделить несколько клипов · Shift+клик · Ctrl+A — выделить всё · P — локатор = выделение · H/G — зум +/− · Del — удалить · Ctrl+D — дублировать · 1-4 — инструменты · Ctrl+колесо — масштаб",
+"Space — play · Ctrl+Shift+A — fit everything · Ctrl+↑/↓ or Alt+wheel — track height · S — split · Alt (hold) — temporary ✂ scissors · Ctrl+Alt+drag — copy · drag from empty space — select several clips · Shift+click · Ctrl+A — select all · P — locators = selection · H/G — zoom +/− · Del — delete · Ctrl+D — duplicate · 1-4 — tools · Ctrl+wheel — zoom"
+],
+"Trek qo‘shish": [
+"Добавить трек",
+"Add track"
+],
+"Ikki marta bosing — nomini o‘zgartirish": [
+"Двойной щелчок — переименовать",
+"Double-click to rename"
+],
+"Yozishga tayyor": [
+"Готов к записи",
+"Record enable"
+],
+"Effektlar (insert zanjiri)": [
+"Эффекты (цепочка инсертов)",
+"Effects (insert chain)"
+],
+"Trekni o‘chirish": [
+"Удалить трек",
+"Delete track"
+],
+"Balandlik": [
+"Громкость",
+"Volume"
+],
+"Pan": [
+"Панорама",
+"Pan"
+],
+"Tanlash (1)": [
+"Выбор (1)",
+"Select (1)"
+],
+"Tanlash": [
+"Выбор",
+"Select"
+],
+"Mute": [
+"Mute",
+"Mute"
+],
+"Boshiga (Home)": [
+"В начало (Home)",
+"To start (Home)"
+],
+"O‘ynash / Pauza (Space)": [
+"Играть / Пауза (Space)",
+"Play / Pause (Space)"
+],
+"Yozish — mikrofon (R)": [
+"Запись — микрофон (R)",
+"Record — microphone (R)"
+],
+"Master daraja": [
+"Уровень Master",
+"Master level"
+],
+"Loop boshlanishi (bar)": [
+"Начало петли (такт)",
+"Loop start (bar)"
+],
+"Loop oxiri (bar)": [
+"Конец петли (такт)",
+"Loop end (bar)"
+],
+"Loop chegaralari = tanlangan klip (P)": [
+"Границы петли = выбранный клип (P)",
+"Loop range = selected clip (P)"
+],
+"Tanlovga (P)": [
+"По выделению (P)",
+"To selection (P)"
+],
+"Tempo": [
+"Темп",
+"Tempo"
+],
+"Tap tempo": [
+"Тап-темп",
+"Tap tempo"
+],
+"O‘lchov": [
+"Размер",
+"Time signature"
+],
+"Metronom (C)": [
+"Метроном (C)",
+"Metronome (C)"
+],
+"Cycle / Loop (L)": [
+"Цикл / Loop (L)",
+"Cycle / Loop (L)"
+],
+"Varaqni o‘chirish: varaq nomini bosing, so‘ng Shift+D": [
+"Удалить лист: нажмите на название листа, затем Shift+D",
+"Delete sheet: click the sheet name, then Shift+D"
+],
+"Yangi varaq yoki DAW (audio sekvenser)": [
+"Новый лист или DAW (аудио-секвенсор)",
+"New sheet or DAW (audio sequencer)"
+],
+"Varaqni parol bilan qulflash": [
+"Заблокировать лист паролем",
+"Lock the sheet with a password"
+],
+"Varaq 1": [
+"Лист 1",
+"Sheet 1"
+],
+"📄 Varaq (jadval)": [
+"📄 Лист (таблица)",
+"📄 Sheet (table)"
+],
+"Varaq (jadval)": [
+"Лист (таблица)",
+"Sheet (table)"
+],
+"DAW — audio sekvenser": [
+"DAW — аудио-секвенсор",
+"DAW — audio sequencer"
+],
+"🎛 DAW ochildi. Audio fayllarni shu yerga tashlang yoki «📥 Import» ni bosing.": [
+"🎛 DAW открыт. Перетащите сюда аудиофайлы или нажмите «📥 Import».",
+"🎛 DAW opened. Drop audio files here or press “📥 Import”."
+],
+"Uzunlik": [
+"Длина",
+"Length"
+],
+"Juft bo‘lmagan 1/16 zarblarni kechiktirish (groove)": [
+"Задержка нечётных 1/16 ударов (groove)",
+"Delay off-beat 1/16 hits (groove)"
+],
+"Vaqt va kuchni tasodifiy biroz o‘zgartirish": [
+"Случайно немного менять время и силу",
+"Randomly vary timing and velocity slightly"
+],
+"Bo‘sh": [
+"Пусто",
+"Empty"
+],
+"Tanlangan pad qatorini tasodifiy to‘ldirish": [
+"Случайно заполнить строку выбранного пада",
+"Randomly fill the selected pad row"
+],
+"Audioni bo‘laklarga bo‘lib padlarga joylash": [
+"Нарезать аудио и разложить по падам",
+"Slice audio across the pads"
+],
+"Yozish: ijro paytida padlarni bossangiz zarblar patternga yoziladi": [
+"Запись: удары по падам во время игры записываются в паттерн",
+"Record: pad hits during playback are written into the pattern"
+],
+"Pad yozish": [
+"Запись падов",
+"Rec pads"
+],
+"Shu patternni yangi klip sifatida timelinega qo‘shish": [
+"Добавить паттерн на таймлайн как новый клип",
+"Add this pattern to the timeline as a new clip"
+],
+"Klip": [
+"Клип",
+"Clip"
+],
+"Panelni yig‘ish": [
+"Свернуть панель",
+"Collapse panel"
+],
+"Klaviatura:": [
+"Клавиатура:",
+"Keyboard:"
+],
+"Tur": [
+"Тип",
+"Type"
+],
+"Sample yuklash": [
+"Загрузить сэмпл",
+"Load sample"
+],
+"Ovoz": [
+"Громкость",
+"Level"
+],
+"Boshi": [
+"Начало",
+"Start"
+],
+"Oxiri": [
+"Конец",
+"End"
+],
+"Tezlik (velocity)": [
+"Сила удара (velocity)",
+"Velocity"
+],
+"Pitch (yarim ton)": [
+"Высота (полутоны)",
+"Pitch (semitones)"
+],
+"Ehtimol %": [
+"Вероятность %",
+"Probability %"
+],
+"Ratchet (takror)": [
+"Ratchet (повтор)",
+"Ratchet (repeat)"
+],
+"Siljish (nudge) %": [
+"Сдвиг (nudge) %",
+"Nudge %"
+],
+"Sound library": [
+"Библиотека звуков",
+"Sound library"
+],
+"Packs": [
+"Паки",
+"Packs"
+],
+"Online": [
+"Онлайн",
+"Online"
+],
+"Mening fayllarim": [
+"Мои файлы",
+"My files"
+],
+"Uslub yoki kayfiyatni yozing: braam, shamol, olqish, 808…": [
+"Введите стиль или настроение: braam, ветер, аплодисменты, 808…",
+"Type a style or mood: braam, wind, applause, 808…"
+],
+"Sevimli": [
+"Избранное",
+"Favorites"
+],
+"Oldindan eshitish": [
+"Предпрослушивание",
+"Preview"
+],
+"Loyihaga qo‘shish (yangi trek, pleyer boshiga)": [
+"Добавить в проект (новый трек, в позицию плеера)",
+"Add to project (new track, at the playhead)"
+],
+"Kino FX": [
+"Кино FX",
+"Cinema FX"
+],
+"Teatr / Foley": [
+"Театр / Foley",
+"Theatre / Foley"
+],
+"Ichki kutubxona: 61 ta ovoz — kompyuter ichida sintez qilinadi, internet va litsenziya shart emas. Haqiqiy yozilgan sample emas, sintetik.": [
+"Встроенная библиотека: 61 звук — синтезируются на компьютере, интернет и лицензия не нужны. Это не записанные сэмплы, а синтетические звуки.",
+"Built-in library: 61 sounds — synthesized on your computer, no internet or license needed. Not recorded samples, synthetic."
+],
+"Effects library": [
+"Библиотека эффектов",
+"Effects library"
+],
+"Effektlar": [
+"Эффекты",
+"Effects"
+],
+"Zanjir": [
+"Цепочка",
+"Chain"
+],
+"Maqsad:": [
+"Цель:",
+"Target:"
+],
+"▸ Tanlangan trek": [
+"▸ Выбранный трек",
+"▸ Selected track"
+],
+"Tanlangan trek": [
+"Выбранный трек",
+"Selected track"
+],
+"Master (hamma ovoz)": [
+"Master (весь звук)",
+"Master (all audio)"
+],
+"Zanjirga qo‘shish": [
+"Добавить в цепочку",
+"Add to chain"
+],
+"Overdrive, Equalizer, Delay, Reverb…": [
+"Overdrive, Equalizer, Delay, Reverb…",
+"Overdrive, Equalizer, Delay, Reverb…"
+],
+"Effektlar shu brauzerning o‘zida ishlaydi (Web Audio) — VST/AU plaginlarni brauzerga ulab bo‘lmaydi. AutoTune (pitch-correction) kiritilmagan.": [
+"Эффекты работают прямо в браузере (Web Audio) — VST/AU-плагины подключить к браузеру нельзя. AutoTune (коррекция высоты) не включён.",
+"Effects run right in the browser (Web Audio) — VST/AU plugins cannot be connected to a browser. AutoTune (pitch correction) is not included."
+],
+"Azimxodjayev Music — vokal nuqsonlarini tozalash: tunnel/quti ovoz, xona aks-sadosi, nafas, CH/K va S/SH": [
+"Azimxodjayev Music — очистка дефектов вокала: «туннельный»/коробочный звук, эхо комнаты, дыхание, Ч/К и С/Ш",
+"Azimxodjayev Music — vocal repair: tunnel/boxy sound, room echo, breaths, CH/K and S/SH"
+],
+"Azimxodjayev Music — eng oxirgi insert: loy, qattiqlik va balansni avtomatik ideallashtirish": [
+"Azimxodjayev Music — финальный инсерт: автоматически убирает муть, жёсткость и выравнивает баланс",
+"Azimxodjayev Music — final insert: automatically clears mud, harshness and balances the sound"
+],
+"Vokal: yengil tozalash": [
+"Вокал: лёгкая очистка",
+"Vocal: light repair"
+],
+"Vokal: kuchli tozalash": [
+"Вокал: сильная очистка",
+"Vocal: strong repair"
+],
+"Tunnel ketkazish": [
+"Убрать «туннель»",
+"Remove tunnel sound"
+],
+"Faqat de-ess": [
+"Только де-эссер",
+"De-ess only"
+],
+"Xona sadosini kamaytirish": [
+"Уменьшить эхо комнаты",
+"Reduce room echo"
+],
+"Vokal: oxirgi insert": [
+"Вокал: финальный инсерт",
+"Vocal: final insert"
+],
+"Mix: yengil": [
+"Микс: лёгкий",
+"Mix: light"
+],
+"Kuchli tozalash": [
+"Сильная очистка",
+"Strong cleanup"
+],
+"Sho'x-suvsiz (bypass-ga yaqin)": [
+"Почти без обработки (близко к bypass)",
+"Barely processed (close to bypass)"
+],
+"Iliq, tiniq distortion — issiq gritdan fuzz-gacha": [
+"Тёплый, чистый distortion — от тёплого грита до фузза",
+"Warm, clear distortion — from warm grit to fuzz"
+],
+"Qalin, to'yingan va o'tkir — assimetrik soft-clip": [
+"Плотный, насыщенный и острый — асимметричный soft-clip",
+"Thick, saturated and sharp — asymmetric soft clip"
+],
+"Lenta to'yinishi — yumshoq siqish va iliq yuqori chastota": [
+"Ленточное насыщение — мягкое сжатие и тёплые верха",
+"Tape saturation — soft compression and warm highs"
+],
+"Raqamli buzilish — bit chuqurligini kamaytirish": [
+"Цифровое искажение — уменьшение разрядности",
+"Digital distortion — reducing bit depth"
+],
+"Pro Tools D-Verb uslubidagi 6 algoritmli reverb — o'z implementatsiya": [
+"Ревербератор в стиле Pro Tools D-Verb с 6 алгоритмами — собственная реализация",
+"Pro Tools D-Verb–style reverb with 6 algorithms — own implementation"
+],
+"Klassik exo — vaqt yoki tempoga sinxron": [
+"Классическое эхо — по времени или синхронно с темпом",
+"Classic echo — in time or tempo-synced"
+],
+"Chap va o'ng orasida sakraydigan exo": [
+"Эхо, прыгающее между левым и правым каналами",
+"Echo bouncing between left and right"
+],
+"Lenta exosi — to'lqinlanish (wow) va to'yinish bilan": [
+"Ленточное эхо — с «плаванием» (wow) и насыщением",
+"Tape echo — with wow and saturation"
+],
+"4 polosali parametrik ekvalayzer, yuqori va past chastota filtrlari bilan": [
+"4-полосный параметрический эквалайзер с фильтрами верхних и нижних частот",
+"4-band parametric equalizer with high-pass and low-pass filters"
+],
+"Past/yuqori/polosali filtr, LFO bilan avtomatik supurish": [
+"Фильтр НЧ/ВЧ/полосовой с автоматической разверткой LFO",
+"Low/high/band-pass filter with automatic LFO sweep"
+],
+"Dinamikani siqish, parallel aralashma bilan": [
+"Сжатие динамики с параллельным смешиванием",
+"Dynamic compression with parallel mix"
+],
+"Cho'qqi cheklagich — kuchaytirish va shift": [
+"Лимитер пиков — усиление и потолок",
+"Peak limiter — gain and ceiling"
+],
+"Kengaytiruvchi va qalinlashtiruvchi xor": [
+"Хорус, расширяющий и утолщающий звук",
+"Chorus that widens and thickens the sound"
+],
+"Qisqa kechikish va feedback bilan «reaktiv» ovoz": [
+"«Реактивный» звук с короткой задержкой и фидбэком",
+"“Jet” sound with short delay and feedback"
+],
+"6 pog'onali fazer": [
+"6-ступенчатый фэйзер",
+"6-stage phaser"
+],
+"Ovoz balandligini ritmik tebratish": [
+"Ритмичное колебание громкости",
+"Rhythmic volume modulation"
+],
+"Ovozni chapdan o'ngga avtomatik siljitish": [
+"Автоматическое перемещение звука слева направо",
+"Automatically moves the sound from left to right"
+],
+"Stereo kengligini o'zgartirish (Mid/Side)": [
+"Изменение ширины стерео (Mid/Side)",
+"Change stereo width (Mid/Side)"
+],
+"Robot/metall ovoz — halqa modulyatsiya": [
+"Звук робота/металла — кольцевая модуляция",
+"Robot/metal sound — ring modulation"
+],
+"Daraja, faza almashtirish va mono": [
+"Уровень, инверсия фазы и моно",
+"Level, phase invert and mono"
+],
+"AI Studio": [
+"AI Studio",
+"AI Studio"
+],
+"Audioni tahlil qilib (chastota, LUFS, peak, dinamika, stereo) ishlov zanjirini tuzadi. Hammasi brauzerda, internetsiz.": [
+"Анализирует аудио (частоты, LUFS, пик, динамика, стерео) и строит цепочку обработки. Всё в браузере, без интернета.",
+"Analyzes audio (frequency, LUFS, peak, dynamics, stereo) and builds a processing chain. Everything in the browser, no internet."
+],
+"1. Qaysi tizim?": [
+"1. Какая система?",
+"1. Which system?"
+],
+"Avto EQ, Compression va Mastering": [
+"Авто EQ, компрессия и мастеринг",
+"Auto EQ, compression and mastering"
+],
+"Tahlil va chastota xaritasi": [
+"Анализ и карта частот",
+"Analysis and frequency map"
+],
+"Suno + Cubase hybrid (tavsiyalar)": [
+"Suno + Cubase гибрид (рекомендации)",
+"Suno + Cubase hybrid (recommendations)"
+],
+"2. Audio manba": [
+"2. Источник аудио",
+"2. Audio source"
+],
+"Suno Stems (har bir trek alohida)": [
+"Suno Stems (каждый трек отдельно)",
+"Suno Stems (each track separately)"
+],
+"Tayyor stereo WAV (tanlangan klip)": [
+"Готовый стерео WAV (выбранный клип)",
+"Finished stereo WAV (selected clip)"
+],
+"Stereo WAV + Stems": [
+"Стерео WAV + Stems",
+"Stereo WAV + Stems"
+],
+"3. Ishlash darajasi": [
+"3. Уровень обработки",
+"3. Processing level"
+],
+"Tahlil qilish va zanjir tuzish": [
+"Анализировать и построить цепочку",
+"Analyze and build chain"
+],
+"Pro vositalar": [
+"Pro-инструменты",
+"Pro tools"
+],
+"Cubase'dagi zamonaviy funksiyalar — Daftar DAW ichida.": [
+"Современные функции Cubase — внутри Daftar DAW.",
+"Modern Cubase-style features — inside Daftar DAW."
+],
+"Stem Separation": [
+"Stem Separation",
+"Stem Separation"
+],
+"Ajratish": [
+"Разделить",
+"Separate"
+],
+"Tanlangan klipni 4 ta trekka ajratadi: bas, markaz (vokal), yon (stereo), yuqori.": [
+"Разделяет выбранный клип на 4 трека: бас, центр (вокал), бока (стерео), верха.",
+"Splits the selected clip into 4 tracks: bass, center (vocal), sides (stereo), highs."
+],
+"Taxminiy": [
+"Приблизительно",
+"Approximate"
+],
+"— chastota/stereo bo‘yicha, AI model emas.": [
+"— по частоте/стерео, не AI-модель.",
+"— by frequency/stereo, not an AI model."
+],
+"Spectral Editing": [
+"Spectral Editing",
+"Spectral Editing"
+],
+"Spektrdan keraksiz shovqin va rezonansni belgilab pasaytirish (avto-topish bor).": [
+"Отметьте на спектре лишний шум и резонанс и ослабьте их (есть автопоиск).",
+"Mark unwanted noise and resonance on the spectrum and reduce it (auto-detect included)."
+],
+"Automation": [
+"Automation",
+"Automation"
+],
+"Trek balandligi (volume) chizig‘i — kuplet/naqorat dinamikasi.": [
+"Линия громкости трека (volume) — динамика куплета/припева.",
+"Track volume line — verse/chorus dynamics."
+],
+"Kuplet → Naqorat": [
+"Куплет → Припев",
+"Verse → Chorus"
+],
+"Group Channels (Bus)": [
+"Group Channels (Bus)",
+"Group Channels (Bus)"
+],
+"Orkestr, xor, baraban — treklarni bitta Bus'ga yig‘ing; Bus'ga alohida Fx qo‘yish mumkin.": [
+"Оркестр, хор, барабаны — соберите треки в одну шину (Bus); на шину можно ставить отдельные Fx.",
+"Orchestra, choir, drums — group tracks into one Bus; a Bus can have its own Fx."
+],
+"Sidechain": [
+"Sidechain",
+"Sidechain"
+],
+"Manba trek (kick) bosilganda nishon trek (bas) pasayadi.": [
+"Когда играет источник (kick), целевой трек (бас) приглушается.",
+"When the source track (kick) hits, the target track (bass) ducks."
+],
+"Pattern Sequencer": [
+"Pattern Sequencer",
+"Pattern Sequencer"
+],
+"Qo‘shimcha baraban va ritm — BeatBox 16 (16 pad, step-sequencer).": [
+"Дополнительные барабаны и ритм — BeatBox 16 (16 падов, степ-секвенсор).",
+"Extra drums and rhythm — BeatBox 16 (16 pads, step sequencer)."
+],
+"Quick Export": [
+"Quick Export",
+"Quick Export"
+],
+"Tezkor audio: butun miks yoki har bir trek alohida (ZIP).": [
+"Быстрый экспорт аудио: весь микс или каждый трек отдельно (ZIP).",
+"Quick audio export: the whole mix or each track separately (ZIP)."
+],
+"Stemlar (ZIP)": [
+"Стемы (ZIP)",
+"Stems (ZIP)"
+],
+"Format: WAV 16-bit (MP3 brauzerda mavjud emas).": [
+"Формат: WAV 16-bit (MP3 в браузере недоступен).",
+"Format: WAV 16-bit (MP3 is not available in the browser)."
+],
+"MixConsole": [
+"MixConsole",
+"MixConsole"
+],
+"Treklar balandligi va panini avtomatik muvozanatlaydi": [
+"Автоматически балансирует громкость и панораму треков",
+"Automatically balances track volume and pan"
+],
+"Avto balans": [
+"Авто-баланс",
+"Auto balance"
+],
+"Hamma fader 0 dB, pan markazda": [
+"Все фейдеры 0 dB, панорама по центру",
+"All faders 0 dB, pan centered"
+],
+"Nolga qaytarish": [
+"Сбросить",
+"Reset to zero"
+],
+"Yopish (F3)": [
+"Закрыть (F3)",
+"Close (F3)"
+],
+"Solo": [
+"Solo",
+"Solo"
+],
+"Pan (ikki marta bosing = markaz)": [
+"Панорама (двойной щелчок = центр)",
+"Pan (double-click = center)"
+],
+"Balans uchun kamida 2 ta audio trek kerak.": [
+"Для баланса нужно минимум 2 аудиотрека.",
+"At least 2 audio tracks are needed for balancing."
+],
+"Avto balans natijasi": [
+"Результат авто-баланса",
+"Auto balance result"
+],
+"Rol": [
+"Роль",
+"Role"
+],
+"Asosiy ovoz": [
+"Основной голос",
+"Main voice"
+],
+"Effekt/fon": [
+"Эффект/фон",
+"Effect/background"
+],
+"Cholg‘u": [
+"Инструмент",
+"Instrument"
+],
+"Bas": [
+"Бас",
+"Bass"
+],
+"Studio Setup": [
+"Studio Setup",
+"Studio Setup"
+],
+"Qurilmalar": [
+"Устройства",
+"Devices"
+],
+"Audio System": [
+"Аудиосистема",
+"Audio System"
+],
+"MIDI Port Setup": [
+"Настройка MIDI-портов",
+"MIDI Port Setup"
+],
+"Transport": [
+"Транспорт",
+"Transport"
+],
+"Yozish (Record)": [
+"Запись (Record)",
+"Recording"
+],
+"Audio draiver": [
+"Аудио-драйвер",
+"Audio driver"
+],
+"Web Audio (brauzer) — ASIO yo‘q": [
+"Web Audio (браузер) — ASIO нет",
+"Web Audio (browser) — no ASIO"
+],
+"Chiqish qurilmasi": [
+"Устройство вывода",
+"Output device"
+],
+"Tizim standarti": [
+"Системное по умолчанию",
+"System default"
+],
+"Kirish (mikrofon)": [
+"Вход (микрофон)",
+"Input (microphone)"
+],
+"Qurilma nomlarini ko‘rsatish (mikrofon ruxsati)": [
+"Показать названия устройств (разрешение микрофона)",
+"Show device names (microphone permission)"
+],
+"Tanlangan chiqishda sinov tovushi": [
+"Тестовый звук на выбранном выходе",
+"Test tone on the selected output"
+],
+"Sinov tovushi": [
+"Тестовый звук",
+"Test tone"
+],
+"Kechikish rejimi": [
+"Режим задержки",
+"Latency mode"
+],
+"Interaktiv — eng kam kechikish": [
+"Интерактивный — минимальная задержка",
+"Interactive — lowest latency"
+],
+"Muvozanat": [
+"Баланс",
+"Balanced"
+],
+"Barqaror — katta bufer (og‘ir loyiha, ASIO-Guard kabi)": [
+"Стабильный — большой буфер (тяжёлый проект, как ASIO-Guard)",
+"Stable — large buffer (heavy project, like ASIO-Guard)"
+],
+"Avto (qurilma)": [
+"Авто (устройство)",
+"Auto (device)"
+],
+"Fonda qurilmani bo‘shatish": [
+"Освобождать устройство в фоне",
+"Release device in background"
+],
+"Dastur fonda bo‘lganda (ijro yo‘q) audio qurilmani bo‘shatish — Release Driver": [
+"Освобождать аудиоустройство, когда программа в фоне (нет воспроизведения) — Release Driver",
+"Release the audio device when the app is in the background (not playing) — Release Driver"
+],
+"Kirish kechikishi": [
+"Задержка входа",
+"Input latency"
+],
+"Chiqish kechikishi": [
+"Задержка выхода",
+"Output latency"
+],
+"ASIO-Guard kechikishi": [
+"Задержка ASIO-Guard",
+"ASIO-Guard latency"
+],
+"o‘chiq": [
+"выкл.",
+"off"
+],
+"Holat": [
+"Состояние",
+"Status"
+],
+"(hali ishga tushmagan)": [
+"(ещё не запущено)",
+"(not started yet)"
+],
+"Eslatma: brauzer ASIO draiverlarni ko‘rmaydi — Windows/macOS audio tizimidan (WASAPI/CoreAudio) foydalanadi. Eng kam kechikish uchun «Interaktiv» rejimni tanlang va tizimda «exclusive» rejimli qurilmani yoqing. Chiqish qurilmasini tanlash faqat Chrome/Edge (110+) da ishlaydi.": [
+"Примечание: браузер не видит ASIO-драйверы — используется аудиосистема Windows/macOS (WASAPI/CoreAudio). Для минимальной задержки выберите режим «Интерактивный» и включите в системе устройство в «exclusive»-режиме. Выбор устройства вывода работает только в Chrome/Edge (110+).",
+"Note: the browser cannot see ASIO drivers — it uses the Windows/macOS audio system (WASAPI/CoreAudio). For the lowest latency choose “Interactive” and enable an “exclusive” mode device in the system. Output device selection works only in Chrome/Edge (110+)."
+],
+"Reset": [
+"Сброс",
+"Reset"
+],
+"Bekor": [
+"Отмена",
+"Cancel"
+],
+"Apply": [
+"Применить",
+"Apply"
+],
+"Avval ajratiladigan klipni tanlang.": [
+"Сначала выберите клип для разделения.",
+"Select a clip to separate first."
+],
+"Avval klip tanlang yoki audio qo‘shing.": [
+"Сначала выберите клип или добавьте аудио.",
+"Select a clip or add audio first."
+],
+"Avval klipni tanlang.": [
+"Сначала выберите клип.",
+"Select a clip first."
+],
+"Eksport uchun trek yo‘q.": [
+"Нет треков для экспорта.",
+"No tracks to export."
+],
+"Ijroni boshlang — kirish (ko‘k), ishlovdan keyin (oq) va olib tashlangan qism (binafsha) shu yerda chiziladi": [
+"Запустите воспроизведение — здесь рисуются вход (синий), после обработки (белый) и удалённая часть (фиолетовый)",
+"Start playback — input (blue), processed (white) and removed part (purple) are drawn here"
+],
+"Ijroni boshlang — kirish va chiqish spektri shu yerda ko‘rinadi": [
+"Запустите воспроизведение — здесь виден спектр входа и выхода",
+"Start playback — input and output spectrum are shown here"
+],
+"Klip audiosi yuklanmagan.": [
+"Аудио клипа не загружено.",
+"Clip audio is not loaded."
+],
+"Nusxa olib bo‘lmadi": [
+"Не удалось скопировать",
+"Could not copy"
+],
+"Ruxsat berilmadi.": [
+"Разрешение не получено.",
+"Permission denied."
+],
+"Sidechain uchun kamida 2 ta trek kerak.": [
+"Для sidechain нужно минимум 2 трека.",
+"Sidechain needs at least 2 tracks."
+],
+"Sozlamalar saqlandi.": [
+"Настройки сохранены.",
+"Settings saved."
+],
+"Sozlamalarni qo‘llashda xato.": [
+"Ошибка при применении настроек.",
+"Error applying settings."
+],
+"Tahlil moduli topilmadi.": [
+"Модуль анализа не найден.",
+"Analysis module not found."
+],
+"Tahlil uchun audio topilmadi.": [
+"Аудио для анализа не найдено.",
+"No audio found for analysis."
+],
+"Tahlil uchun yetarli audio topilmadi.": [
+"Недостаточно аудио для анализа.",
+"Not enough audio for analysis."
+],
+"Spektral tahrir…": [
+"Спектральная правка…",
+"Spectral edit…"
+],
+"Taxminiy ajratish (chastota/stereo bo‘yicha)…": [
+"Приблизительное разделение (по частоте/стерео)…",
+"Approximate separation (by frequency/stereo)…"
+],
+"4 ta trek ajratildi (taxminiy; AI model emas — vokalni to‘liq ajratmaydi).": [
+"Разделено на 4 трека (приблизительно; не AI-модель — вокал полностью не выделяет).",
+"Split into 4 tracks (approximate; not an AI model — does not fully isolate the vocal)."
+],
+"Studio Setup saqlandi.": [
+"Studio Setup сохранён.",
+"Studio Setup saved."
+],
+"Chiqish qurilmasi o‘zgartirildi.": [
+"Устройство вывода изменено.",
+"Output device changed."
+],
+"Papkaga ulandi": [
+"Подключено к папке",
+"Connected to folder"
+],
+"Nusxa olindi": [
+"Скопировано",
+"Copied"
+],
+"Fanlar": [
+"Предметы",
+"Subjects"
+],
+"Mavzu": [
+"Тема",
+"Topic"
+],
+"Umumiy konspekt": [
+"Общий конспект",
+"General notes"
+],
+"30 Kunlik Reja": [
+"План на 30 дней",
+"30-Day Plan"
+],
+"Chap panelni yig‘ish (Ctrl+\\)": [
+"Свернуть левую панель (Ctrl+\\)",
+"Collapse left panel (Ctrl+\\)"
+],
+"Chap panelni ochish": [
+"Открыть левую панель",
+"Open left panel"
+],
+"Yuqori panelni kichraytirish (Ctrl+g‘ildirak)": [
+"Уменьшить верхнюю панель (Ctrl+колесо)",
+"Shrink top panel (Ctrl+wheel)"
+],
+"Yuqori panelni kattalashtirish": [
+"Увеличить верхнюю панель",
+"Enlarge top panel"
+],
+"Kichraytirish": [
+"Уменьшить",
+"Shrink"
+],
+"Kattalashtirish": [
+"Увеличить",
+"Enlarge"
+],
+"Rasmni o‘chirish": [
+"Удалить изображение",
+"Delete image"
+],
+"Yozuvni AI bilan tahrirlash": [
+"Редактировать запись с помощью AI",
+"Edit the note with AI"
+],
+"Hisob, til, sana, Admin": [
+"Аккаунт, язык, дата, Admin",
+"Account, language, date, Admin"
+],
+"Interfeys tili / Язык / Language": [
+"Interfeys tili / Язык / Language",
+"Interfeys tili / Язык / Language"
+],
+"Panel balandligini o‘zgartirish (ushlab torting). Ikki marta bosish — avtomatik": [
+"Изменить высоту панели (потяните). Двойной щелчок — авто",
+"Resize panel height (drag). Double-click — auto"
+],
+"Har bir harakat avtomatik saqlanadi. Sahifani yangilasangiz yoki yopsangiz ham oxirgi holat qaytadi.": [
+"Каждое действие сохраняется автоматически. Даже если обновить или закрыть страницу, последнее состояние вернётся.",
+"Every action is saved automatically. Even if you refresh or close the page, the last state is restored."
+],
+"Mavzu va fon": [
+"Тема и фон",
+"Theme & background"
+],
+"Applause (olqish)": [
+"Applause (аплодисменты)",
+"Applause"
+],
+"Thunder (momaqaldiroq)": [
+"Thunder (гром)",
+"Thunder"
+],
+"Wind Howl (shamol)": [
+"Wind Howl (вой ветра)",
+"Wind Howl"
+],
+"Rain (yomg'ir)": [
+"Rain (дождь)",
+"Rain"
+],
+"Door Knock (eshik taqillashi)": [
+"Door Knock (стук в дверь)",
+"Door Knock"
+],
+"Footsteps (qadam tovushi)": [
+"Footsteps (шаги)",
+"Footsteps"
+],
+"Clock Tick-Tock (soat)": [
+"Clock Tick-Tock (часы)",
+"Clock Tick-Tock"
+],
+"Curtain Swish (parda)": [
+"Curtain Swish (занавес)",
+"Curtain Swish"
+],
+"Explosion (portlash)": [
+"Explosion (взрыв)",
+"Explosion"
+],
+"Phone Ring (telefon)": [
+"Phone Ring (телефон)",
+"Phone Ring"
+],
+"Fire Crackle (olov)": [
+"Fire Crackle (огонь)",
+"Fire Crackle"
+],
+"Crowd Murmur (olomon shovqini)": [
+"Crowd Murmur (шум толпы)",
+"Crowd Murmur"
+]
+};
+ for(const k in X)if(!U.D[k])U.D[k]=X[k];
+ const R=[
+  [/^(\d+) ta kanal$/,['$1 каналов','$1 channels']],
+  [/^Avto balans qo‘llandi \((\d+) trek\)\.?$/,['Авто-баланс применён ($1 тр.).','Auto balance applied ($1 tracks).']],
+  [/^Asos: (.+) \((.+) LUFS\) · LUFS bo‘yicha taxminiy balans$/,['Основа: $1 ($2 LUFS) · приблизительный баланс по LUFS','Reference: $1 ($2 LUFS) · approximate balance by LUFS']],
+  [/^Miks peak (.+) dBFS — (.+)$/,['Пик микса $1 dBFS — $2','Mix peak $1 dBFS — $2']],
+  [/^Ctrl\+Z — qaytarish\. Quloq bilan tekshiring\.$/,['Ctrl+Z — отмена. Проверьте на слух.','Ctrl+Z — undo. Check by ear.']],
+  [/^xavfsiz$/,['безопасно','safe']],
+  [/^(.+) · tempoga mos \((\d+) bpm\)$/,['$1 · по темпу ($2 bpm)','$1 · tempo-synced ($2 bpm)']],
+  [/^Faylni ochib bo‘lmadi: (.+)$/,['Не удалось открыть файл: $1','Could not open the file: $1']],
+  [/^Qurilmalar ro‘yxatini olib bo‘lmadi: (.+)$/,['Не удалось получить список устройств: $1','Could not get the device list: $1']],
+  [/^Sinov tovushi chalinmadi: (.+)$/,['Тестовый звук не воспроизведён: $1','Test tone could not play: $1']],
+  [/^Ulanib bo‘lmadi: (.+)$/,['Не удалось подключиться: $1','Could not connect: $1']],
+  [/^Chiqishni o‘zgartirib bo‘lmadi: (.+)$/,['Не удалось сменить вывод: $1','Could not change output: $1']],
+  [/^Audio tizim qayta ishga tushirildi \((.+)\)\.?$/,['Аудиосистема перезапущена ($1).','Audio system restarted ($1).']],
+  [/^AI zanjiri qo‘shildi \((.+)\)\.?$/,['AI-цепочка добавлена ($1).','AI chain added ($1).']],
+  [/^Stem (\d.*)$/,['Стем $1','Stem $1']]
+ ];
+ R.unshift([/^Teatr \/ Foley( · .+)?$/,['Театр / Foley$1','Theatre / Foley$1']],[/^Kino FX( · .+)?$/,['Кино FX$1','Cinema FX$1']]);
+ R.forEach(r=>U.RX.push(r));
+ try{if(U.get()!=='uz')U.pass()}catch(_){}
 })();
 
 /* ===== f6zl: interfeys tili — O'zbek / Русский / English (lug'at + avto-tarjima keshi) ===== */
@@ -10919,10 +12004,10 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   if(!root)return;
   if(root.nodeType==3){doText(root);return}
   if(root.nodeType!=1)return;
-  if(root.matches&&root.matches(SKIP))return;
+  if(root.matches&&root.matches(SKIP)){if(root.matches('input,textarea'))doAttr(root);return}
   doAttr(root);
   const w=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT);let n;
-  while(n=w.nextNode()){if(n.nodeType==3)doText(n);else{if(n.matches(SKIP)){/* ichiga kirmaymiz */const nx=n;let c=0;}else doAttr(n)}}
+  while(n=w.nextNode()){if(n.nodeType==3)doText(n);else{if(n.matches(SKIP)){if(n.matches('input,textarea'))doAttr(n)}else doAttr(n)}}
  }
  function restore(){touched.forEach(x=>{try{if(x.nodeType==3){if(x.__o!==undefined&&x.nodeValue===x.__t){x.nodeValue=x.__o}x.__t=undefined}else{const o=x.__oa||{},t=x.__ta||{};AT.forEach(a=>{if(t[a]!==undefined&&x.getAttribute(a)===t[a])x.setAttribute(a,o[a]);t[a]=undefined})}}catch(_){}});touched.clear()}
  /* avto-tarjima (kesh) */
@@ -10957,7 +12042,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   const av=byId('rbav');if(av)av.before(b);else{const th=byId('th');if(th)th.after(b);else hd.append(b)}label();return true}
  let n=0;const iv=setInterval(()=>{if(mount()||++n>40)clearInterval(iv)},300);
  if(L!='uz')setTimeout(start,600);
- window.__ui={set,get:()=>L,pass,D,tr};
+ window.__ui={set,get:()=>L,pass,D,tr,RX};
 })();
 
 /* ===== f6zfx: DAW effekt dvigateli (Web Audio, o'z implementatsiya) — insert zanjiri, D-Verb uslubidagi reverb va boshqalar ===== */
@@ -12572,6 +13657,1114 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  /* telefonda qiladigani: doimiy xotira so'rash */
  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
  if(document.readyState=='complete')boot();else addEventListener('load',boot);
+})();
+
+/* DAW va boshqa interfeys matnlari uchun oflayn RU/EN lug‘at (f6zl tarjimoniga qo‘shiladi) */
+(function(){
+ const U=window.__ui;if(!U||!U.D)return;
+ const X={"Ehtimol":["Вероятность","Probability"],"Siljish (nudge)":["Сдвиг (nudge)","Nudge"],"Ovoz tili":["Язык озвучивания","Voice language"],
+"Klip chetini cho‘zish rejimi": [
+"Режим растягивания края клипа",
+"Clip sizing mode"
+],
+"Oddiy o‘lcham": [
+"Обычное изменение размера",
+"Normal Sizing"
+],
+"Time stretch: tovush balandligi o‘zgarmasin (o‘chirilsa — tape kabi)": [
+"Time stretch: сохранять высоту тона (выключено — как лента)",
+"Time stretch: keep pitch (off — tape style)"
+],
+"balandlik saqlansin": [
+"сохранять высоту",
+"keep pitch"
+],
+"Kesish (2) — bosilgan joydan bo‘ladi": [
+"Разрезать (2) — в месте клика",
+"Split (2) — at the click position"
+],
+"Kesish": [
+"Разрезать",
+"Split"
+],
+"O‘chirish (3)": [
+"Ластик (3)",
+"Erase (3)"
+],
+"O‘chirgich": [
+"Ластик",
+"Eraser"
+],
+"Ovozsiz (4)": [
+"Без звука (4)",
+"Mute (4)"
+],
+"Tarmoqqa yopishish": [
+"Привязка к сетке",
+"Snap to grid"
+],
+"Tarmoq turi": [
+"Тип сетки",
+"Grid type"
+],
+"Kattalashtirish (H yoki +)": [
+"Увеличить (H или +)",
+"Zoom in (H or +)"
+],
+"Kichraytirish (G yoki −)": [
+"Уменьшить (G или −)",
+"Zoom out (G or −)"
+],
+"Hammasini sig‘dirish": [
+"Вписать всё",
+"Fit all"
+],
+"Sig‘dir": [
+"Вписать",
+"Fit"
+],
+"Treklarni balandroq qilish (Ctrl+↓ yoki Alt+g‘ildirak)": [
+"Увеличить высоту треков (Ctrl+↓ или Alt+колесо)",
+"Taller tracks (Ctrl+↓ or Alt+wheel)"
+],
+"Treklarni pastroq qilish (Ctrl+↑ yoki Alt+g‘ildirak)": [
+"Уменьшить высоту треков (Ctrl+↑ или Alt+колесо)",
+"Shorter tracks (Ctrl+↑ or Alt+wheel)"
+],
+"Hamma treklarni bir ko‘rinishga sig‘dirish": [
+"Вписать все треки в окно",
+"Fit all tracks in view"
+],
+"Treklar": [
+"Треки",
+"Tracks"
+],
+"Hamma narsani ekranga sig‘dirish — vaqt va treklar (Ctrl+Shift+A)": [
+"Вписать всё в экран — время и треки (Ctrl+Shift+A)",
+"Fit everything to screen — time and tracks (Ctrl+Shift+A)"
+],
+"Hammasi": [
+"Всё",
+"All"
+],
+"Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv": [
+"Библиотека звуков: кино, театр FX, сэмплы для аранжировки (офлайн) и онлайн-поиск",
+"Sound library: cinema, theatre FX, arrangement samples (offline) and online search"
+],
+"Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)": [
+"Библиотека эффектов: reverb, delay, distortion, EQ… (выбранный трек или Master)",
+"Effects library: reverb, delay, distortion, EQ… (selected track or Master)"
+],
+"MixConsole — kanal qatorlari, balans (F3)": [
+"MixConsole — каналы и баланс (F3)",
+"MixConsole — channel strips and balance (F3)"
+],
+"Studio Setup: audio qurilma, kechikish, yozish (F4)": [
+"Studio Setup: аудиоустройство, задержка, запись (F4)",
+"Studio Setup: audio device, latency, recording (F4)"
+],
+"AI Studio: tahlil + avto-zanjir (EQ, kompressor, master)": [
+"AI Studio: анализ + авто-цепочка (EQ, компрессор, мастер)",
+"AI Studio: analysis + auto chain (EQ, compressor, master)"
+],
+"Pro vositalar: Stem, Spectral, Automation, Bus, Sidechain, Export": [
+"Pro-инструменты: Stem, Spectral, Automation, Bus, Sidechain, Export",
+"Pro tools: Stem, Spectral, Automation, Bus, Sidechain, Export"
+],
+"Yangi audio trek qo‘shish": [
+"Добавить новый аудиотрек",
+"Add a new audio track"
+],
+"Trek": [
+"Трек",
+"Track"
+],
+"Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar": [
+"Драм-машина + сэмплер (BeatBox 16): 16 падов, степ-секвенсор, swing, эффекты",
+"Drum machine + sampler (BeatBox 16): 16 pads, step sequencer, swing, effects"
+],
+"Audio faylni import qilish (yoki shu yerga tashlang)": [
+"Импорт аудиофайла (или перетащите сюда)",
+"Import an audio file (or drop it here)"
+],
+"Hamma treklarni birlashtirib WAV sifatida yuklash": [
+"Свести все треки и скачать как WAV",
+"Mix down all tracks and download as WAV"
+],
+"Miks (WAV)": [
+"Микс (WAV)",
+"Mix (WAV)"
+],
+"Space — o‘ynash · Ctrl+Shift+A — hammasini ekranga sig‘dirish · Ctrl+↑/↓ yoki Alt+g‘ildirak — trek balandligi · S — kesish · Alt (bosib tur) — vaqtincha ✂ qaychi · Ctrl+Alt+sudrash — nusxa · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab": [
+"Space — воспроизведение · Ctrl+Shift+A — вписать всё · Ctrl+↑/↓ или Alt+колесо — высота трека · S — разрезать · Alt (удерживать) — временно ✂ ножницы · Ctrl+Alt+перетаскивание — копия · перетаскивание с пустого места — выделить несколько клипов · Shift+клик · Ctrl+A — выделить всё · P — локатор = выделение · H/G — зум +/− · Del — удалить · Ctrl+D — дублировать · 1-4 — инструменты · Ctrl+колесо — масштаб",
+"Space — play · Ctrl+Shift+A — fit everything · Ctrl+↑/↓ or Alt+wheel — track height · S — split · Alt (hold) — temporary ✂ scissors · Ctrl+Alt+drag — copy · drag from empty space — select several clips · Shift+click · Ctrl+A — select all · P — locators = selection · H/G — zoom +/− · Del — delete · Ctrl+D — duplicate · 1-4 — tools · Ctrl+wheel — zoom"
+],
+"Trek qo‘shish": [
+"Добавить трек",
+"Add track"
+],
+"Ikki marta bosing — nomini o‘zgartirish": [
+"Двойной щелчок — переименовать",
+"Double-click to rename"
+],
+"Yozishga tayyor": [
+"Готов к записи",
+"Record enable"
+],
+"Effektlar (insert zanjiri)": [
+"Эффекты (цепочка инсертов)",
+"Effects (insert chain)"
+],
+"Trekni o‘chirish": [
+"Удалить трек",
+"Delete track"
+],
+"Balandlik": [
+"Громкость",
+"Volume"
+],
+"Pan": [
+"Панорама",
+"Pan"
+],
+"Tanlash (1)": [
+"Выбор (1)",
+"Select (1)"
+],
+"Tanlash": [
+"Выбор",
+"Select"
+],
+"Mute": [
+"Mute",
+"Mute"
+],
+"Boshiga (Home)": [
+"В начало (Home)",
+"To start (Home)"
+],
+"O‘ynash / Pauza (Space)": [
+"Играть / Пауза (Space)",
+"Play / Pause (Space)"
+],
+"Yozish — mikrofon (R)": [
+"Запись — микрофон (R)",
+"Record — microphone (R)"
+],
+"Master daraja": [
+"Уровень Master",
+"Master level"
+],
+"Loop boshlanishi (bar)": [
+"Начало петли (такт)",
+"Loop start (bar)"
+],
+"Loop oxiri (bar)": [
+"Конец петли (такт)",
+"Loop end (bar)"
+],
+"Loop chegaralari = tanlangan klip (P)": [
+"Границы петли = выбранный клип (P)",
+"Loop range = selected clip (P)"
+],
+"Tanlovga (P)": [
+"По выделению (P)",
+"To selection (P)"
+],
+"Tempo": [
+"Темп",
+"Tempo"
+],
+"Tap tempo": [
+"Тап-темп",
+"Tap tempo"
+],
+"O‘lchov": [
+"Размер",
+"Time signature"
+],
+"Metronom (C)": [
+"Метроном (C)",
+"Metronome (C)"
+],
+"Cycle / Loop (L)": [
+"Цикл / Loop (L)",
+"Cycle / Loop (L)"
+],
+"Varaqni o‘chirish: varaq nomini bosing, so‘ng Shift+D": [
+"Удалить лист: нажмите на название листа, затем Shift+D",
+"Delete sheet: click the sheet name, then Shift+D"
+],
+"Yangi varaq yoki DAW (audio sekvenser)": [
+"Новый лист или DAW (аудио-секвенсор)",
+"New sheet or DAW (audio sequencer)"
+],
+"Varaqni parol bilan qulflash": [
+"Заблокировать лист паролем",
+"Lock the sheet with a password"
+],
+"Varaq 1": [
+"Лист 1",
+"Sheet 1"
+],
+"📄 Varaq (jadval)": [
+"📄 Лист (таблица)",
+"📄 Sheet (table)"
+],
+"Varaq (jadval)": [
+"Лист (таблица)",
+"Sheet (table)"
+],
+"DAW — audio sekvenser": [
+"DAW — аудио-секвенсор",
+"DAW — audio sequencer"
+],
+"🎛 DAW ochildi. Audio fayllarni shu yerga tashlang yoki «📥 Import» ni bosing.": [
+"🎛 DAW открыт. Перетащите сюда аудиофайлы или нажмите «📥 Import».",
+"🎛 DAW opened. Drop audio files here or press “📥 Import”."
+],
+"Uzunlik": [
+"Длина",
+"Length"
+],
+"Juft bo‘lmagan 1/16 zarblarni kechiktirish (groove)": [
+"Задержка нечётных 1/16 ударов (groove)",
+"Delay off-beat 1/16 hits (groove)"
+],
+"Vaqt va kuchni tasodifiy biroz o‘zgartirish": [
+"Случайно немного менять время и силу",
+"Randomly vary timing and velocity slightly"
+],
+"Bo‘sh": [
+"Пусто",
+"Empty"
+],
+"Tanlangan pad qatorini tasodifiy to‘ldirish": [
+"Случайно заполнить строку выбранного пада",
+"Randomly fill the selected pad row"
+],
+"Audioni bo‘laklarga bo‘lib padlarga joylash": [
+"Нарезать аудио и разложить по падам",
+"Slice audio across the pads"
+],
+"Yozish: ijro paytida padlarni bossangiz zarblar patternga yoziladi": [
+"Запись: удары по падам во время игры записываются в паттерн",
+"Record: pad hits during playback are written into the pattern"
+],
+"Pad yozish": [
+"Запись падов",
+"Rec pads"
+],
+"Shu patternni yangi klip sifatida timelinega qo‘shish": [
+"Добавить паттерн на таймлайн как новый клип",
+"Add this pattern to the timeline as a new clip"
+],
+"Klip": [
+"Клип",
+"Clip"
+],
+"Panelni yig‘ish": [
+"Свернуть панель",
+"Collapse panel"
+],
+"Klaviatura:": [
+"Клавиатура:",
+"Keyboard:"
+],
+"Tur": [
+"Тип",
+"Type"
+],
+"Sample yuklash": [
+"Загрузить сэмпл",
+"Load sample"
+],
+"Ovoz": [
+"Громкость",
+"Level"
+],
+"Boshi": [
+"Начало",
+"Start"
+],
+"Oxiri": [
+"Конец",
+"End"
+],
+"Tezlik (velocity)": [
+"Сила удара (velocity)",
+"Velocity"
+],
+"Pitch (yarim ton)": [
+"Высота (полутоны)",
+"Pitch (semitones)"
+],
+"Ehtimol %": [
+"Вероятность %",
+"Probability %"
+],
+"Ratchet (takror)": [
+"Ratchet (повтор)",
+"Ratchet (repeat)"
+],
+"Siljish (nudge) %": [
+"Сдвиг (nudge) %",
+"Nudge %"
+],
+"Sound library": [
+"Библиотека звуков",
+"Sound library"
+],
+"Packs": [
+"Паки",
+"Packs"
+],
+"Online": [
+"Онлайн",
+"Online"
+],
+"Mening fayllarim": [
+"Мои файлы",
+"My files"
+],
+"Uslub yoki kayfiyatni yozing: braam, shamol, olqish, 808…": [
+"Введите стиль или настроение: braam, ветер, аплодисменты, 808…",
+"Type a style or mood: braam, wind, applause, 808…"
+],
+"Sevimli": [
+"Избранное",
+"Favorites"
+],
+"Oldindan eshitish": [
+"Предпрослушивание",
+"Preview"
+],
+"Loyihaga qo‘shish (yangi trek, pleyer boshiga)": [
+"Добавить в проект (новый трек, в позицию плеера)",
+"Add to project (new track, at the playhead)"
+],
+"Kino FX": [
+"Кино FX",
+"Cinema FX"
+],
+"Teatr / Foley": [
+"Театр / Foley",
+"Theatre / Foley"
+],
+"Ichki kutubxona: 61 ta ovoz — kompyuter ichida sintez qilinadi, internet va litsenziya shart emas. Haqiqiy yozilgan sample emas, sintetik.": [
+"Встроенная библиотека: 61 звук — синтезируются на компьютере, интернет и лицензия не нужны. Это не записанные сэмплы, а синтетические звуки.",
+"Built-in library: 61 sounds — synthesized on your computer, no internet or license needed. Not recorded samples, synthetic."
+],
+"Effects library": [
+"Библиотека эффектов",
+"Effects library"
+],
+"Effektlar": [
+"Эффекты",
+"Effects"
+],
+"Zanjir": [
+"Цепочка",
+"Chain"
+],
+"Maqsad:": [
+"Цель:",
+"Target:"
+],
+"▸ Tanlangan trek": [
+"▸ Выбранный трек",
+"▸ Selected track"
+],
+"Tanlangan trek": [
+"Выбранный трек",
+"Selected track"
+],
+"Master (hamma ovoz)": [
+"Master (весь звук)",
+"Master (all audio)"
+],
+"Zanjirga qo‘shish": [
+"Добавить в цепочку",
+"Add to chain"
+],
+"Overdrive, Equalizer, Delay, Reverb…": [
+"Overdrive, Equalizer, Delay, Reverb…",
+"Overdrive, Equalizer, Delay, Reverb…"
+],
+"Effektlar shu brauzerning o‘zida ishlaydi (Web Audio) — VST/AU plaginlarni brauzerga ulab bo‘lmaydi. AutoTune (pitch-correction) kiritilmagan.": [
+"Эффекты работают прямо в браузере (Web Audio) — VST/AU-плагины подключить к браузеру нельзя. AutoTune (коррекция высоты) не включён.",
+"Effects run right in the browser (Web Audio) — VST/AU plugins cannot be connected to a browser. AutoTune (pitch correction) is not included."
+],
+"Azimxodjayev Music — vokal nuqsonlarini tozalash: tunnel/quti ovoz, xona aks-sadosi, nafas, CH/K va S/SH": [
+"Azimxodjayev Music — очистка дефектов вокала: «туннельный»/коробочный звук, эхо комнаты, дыхание, Ч/К и С/Ш",
+"Azimxodjayev Music — vocal repair: tunnel/boxy sound, room echo, breaths, CH/K and S/SH"
+],
+"Azimxodjayev Music — eng oxirgi insert: loy, qattiqlik va balansni avtomatik ideallashtirish": [
+"Azimxodjayev Music — финальный инсерт: автоматически убирает муть, жёсткость и выравнивает баланс",
+"Azimxodjayev Music — final insert: automatically clears mud, harshness and balances the sound"
+],
+"Vokal: yengil tozalash": [
+"Вокал: лёгкая очистка",
+"Vocal: light repair"
+],
+"Vokal: kuchli tozalash": [
+"Вокал: сильная очистка",
+"Vocal: strong repair"
+],
+"Tunnel ketkazish": [
+"Убрать «туннель»",
+"Remove tunnel sound"
+],
+"Faqat de-ess": [
+"Только де-эссер",
+"De-ess only"
+],
+"Xona sadosini kamaytirish": [
+"Уменьшить эхо комнаты",
+"Reduce room echo"
+],
+"Vokal: oxirgi insert": [
+"Вокал: финальный инсерт",
+"Vocal: final insert"
+],
+"Mix: yengil": [
+"Микс: лёгкий",
+"Mix: light"
+],
+"Kuchli tozalash": [
+"Сильная очистка",
+"Strong cleanup"
+],
+"Sho'x-suvsiz (bypass-ga yaqin)": [
+"Почти без обработки (близко к bypass)",
+"Barely processed (close to bypass)"
+],
+"Iliq, tiniq distortion — issiq gritdan fuzz-gacha": [
+"Тёплый, чистый distortion — от тёплого грита до фузза",
+"Warm, clear distortion — from warm grit to fuzz"
+],
+"Qalin, to'yingan va o'tkir — assimetrik soft-clip": [
+"Плотный, насыщенный и острый — асимметричный soft-clip",
+"Thick, saturated and sharp — asymmetric soft clip"
+],
+"Lenta to'yinishi — yumshoq siqish va iliq yuqori chastota": [
+"Ленточное насыщение — мягкое сжатие и тёплые верха",
+"Tape saturation — soft compression and warm highs"
+],
+"Raqamli buzilish — bit chuqurligini kamaytirish": [
+"Цифровое искажение — уменьшение разрядности",
+"Digital distortion — reducing bit depth"
+],
+"Pro Tools D-Verb uslubidagi 6 algoritmli reverb — o'z implementatsiya": [
+"Ревербератор в стиле Pro Tools D-Verb с 6 алгоритмами — собственная реализация",
+"Pro Tools D-Verb–style reverb with 6 algorithms — own implementation"
+],
+"Klassik exo — vaqt yoki tempoga sinxron": [
+"Классическое эхо — по времени или синхронно с темпом",
+"Classic echo — in time or tempo-synced"
+],
+"Chap va o'ng orasida sakraydigan exo": [
+"Эхо, прыгающее между левым и правым каналами",
+"Echo bouncing between left and right"
+],
+"Lenta exosi — to'lqinlanish (wow) va to'yinish bilan": [
+"Ленточное эхо — с «плаванием» (wow) и насыщением",
+"Tape echo — with wow and saturation"
+],
+"4 polosali parametrik ekvalayzer, yuqori va past chastota filtrlari bilan": [
+"4-полосный параметрический эквалайзер с фильтрами верхних и нижних частот",
+"4-band parametric equalizer with high-pass and low-pass filters"
+],
+"Past/yuqori/polosali filtr, LFO bilan avtomatik supurish": [
+"Фильтр НЧ/ВЧ/полосовой с автоматической разверткой LFO",
+"Low/high/band-pass filter with automatic LFO sweep"
+],
+"Dinamikani siqish, parallel aralashma bilan": [
+"Сжатие динамики с параллельным смешиванием",
+"Dynamic compression with parallel mix"
+],
+"Cho'qqi cheklagich — kuchaytirish va shift": [
+"Лимитер пиков — усиление и потолок",
+"Peak limiter — gain and ceiling"
+],
+"Kengaytiruvchi va qalinlashtiruvchi xor": [
+"Хорус, расширяющий и утолщающий звук",
+"Chorus that widens and thickens the sound"
+],
+"Qisqa kechikish va feedback bilan «reaktiv» ovoz": [
+"«Реактивный» звук с короткой задержкой и фидбэком",
+"“Jet” sound with short delay and feedback"
+],
+"6 pog'onali fazer": [
+"6-ступенчатый фэйзер",
+"6-stage phaser"
+],
+"Ovoz balandligini ritmik tebratish": [
+"Ритмичное колебание громкости",
+"Rhythmic volume modulation"
+],
+"Ovozni chapdan o'ngga avtomatik siljitish": [
+"Автоматическое перемещение звука слева направо",
+"Automatically moves the sound from left to right"
+],
+"Stereo kengligini o'zgartirish (Mid/Side)": [
+"Изменение ширины стерео (Mid/Side)",
+"Change stereo width (Mid/Side)"
+],
+"Robot/metall ovoz — halqa modulyatsiya": [
+"Звук робота/металла — кольцевая модуляция",
+"Robot/metal sound — ring modulation"
+],
+"Daraja, faza almashtirish va mono": [
+"Уровень, инверсия фазы и моно",
+"Level, phase invert and mono"
+],
+"AI Studio": [
+"AI Studio",
+"AI Studio"
+],
+"Audioni tahlil qilib (chastota, LUFS, peak, dinamika, stereo) ishlov zanjirini tuzadi. Hammasi brauzerda, internetsiz.": [
+"Анализирует аудио (частоты, LUFS, пик, динамика, стерео) и строит цепочку обработки. Всё в браузере, без интернета.",
+"Analyzes audio (frequency, LUFS, peak, dynamics, stereo) and builds a processing chain. Everything in the browser, no internet."
+],
+"1. Qaysi tizim?": [
+"1. Какая система?",
+"1. Which system?"
+],
+"Avto EQ, Compression va Mastering": [
+"Авто EQ, компрессия и мастеринг",
+"Auto EQ, compression and mastering"
+],
+"Tahlil va chastota xaritasi": [
+"Анализ и карта частот",
+"Analysis and frequency map"
+],
+"Suno + Cubase hybrid (tavsiyalar)": [
+"Suno + Cubase гибрид (рекомендации)",
+"Suno + Cubase hybrid (recommendations)"
+],
+"2. Audio manba": [
+"2. Источник аудио",
+"2. Audio source"
+],
+"Suno Stems (har bir trek alohida)": [
+"Suno Stems (каждый трек отдельно)",
+"Suno Stems (each track separately)"
+],
+"Tayyor stereo WAV (tanlangan klip)": [
+"Готовый стерео WAV (выбранный клип)",
+"Finished stereo WAV (selected clip)"
+],
+"Stereo WAV + Stems": [
+"Стерео WAV + Stems",
+"Stereo WAV + Stems"
+],
+"3. Ishlash darajasi": [
+"3. Уровень обработки",
+"3. Processing level"
+],
+"Tahlil qilish va zanjir tuzish": [
+"Анализировать и построить цепочку",
+"Analyze and build chain"
+],
+"Pro vositalar": [
+"Pro-инструменты",
+"Pro tools"
+],
+"Cubase'dagi zamonaviy funksiyalar — Daftar DAW ichida.": [
+"Современные функции Cubase — внутри Daftar DAW.",
+"Modern Cubase-style features — inside Daftar DAW."
+],
+"Stem Separation": [
+"Stem Separation",
+"Stem Separation"
+],
+"Ajratish": [
+"Разделить",
+"Separate"
+],
+"Tanlangan klipni 4 ta trekka ajratadi: bas, markaz (vokal), yon (stereo), yuqori.": [
+"Разделяет выбранный клип на 4 трека: бас, центр (вокал), бока (стерео), верха.",
+"Splits the selected clip into 4 tracks: bass, center (vocal), sides (stereo), highs."
+],
+"Taxminiy": [
+"Приблизительно",
+"Approximate"
+],
+"— chastota/stereo bo‘yicha, AI model emas.": [
+"— по частоте/стерео, не AI-модель.",
+"— by frequency/stereo, not an AI model."
+],
+"Spectral Editing": [
+"Spectral Editing",
+"Spectral Editing"
+],
+"Spektrdan keraksiz shovqin va rezonansni belgilab pasaytirish (avto-topish bor).": [
+"Отметьте на спектре лишний шум и резонанс и ослабьте их (есть автопоиск).",
+"Mark unwanted noise and resonance on the spectrum and reduce it (auto-detect included)."
+],
+"Automation": [
+"Automation",
+"Automation"
+],
+"Trek balandligi (volume) chizig‘i — kuplet/naqorat dinamikasi.": [
+"Линия громкости трека (volume) — динамика куплета/припева.",
+"Track volume line — verse/chorus dynamics."
+],
+"Kuplet → Naqorat": [
+"Куплет → Припев",
+"Verse → Chorus"
+],
+"Group Channels (Bus)": [
+"Group Channels (Bus)",
+"Group Channels (Bus)"
+],
+"Orkestr, xor, baraban — treklarni bitta Bus'ga yig‘ing; Bus'ga alohida Fx qo‘yish mumkin.": [
+"Оркестр, хор, барабаны — соберите треки в одну шину (Bus); на шину можно ставить отдельные Fx.",
+"Orchestra, choir, drums — group tracks into one Bus; a Bus can have its own Fx."
+],
+"Sidechain": [
+"Sidechain",
+"Sidechain"
+],
+"Manba trek (kick) bosilganda nishon trek (bas) pasayadi.": [
+"Когда играет источник (kick), целевой трек (бас) приглушается.",
+"When the source track (kick) hits, the target track (bass) ducks."
+],
+"Pattern Sequencer": [
+"Pattern Sequencer",
+"Pattern Sequencer"
+],
+"Qo‘shimcha baraban va ritm — BeatBox 16 (16 pad, step-sequencer).": [
+"Дополнительные барабаны и ритм — BeatBox 16 (16 падов, степ-секвенсор).",
+"Extra drums and rhythm — BeatBox 16 (16 pads, step sequencer)."
+],
+"Quick Export": [
+"Quick Export",
+"Quick Export"
+],
+"Tezkor audio: butun miks yoki har bir trek alohida (ZIP).": [
+"Быстрый экспорт аудио: весь микс или каждый трек отдельно (ZIP).",
+"Quick audio export: the whole mix or each track separately (ZIP)."
+],
+"Stemlar (ZIP)": [
+"Стемы (ZIP)",
+"Stems (ZIP)"
+],
+"Format: WAV 16-bit (MP3 brauzerda mavjud emas).": [
+"Формат: WAV 16-bit (MP3 в браузере недоступен).",
+"Format: WAV 16-bit (MP3 is not available in the browser)."
+],
+"MixConsole": [
+"MixConsole",
+"MixConsole"
+],
+"Treklar balandligi va panini avtomatik muvozanatlaydi": [
+"Автоматически балансирует громкость и панораму треков",
+"Automatically balances track volume and pan"
+],
+"Avto balans": [
+"Авто-баланс",
+"Auto balance"
+],
+"Hamma fader 0 dB, pan markazda": [
+"Все фейдеры 0 dB, панорама по центру",
+"All faders 0 dB, pan centered"
+],
+"Nolga qaytarish": [
+"Сбросить",
+"Reset to zero"
+],
+"Yopish (F3)": [
+"Закрыть (F3)",
+"Close (F3)"
+],
+"Solo": [
+"Solo",
+"Solo"
+],
+"Pan (ikki marta bosing = markaz)": [
+"Панорама (двойной щелчок = центр)",
+"Pan (double-click = center)"
+],
+"Balans uchun kamida 2 ta audio trek kerak.": [
+"Для баланса нужно минимум 2 аудиотрека.",
+"At least 2 audio tracks are needed for balancing."
+],
+"Avto balans natijasi": [
+"Результат авто-баланса",
+"Auto balance result"
+],
+"Rol": [
+"Роль",
+"Role"
+],
+"Asosiy ovoz": [
+"Основной голос",
+"Main voice"
+],
+"Effekt/fon": [
+"Эффект/фон",
+"Effect/background"
+],
+"Cholg‘u": [
+"Инструмент",
+"Instrument"
+],
+"Bas": [
+"Бас",
+"Bass"
+],
+"Studio Setup": [
+"Studio Setup",
+"Studio Setup"
+],
+"Qurilmalar": [
+"Устройства",
+"Devices"
+],
+"Audio System": [
+"Аудиосистема",
+"Audio System"
+],
+"MIDI Port Setup": [
+"Настройка MIDI-портов",
+"MIDI Port Setup"
+],
+"Transport": [
+"Транспорт",
+"Transport"
+],
+"Yozish (Record)": [
+"Запись (Record)",
+"Recording"
+],
+"Audio draiver": [
+"Аудио-драйвер",
+"Audio driver"
+],
+"Web Audio (brauzer) — ASIO yo‘q": [
+"Web Audio (браузер) — ASIO нет",
+"Web Audio (browser) — no ASIO"
+],
+"Chiqish qurilmasi": [
+"Устройство вывода",
+"Output device"
+],
+"Tizim standarti": [
+"Системное по умолчанию",
+"System default"
+],
+"Kirish (mikrofon)": [
+"Вход (микрофон)",
+"Input (microphone)"
+],
+"Qurilma nomlarini ko‘rsatish (mikrofon ruxsati)": [
+"Показать названия устройств (разрешение микрофона)",
+"Show device names (microphone permission)"
+],
+"Tanlangan chiqishda sinov tovushi": [
+"Тестовый звук на выбранном выходе",
+"Test tone on the selected output"
+],
+"Sinov tovushi": [
+"Тестовый звук",
+"Test tone"
+],
+"Kechikish rejimi": [
+"Режим задержки",
+"Latency mode"
+],
+"Interaktiv — eng kam kechikish": [
+"Интерактивный — минимальная задержка",
+"Interactive — lowest latency"
+],
+"Muvozanat": [
+"Баланс",
+"Balanced"
+],
+"Barqaror — katta bufer (og‘ir loyiha, ASIO-Guard kabi)": [
+"Стабильный — большой буфер (тяжёлый проект, как ASIO-Guard)",
+"Stable — large buffer (heavy project, like ASIO-Guard)"
+],
+"Avto (qurilma)": [
+"Авто (устройство)",
+"Auto (device)"
+],
+"Fonda qurilmani bo‘shatish": [
+"Освобождать устройство в фоне",
+"Release device in background"
+],
+"Dastur fonda bo‘lganda (ijro yo‘q) audio qurilmani bo‘shatish — Release Driver": [
+"Освобождать аудиоустройство, когда программа в фоне (нет воспроизведения) — Release Driver",
+"Release the audio device when the app is in the background (not playing) — Release Driver"
+],
+"Kirish kechikishi": [
+"Задержка входа",
+"Input latency"
+],
+"Chiqish kechikishi": [
+"Задержка выхода",
+"Output latency"
+],
+"ASIO-Guard kechikishi": [
+"Задержка ASIO-Guard",
+"ASIO-Guard latency"
+],
+"o‘chiq": [
+"выкл.",
+"off"
+],
+"Holat": [
+"Состояние",
+"Status"
+],
+"(hali ishga tushmagan)": [
+"(ещё не запущено)",
+"(not started yet)"
+],
+"Eslatma: brauzer ASIO draiverlarni ko‘rmaydi — Windows/macOS audio tizimidan (WASAPI/CoreAudio) foydalanadi. Eng kam kechikish uchun «Interaktiv» rejimni tanlang va tizimda «exclusive» rejimli qurilmani yoqing. Chiqish qurilmasini tanlash faqat Chrome/Edge (110+) da ishlaydi.": [
+"Примечание: браузер не видит ASIO-драйверы — используется аудиосистема Windows/macOS (WASAPI/CoreAudio). Для минимальной задержки выберите режим «Интерактивный» и включите в системе устройство в «exclusive»-режиме. Выбор устройства вывода работает только в Chrome/Edge (110+).",
+"Note: the browser cannot see ASIO drivers — it uses the Windows/macOS audio system (WASAPI/CoreAudio). For the lowest latency choose “Interactive” and enable an “exclusive” mode device in the system. Output device selection works only in Chrome/Edge (110+)."
+],
+"Reset": [
+"Сброс",
+"Reset"
+],
+"Bekor": [
+"Отмена",
+"Cancel"
+],
+"Apply": [
+"Применить",
+"Apply"
+],
+"Avval ajratiladigan klipni tanlang.": [
+"Сначала выберите клип для разделения.",
+"Select a clip to separate first."
+],
+"Avval klip tanlang yoki audio qo‘shing.": [
+"Сначала выберите клип или добавьте аудио.",
+"Select a clip or add audio first."
+],
+"Avval klipni tanlang.": [
+"Сначала выберите клип.",
+"Select a clip first."
+],
+"Eksport uchun trek yo‘q.": [
+"Нет треков для экспорта.",
+"No tracks to export."
+],
+"Ijroni boshlang — kirish (ko‘k), ishlovdan keyin (oq) va olib tashlangan qism (binafsha) shu yerda chiziladi": [
+"Запустите воспроизведение — здесь рисуются вход (синий), после обработки (белый) и удалённая часть (фиолетовый)",
+"Start playback — input (blue), processed (white) and removed part (purple) are drawn here"
+],
+"Ijroni boshlang — kirish va chiqish spektri shu yerda ko‘rinadi": [
+"Запустите воспроизведение — здесь виден спектр входа и выхода",
+"Start playback — input and output spectrum are shown here"
+],
+"Klip audiosi yuklanmagan.": [
+"Аудио клипа не загружено.",
+"Clip audio is not loaded."
+],
+"Nusxa olib bo‘lmadi": [
+"Не удалось скопировать",
+"Could not copy"
+],
+"Ruxsat berilmadi.": [
+"Разрешение не получено.",
+"Permission denied."
+],
+"Sidechain uchun kamida 2 ta trek kerak.": [
+"Для sidechain нужно минимум 2 трека.",
+"Sidechain needs at least 2 tracks."
+],
+"Sozlamalar saqlandi.": [
+"Настройки сохранены.",
+"Settings saved."
+],
+"Sozlamalarni qo‘llashda xato.": [
+"Ошибка при применении настроек.",
+"Error applying settings."
+],
+"Tahlil moduli topilmadi.": [
+"Модуль анализа не найден.",
+"Analysis module not found."
+],
+"Tahlil uchun audio topilmadi.": [
+"Аудио для анализа не найдено.",
+"No audio found for analysis."
+],
+"Tahlil uchun yetarli audio topilmadi.": [
+"Недостаточно аудио для анализа.",
+"Not enough audio for analysis."
+],
+"Spektral tahrir…": [
+"Спектральная правка…",
+"Spectral edit…"
+],
+"Taxminiy ajratish (chastota/stereo bo‘yicha)…": [
+"Приблизительное разделение (по частоте/стерео)…",
+"Approximate separation (by frequency/stereo)…"
+],
+"4 ta trek ajratildi (taxminiy; AI model emas — vokalni to‘liq ajratmaydi).": [
+"Разделено на 4 трека (приблизительно; не AI-модель — вокал полностью не выделяет).",
+"Split into 4 tracks (approximate; not an AI model — does not fully isolate the vocal)."
+],
+"Studio Setup saqlandi.": [
+"Studio Setup сохранён.",
+"Studio Setup saved."
+],
+"Chiqish qurilmasi o‘zgartirildi.": [
+"Устройство вывода изменено.",
+"Output device changed."
+],
+"Papkaga ulandi": [
+"Подключено к папке",
+"Connected to folder"
+],
+"Nusxa olindi": [
+"Скопировано",
+"Copied"
+],
+"Fanlar": [
+"Предметы",
+"Subjects"
+],
+"Mavzu": [
+"Тема",
+"Topic"
+],
+"Umumiy konspekt": [
+"Общий конспект",
+"General notes"
+],
+"30 Kunlik Reja": [
+"План на 30 дней",
+"30-Day Plan"
+],
+"Chap panelni yig‘ish (Ctrl+\\)": [
+"Свернуть левую панель (Ctrl+\\)",
+"Collapse left panel (Ctrl+\\)"
+],
+"Chap panelni ochish": [
+"Открыть левую панель",
+"Open left panel"
+],
+"Yuqori panelni kichraytirish (Ctrl+g‘ildirak)": [
+"Уменьшить верхнюю панель (Ctrl+колесо)",
+"Shrink top panel (Ctrl+wheel)"
+],
+"Yuqori panelni kattalashtirish": [
+"Увеличить верхнюю панель",
+"Enlarge top panel"
+],
+"Kichraytirish": [
+"Уменьшить",
+"Shrink"
+],
+"Kattalashtirish": [
+"Увеличить",
+"Enlarge"
+],
+"Rasmni o‘chirish": [
+"Удалить изображение",
+"Delete image"
+],
+"Yozuvni AI bilan tahrirlash": [
+"Редактировать запись с помощью AI",
+"Edit the note with AI"
+],
+"Hisob, til, sana, Admin": [
+"Аккаунт, язык, дата, Admin",
+"Account, language, date, Admin"
+],
+"Interfeys tili / Язык / Language": [
+"Interfeys tili / Язык / Language",
+"Interfeys tili / Язык / Language"
+],
+"Panel balandligini o‘zgartirish (ushlab torting). Ikki marta bosish — avtomatik": [
+"Изменить высоту панели (потяните). Двойной щелчок — авто",
+"Resize panel height (drag). Double-click — auto"
+],
+"Har bir harakat avtomatik saqlanadi. Sahifani yangilasangiz yoki yopsangiz ham oxirgi holat qaytadi.": [
+"Каждое действие сохраняется автоматически. Даже если обновить или закрыть страницу, последнее состояние вернётся.",
+"Every action is saved automatically. Even if you refresh or close the page, the last state is restored."
+],
+"Mavzu va fon": [
+"Тема и фон",
+"Theme & background"
+],
+"Applause (olqish)": [
+"Applause (аплодисменты)",
+"Applause"
+],
+"Thunder (momaqaldiroq)": [
+"Thunder (гром)",
+"Thunder"
+],
+"Wind Howl (shamol)": [
+"Wind Howl (вой ветра)",
+"Wind Howl"
+],
+"Rain (yomg'ir)": [
+"Rain (дождь)",
+"Rain"
+],
+"Door Knock (eshik taqillashi)": [
+"Door Knock (стук в дверь)",
+"Door Knock"
+],
+"Footsteps (qadam tovushi)": [
+"Footsteps (шаги)",
+"Footsteps"
+],
+"Clock Tick-Tock (soat)": [
+"Clock Tick-Tock (часы)",
+"Clock Tick-Tock"
+],
+"Curtain Swish (parda)": [
+"Curtain Swish (занавес)",
+"Curtain Swish"
+],
+"Explosion (portlash)": [
+"Explosion (взрыв)",
+"Explosion"
+],
+"Phone Ring (telefon)": [
+"Phone Ring (телефон)",
+"Phone Ring"
+],
+"Fire Crackle (olov)": [
+"Fire Crackle (огонь)",
+"Fire Crackle"
+],
+"Crowd Murmur (olomon shovqini)": [
+"Crowd Murmur (шум толпы)",
+"Crowd Murmur"
+]
+};
+ for(const k in X)if(!U.D[k])U.D[k]=X[k];
+ const R=[
+  [/^(\d+) ta kanal$/,['$1 каналов','$1 channels']],
+  [/^Avto balans qo‘llandi \((\d+) trek\)\.?$/,['Авто-баланс применён ($1 тр.).','Auto balance applied ($1 tracks).']],
+  [/^Asos: (.+) \((.+) LUFS\) · LUFS bo‘yicha taxminiy balans$/,['Основа: $1 ($2 LUFS) · приблизительный баланс по LUFS','Reference: $1 ($2 LUFS) · approximate balance by LUFS']],
+  [/^Miks peak (.+) dBFS — (.+)$/,['Пик микса $1 dBFS — $2','Mix peak $1 dBFS — $2']],
+  [/^Ctrl\+Z — qaytarish\. Quloq bilan tekshiring\.$/,['Ctrl+Z — отмена. Проверьте на слух.','Ctrl+Z — undo. Check by ear.']],
+  [/^xavfsiz$/,['безопасно','safe']],
+  [/^(.+) · tempoga mos \((\d+) bpm\)$/,['$1 · по темпу ($2 bpm)','$1 · tempo-synced ($2 bpm)']],
+  [/^Faylni ochib bo‘lmadi: (.+)$/,['Не удалось открыть файл: $1','Could not open the file: $1']],
+  [/^Qurilmalar ro‘yxatini olib bo‘lmadi: (.+)$/,['Не удалось получить список устройств: $1','Could not get the device list: $1']],
+  [/^Sinov tovushi chalinmadi: (.+)$/,['Тестовый звук не воспроизведён: $1','Test tone could not play: $1']],
+  [/^Ulanib bo‘lmadi: (.+)$/,['Не удалось подключиться: $1','Could not connect: $1']],
+  [/^Chiqishni o‘zgartirib bo‘lmadi: (.+)$/,['Не удалось сменить вывод: $1','Could not change output: $1']],
+  [/^Audio tizim qayta ishga tushirildi \((.+)\)\.?$/,['Аудиосистема перезапущена ($1).','Audio system restarted ($1).']],
+  [/^AI zanjiri qo‘shildi \((.+)\)\.?$/,['AI-цепочка добавлена ($1).','AI chain added ($1).']],
+  [/^Stem (\d.*)$/,['Стем $1','Stem $1']]
+ ];
+ R.unshift([/^Teatr \/ Foley( · .+)?$/,['Театр / Foley$1','Theatre / Foley$1']],[/^Kino FX( · .+)?$/,['Кино FX$1','Cinema FX$1']]);
+ R.forEach(r=>U.RX.push(r));
+ try{if(U.get()!=='uz')U.pass()}catch(_){}
 })();
 
 loadTopic();applyView();pushRecent();gw.focus();

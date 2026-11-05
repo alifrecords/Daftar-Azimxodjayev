@@ -78,3 +78,6 @@ Daftar ma'lumotlari qurilmaning **o'zida** (brauzer/ilova xotirasi, IndexedDB + 
 - **Mixer (F3 yoki 🎚 Mixer):** treklar soniga qarab shakllanadi, ochiladi/yopiladi; fader, pan, M/S, metr, Fx, bus va MASTER. "🤖 Avto balans" — LUFS va trek nomiga asoslangan avtomatik balans (Ctrl+Z bilan qaytariladi).
 - **Klip tutqichlari:** sichqoncha yaqinlashganda fade-in/out, klip ovozi (gain) va chetlarni kesish belgilari chiqadi; bosib turib suriladi.
 - **Sizing:** Oddiy / Sizing Moves Contents / Sizing Applies Time Stretch (balandlik saqlansin belgisi bilan).
+
+## Til (v89)
+Yuqoridagi 🌐 tugmasi: O‘zbekcha / Русский / English. DAW (asboblar paneli, Mixer, Studio Setup, Sounds, Fx, AI, Pro, Drum) uchun oflayn lug‘at kiritilgan — internet shart emas. Boshqa bo‘limlarning lug‘atda yo‘q matnlari internet bo‘lsa avtomatik tarjima qilinadi. Qidiruv/kiritish maydonlaridagi yordamchi matnlar (placeholder) ham endi tarjima qilinadi.
