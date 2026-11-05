@@ -68,3 +68,7 @@ Daftar ma'lumotlari qurilmaning **o'zida** (brauzer/ilova xotirasi, IndexedDB + 
 - **🎵 Sounds**: 61 ta ichki (sintez qilingan, oflayn) ovoz — Cinematic, Kino FX, Teatr/Foley, Rizer, Drums, Bass, Pads, Stabs, Arranger (tempoga mos fill/loop). Qidiruv, kategoriya, paketlar, sevimli. **Online** tabi: Freesound.org (o'z API kalitingiz kerak). **Mening fayllarim**: kompyuterdagi sample papkasini oflayn qidirish (Chrome/Edge).
 - **Fx**: trek yoki Master uchun insert zanjiri — D-Verb uslubidagi reverb (Hall/Church/Plate/Room/Ambient/Nonlin), delay, distortion, EQ, compressor, limiter, chorus, flanger, phaser va boshqalar. Eksport (WAV) effektlar bilan chiqadi.
 - Brauzerda VST/AU plaginlar ishlamaydi; AutoTune kiritilmagan.
+
+## 🤖 AI Studio va 🛠 Pro vositalar (DAW)
+- **AI Studio**: tanlangan klip/treklarni tahlil qiladi (chastota, LUFS, peak, LRA, stereo) va qoidalar bo'yicha avto-zanjir tuzadi (Vocal Repair, EQ, Compressor, Audio Cleanup, Limiter). Cubase uchun matnli tavsiyalar. Haqiqiy AI emas.
+- **Pro**: Stem Separation (taxminiy, chastota/stereo), Spectral Editing, Automation (volume), Group Bus, Sidechain, BeatBox ulanishi, Quick Export (miks WAV / stemlar ZIP).

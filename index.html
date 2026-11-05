@@ -11214,11 +11214,16 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   if(count){msg2('🎛 '+count+' ta audio qo‘shildi');buildHeads();draw();persist()}}
  /* ---------- pleyer ---------- */
  function mixGain(t){const solo=D.tracks.some(x=>x.s);return(t.m||(solo&&!t.s))?0:t.vol}
+ function autoVal(a,tm){if(tm<=a[0].t)return a[0].v;for(let i=1;i<a.length;i++)if(tm<=a[i].t){const u=(tm-a[i-1].t)/((a[i].t-a[i-1].t)||1);return a[i-1].v+(a[i].v-a[i-1].v)*u}return a[a.length-1].v}
+ function autoSched(par,a,base,t0,p0){a=a.slice().sort((x,y)=>x.t-y.t);par.value=base*autoVal(a,p0);par.setValueAtTime(base*autoVal(a,p0),t0);a.forEach(pt=>{if(pt.t>p0)par.linearRampToValueAtTime(base*pt.v,t0+pt.t-p0)})}
+ function scWire(ctx,srcG,par,sc){const pre=ctx.createGain();pre.gain.value=10;const ab=ctx.createWaveShaper();ab.curve=new Float32Array([1,0,1]);const fc=Math.max(6,Math.min(40,2400/(sc.rel||120)));const l1=ctx.createBiquadFilter(),l2=ctx.createBiquadFilter();l1.type=l2.type='lowpass';l1.frequency.value=l2.frequency.value=fc;l1.Q.value=l2.Q.value=.5;const sh=ctx.createWaveShaper();const th=.02,fl=Math.pow(10,-(sc.db==null?6:sc.db)/20),N=2048,c=new Float32Array(N*2+1);for(let i=-N;i<=N;i++){const e=Math.abs(i/N)/10,u=Math.min(1,Math.max(0,(e-th)/(th*3)));c[i+N]=1-(1-fl)*u}sh.curve=c;srcG.connect(pre);pre.connect(ab);ab.connect(l1);l1.connect(l2);l2.connect(sh);sh.connect(par)}
  function buildGraph(ctx,dest,t0,p0,limit){const out=[];const tn=new Map();let mfx=null;if(window.DAWFX&&D.mfx&&D.mfx.some(f=>f.on!==0)){try{const mi=ctx.createGain();mfx=DAWFX.chain(ctx,D.mfx,mi,dest);dest=mi}catch(e){console.warn('mfx',e);mfx=null}}
-  D.tracks.forEach(t=>{const g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;g.gain.value=mixGain(t);let fxi=null;if(p){p.pan.value=t.pan;p.connect(dest)}const snk=p||dest;if(window.DAWFX&&t.fx&&t.fx.some(f=>f.on!==0)){try{fxi=DAWFX.chain(ctx,t.fx,g,snk)}catch(e){console.warn('fx',e);fxi=null;g.connect(snk)}}else g.connect(snk);tn.set(t.id,{g,p,fx:fxi});if(t.dm){try{schedDrum(ctx,t,g,t0,p0,limit)}catch(e){console.warn('drum',e)}return}
+  const busM=new Map();(D.buses||[]).forEach(b=>{try{const bi=ctx.createGain(),bg=ctx.createGain();bg.gain.value=b.vol==null?1:b.vol;bg.connect(dest);let bf=null;if(window.DAWFX&&b.fx&&b.fx.some(f=>f.on!==0)){try{bf=DAWFX.chain(ctx,b.fx,bi,bg)}catch(e){console.warn('busfx',e);bi.connect(bg)}}else bi.connect(bg);busM.set(b.id,bi);tn.set(b.id,{g:bi,fx:bf,bus:1})}catch(e){console.warn('bus',e)}});
+  D.tracks.forEach(t=>{const g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;g.gain.value=mixGain(t);if(t.au&&t.au.length>1)autoSched(g.gain,t.au,mixGain(t),t0,p0);let fxi=null;const dst=busM.get(t.bus)||dest;if(p){p.pan.value=t.pan;p.connect(dst)}const snk0=p||dst;let dk=null;const scd=(D.sc||[]).find(x=>x.on!==0&&x.dst==t.id&&x.src!=t.id&&D.tracks.some(y=>y.id==x.src));if(scd){dk=ctx.createGain();dk.gain.value=0;dk.connect(snk0)}const snk=dk||snk0;if(window.DAWFX&&t.fx&&t.fx.some(f=>f.on!==0)){try{fxi=DAWFX.chain(ctx,t.fx,g,snk)}catch(e){console.warn('fx',e);fxi=null;g.connect(snk)}}else g.connect(snk);tn.set(t.id,{g,p,fx:fxi,dk,scd});if(t.dm){try{schedDrum(ctx,t,g,t0,p0,limit)}catch(e){console.warn('drum',e)}return}
    t.clips.forEach(c=>{if(c.m)return;const a=A.get(c.asset);if(!a||!a.buf)return;const end=c.start+c.dur;if(end<=p0)return;if(limit!=null&&c.start>=limit)return;
     const skip=Math.max(0,p0-c.start),when=t0+Math.max(0,c.start-p0),off=c.off+skip;let dur=c.dur-skip;if(limit!=null)dur=Math.min(dur,limit-Math.max(c.start,p0));if(dur<=0)return;
     const src=ctx.createBufferSource();src.buffer=a.buf;const cg=ctx.createGain();cg.gain.value=c.g;src.connect(cg);cg.connect(g);try{src.start(when,off,dur)}catch(_){}out.push(src)})});
+  D.tracks.forEach(t=>{const n=tn.get(t.id);if(!n||!n.dk)return;const sN=tn.get(n.scd.src);if(sN)try{scWire(ctx,sN.g,n.dk.gain,n.scd)}catch(e){console.warn('sc',e)}});
   return{srcs:out,tn,mfx}}
  function startAt(p){stopSrcs();ctxOn();V.p0=p;V.t0=AC.currentTime+0.05;const gph=buildGraph(AC,MG,V.t0,p);V.srcs=gph.srcs;V.tn=gph.tn;V.mfx=gph.mfx;V.nb=Math.ceil(p/beat()-1e-6)}
  function stopSrcs(){V.srcs.forEach(x=>{try{x.stop()}catch(_){}try{x.disconnect()}catch(_){}});V.srcs=[];V.tn.forEach(n=>{try{n.g.disconnect()}catch(_){}try{n.fx&&n.fx.dispose()}catch(_){}});V.tn=new Map();try{V.mfx&&V.mfx.dispose()}catch(_){}V.mfx=null}
@@ -11234,7 +11239,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   if(D.click){const bt=beat();while(V.t0+V.nb*bt-V.p0<AC.currentTime+.15){const at=V.t0+(V.nb*bt-V.p0);if(at>AC.currentTime-.01)click(at,V.nb%D.ts==0);V.nb++}}
   const vw=V.cw/D.zx;if(p>V.sx+vw*.92||p<V.sx){V.sx=Math.max(0,p-vw*.1)}
   draw();meter();V.raf=requestAnimationFrame(tick)}
- function applyMix(){V.tn.forEach((n,id)=>{const t=D.tracks.find(x=>x.id==id);if(!t)return;n.g.gain.value=mixGain(t);if(n.p)n.p.pan.value=t.pan})}
+ function applyMix(){V.tn.forEach((n,id)=>{const t=D.tracks.find(x=>x.id==id);if(!t)return;if(!(t.au&&t.au.length>1))n.g.gain.value=mixGain(t);if(n.p)n.p.pan.value=t.pan})}
  /* yozish */
  async function startRec(){
   try{const st=await navigator.mediaDevices.getUserMedia({audio:true});ctxOn();const mr=new MediaRecorder(st),ch=[];const tr=selTrack()||addTrack();const at=D.ph;
@@ -11245,6 +11250,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  function play2(){/* yozish paytida bo'sh bo'lsa ham vaqt yursin */if(V.playing)return;startAt(D.ph);V.playing=true;tick()}
  function stopRec(){const r=V.rec;V.rec=null;try{r.mr.stop()}catch(_){}ui()}
  /* ---------- eksport ---------- */
+async function renderBuf(onlyId){const end=projEnd();if(end<=0)return null;const sv=D.tracks.map(t=>t.s);if(onlyId)D.tracks.forEach(t=>{t.s=t.id==onlyId?1:0});try{const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+(window.DAWFX?DAWFX.tail(D):.3))*sr),sr);const dest=oc.createGain();dest.connect(oc.destination);buildGraph(oc,dest,0,0);return await oc.startRendering()}finally{D.tracks.forEach((t,i)=>{t.s=sv[i]})}}
  async function mixdown(){
   const end=projEnd();if(end<=0){msg2('Eksport qilish uchun audio yo‘q.');return}msg2('⏳ Miks tayyorlanmoqda…');
   const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+(window.DAWFX?DAWFX.tail(D):.3))*sr),sr);const dest=oc.createGain();dest.connect(oc.destination);buildGraph(oc,dest,0,0);
@@ -11374,7 +11380,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  <button data-tool=sel title="Tanlash (1)">⬉ Tanlash</button><button data-tool=split title="Kesish (2) — bosilgan joydan bo‘ladi">✂ Kesish</button><button data-tool=erase title="O‘chirish (3)">⌫ O‘chirgich</button><button data-tool=mute title="Ovozsiz (4)">🔇 Mute</button><span class=dsep></span>
  <button id=dawsn title="Tarmoqqa yopishish">🧲 Snap</button><select id=dawg title="Tarmoq turi"><option value=bar>Bar<option value=half>1/2<option value=beat>1/4<option value=eighth>1/8<option value=sixteenth>1/16<option value=off>Off</select><span class=dsep></span>
  <button id=dawzi title="Kattalashtirish (H yoki +)">🔍＋</button><button id=dawzo title="Kichraytirish (G yoki −)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><button id=dawty1 title="Treklarni balandroq qilish (Ctrl+↓ yoki Alt+g‘ildirak)">↕＋</button><button id=dawty2 title="Treklarni pastroq qilish (Ctrl+↑ yoki Alt+g‘ildirak)">↕−</button><button id=dawtyf title="Hamma treklarni bir ko‘rinishga sig‘dirish">⇕ Treklar</button><button id=dawfa title="Hamma narsani ekranga sig‘dirish — vaqt va treklar (Ctrl+Shift+A)">⛶ Hammasi</button><span class=dsep></span>
- <button id=dawsnd title="Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv">🎵 Sounds</button><button id=dawfx title="Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)">Fx</button><button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
+ <button id=dawsnd title="Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv">🎵 Sounds</button><button id=dawfx title="Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)">Fx</button><button id=dawai title="AI Studio: tahlil + avto-zanjir (EQ, kompressor, master)">🤖 AI</button><button id=dawpro title="Pro vositalar: Stem, Spectral, Automation, Bus, Sidechain, Export">🛠 Pro</button><button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
 </div>
 <div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · Ctrl+Shift+A — hammasini ekranga sig‘dirish · Ctrl+↑/↓ yoki Alt+g‘ildirak — trek balandligi · S — kesish · Alt (bosib tur) — vaqtincha ✂ qaychi · Ctrl+Alt+sudrash — nusxa · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
 <div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div><div class=dfxp id=dawpan hidden></div></div>
@@ -11394,7 +11400,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   q('dawun').onclick=undo;q('dawre').onclick=redo;
   root.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{V.tool=b.dataset.tool;ui()});
   q('dawsn').onclick=()=>{D.snap=!D.snap;ui();persist()};q('dawg').onchange=e=>{D.grid=e.target.value;persist()};
-  q('dawsnd').onclick=()=>{window.__dawui&&__dawui.toggle('snd')};q('dawfx').onclick=()=>{window.__dawui&&__dawui.toggle('fx')};q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
+  q('dawsnd').onclick=()=>{window.__dawui&&__dawui.toggle('snd')};q('dawfx').onclick=()=>{window.__dawui&&__dawui.toggle('fx')};q('dawai').onclick=()=>{window.__dawui&&__dawui.toggle('ai')};q('dawpro').onclick=()=>{window.__dawui&&__dawui.toggle('pro')};q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
   const addT=()=>{hist();const t=addTrack();D.selT=t.id;buildHeads();draw();persist()};q('dawat').onclick=addT;q('dawat2').onclick=addT;q('dawdm').onclick=()=>menu(q('dawdm'),[{t:'🥁 Trap beat',fn:()=>addDrum('trap')},{t:'🥁 Boom Bap',fn:()=>addDrum('boombap')},{t:'🥁 House',fn:()=>addDrum('house')},{t:'🥁 Drill',fn:()=>addDrum('drill')},{t:'🥁 Bo‘sh pattern',fn:()=>addDrum('empty')}]);
   q('dawim').onclick=()=>q('dawfile').click();q('dawfile').onchange=e=>{const f=[...e.target.files];e.target.value='';const tr=selTrack();importFiles(f,tr?D.tracks.indexOf(tr):null,tr?D.ph:null)};
   q('dawex').onclick=()=>mixdown().catch(e=>{console.warn(e);msg2('❌ Miks tayyorlanmadi: '+(e&&e.message||'xato'))});
@@ -11709,7 +11715,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  const add=byId('add'),oh=add&&add.onclick;
  if(add&&oh){add.title='Yangi varaq yoki DAW (audio sekvenser)';add.onclick=function(ev){if(ev&&ev.isTrusted===false)return oh.call(add);menu(add,[{t:'📄 Varaq (jadval)',fn:()=>oh.call(add)},{t:'🎛 DAW — audio sekvenser',fn:()=>{try{create()}catch(e){console.warn(e);msg2('❌ DAW ochilmadi: '+e.message)}}}])}}
  const oRender=render;render=function(){const r=oRender.apply(this,arguments);try{sync()}catch(e){console.warn('daw',e)}return r};
- window.__daw={create,get:()=>D,A,play,stop,importFiles,mixdown,V,hist,persist,selTrack,startAt,curP,buildHeads,draw,addTrack,beat,ctxOn,msg2,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
+ window.__daw={rid,IDB,peaksOf,projEnd,decode,renderBuf,selClip:()=>{for(const t of D.tracks){const c=t.clips.find(x=>x.id==D.sel);if(c)return{c,t}}return null},create,get:()=>D,A,play,stop,importFiles,mixdown,V,hist,persist,selTrack,startAt,curP,buildHeads,draw,addTrack,beat,ctxOn,msg2,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
 })();
 
 /* ===== f6zsn: DAW ichki sound kutubxonasi — kino, teatr FX, aranjirovka (sintez qilingan, oflayn, litsenziyasiz) ===== */
@@ -11911,16 +11917,17 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
 #dawv .fxi .zbd{padding:6px 10px 8px}#dawv .fxi .zpp{display:grid;grid-template-columns:96px 1fr 58px;gap:6px;align-items:center;margin:3px 0}#dawv .fxi .zpp span{color:#9fb0c9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dawv .fxi .zpp em{font-style:normal;color:#d7dfec;text-align:right;font-variant-numeric:tabular-nums}
 #dawv .fxi input[type=range]{width:100%;accent-color:#8b6cff;height:14px;padding:0;background:none;border:0}#dawv .fxi select{height:24px;width:100%}
 #dawv .zemp{color:#8ea0c0;text-align:center;padding:22px 8px}
-#dawv #dawfx.on,#dawv #dawsnd.on{background:#8b6cff;border-color:#a891ff;color:#fff}
+#dawv #dawfx.on,#dawv #dawsnd.on,#dawv #dawai.on,#dawv #dawpro.on{background:#8b6cff;border-color:#a891ff;color:#fff}
 @media(max-width:760px){#dawv .dfxp{width:100%;position:absolute;inset:0;z-index:20}}
 `;
  let styled=false;
  function ensureStyle(){if(styled)return;styled=true;const s=document.createElement('style');s.textContent=CSS;document.head.append(s)}
  const panel=()=>document.getElementById('dawpan');
+ const EXT=['ai','pro'];
  function toggle(m){const p=panel();if(!p)return;ensureStyle();if(ST.mode===m&&!p.hidden){close();return}open(m)}
  function open(m,trackId){const p=panel();if(!p)return;ensureStyle();const prevM=ST.mode;ST.mode=m;if(m=='fx'){if(trackId){ST.fTab='chain';ST.tgt=trackId}else if(prevM!=='fx')ST.fTab='fx'}p.hidden=false;sync();render()}
  function close(){const p=panel();if(p)p.hidden=true;ST.mode=null;stopPrev();sync();setTimeout(()=>window.dispatchEvent(new Event('resize')),30)}
- function sync(){const a=document.getElementById('dawsnd'),b=document.getElementById('dawfx');if(a)a.classList.toggle('on',ST.mode=='snd');if(b)b.classList.toggle('on',ST.mode=='fx')}
+ function sync(){const a=document.getElementById('dawsnd'),b=document.getElementById('dawfx');if(a)a.classList.toggle('on',ST.mode=='snd');if(b)b.classList.toggle('on',ST.mode=='fx');['ai','pro'].forEach(k=>{const e=document.getElementById('daw'+k);if(e)e.classList.toggle('on',ST.mode==k)})}
  /* ---------- ovoz oldindan eshitish ---------- */
  function stopPrev(){if(ST.prev){try{ST.prev.src&&ST.prev.src.stop()}catch(_){}try{ST.prev.el&&ST.prev.el.pause()}catch(_){}ST.prev=null;const r=panel();r&&r.querySelectorAll('.zpl.on').forEach(x=>{x.classList.remove('on');x.textContent='▶'})}}
  async function playBuf(b,btn){stopPrev();const ac=W().ctxOn(),src=ac.createBufferSource(),g=ac.createGain();g.gain.value=.9;src.buffer=b;src.connect(g);g.connect(ac.destination);src.onended=()=>{if(ST.prev&&ST.prev.src===src)stopPrev()};src.start();ST.prev={src};if(btn){btn.classList.add('on');btn.textContent='■'}}
@@ -11969,8 +11976,8 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   b.querySelectorAll('[data-i]').forEach(r=>{const x=ST.loc[+r.dataset.i];r.querySelector('.zpl').onclick=async e=>{const btn=e.currentTarget;if(btn.classList.contains('on')){stopPrev();return}btn.textContent='…';try{const f=await x.h.getFile(),ab=await f.arrayBuffer(),ac=W().ctxOn(),buf=await new Promise((res,no)=>{const p=ac.decodeAudioData(ab,res,no);if(p&&p.catch)p.catch(no)});await playBuf(buf,btn)}catch(err){btn.textContent='▶';W().msg2('Eshitib bo‘lmadi: '+(err.message||err))}};
    r.querySelector('.zad').onclick=async e=>{const btn=e.currentTarget;btn.textContent='…';try{const f=await x.h.getFile();await W().importFiles([f],null,DD().ph)}catch(err){W().msg2('Qo‘shib bo‘lmadi: '+(err.message||err))}btn.textContent='＋'}})}
  /* ---------- Fx paneli ---------- */
- const targets=()=>{const D=DD();return[{id:'sel',n:'▸ Tanlangan trek'},...D.tracks.map(t=>({id:t.id,n:t.n})),{id:'master',n:'🎚 Master (hamma ovoz)'}]};
- function tgtList(create){const D=DD();if(ST.tgt=='master'){if(create&&!D.mfx)D.mfx=[];return{list:D.mfx||[],owner:null,master:true,name:'Master'}}let t=ST.tgt=='sel'?W().selTrack():D.tracks.find(x=>x.id==ST.tgt);if(!t)return{list:[],owner:null,name:'—'};if(create&&!t.fx)t.fx=[];return{list:t.fx||[],owner:t,name:t.n}}
+ const targets=()=>{const D=DD();return[{id:'sel',n:'▸ Tanlangan trek'},...D.tracks.map(t=>({id:t.id,n:t.n})),...(D.buses||[]).map(b=>({id:b.id,n:'🎻 Bus: '+b.n})),{id:'master',n:'🎚 Master (hamma ovoz)'}]};
+ function tgtList(create){const D=DD();if(ST.tgt=='master'){if(create&&!D.mfx)D.mfx=[];return{list:D.mfx||[],owner:null,master:true,name:'Master'}}let t=ST.tgt=='sel'?W().selTrack():(D.tracks.find(x=>x.id==ST.tgt)||(D.buses||[]).find(x=>x.id==ST.tgt));if(!t)return{list:[],owner:null,name:'—'};if(create&&!t.fx)t.fx=[];return{list:t.fx||[],owner:t,name:t.n}}
  function rewire(){const V=W().V;if(V.playing)W().startAt(W().curP());W().persist();try{W().buildHeads()}catch(_){}}
  function liveSet(f){const V=W().V,tg=tgtList(),d=DAWFX.merged(f);if(tg.master){V.mfx&&V.mfx.set(f.uid,d)}else if(tg.owner){const n=V.tn.get(tg.owner.id);n&&n.fx&&n.fx.set(f.uid,d)}}
  function addFx(id,preset){const D=DD(),tg=tgtList(true);if(!tg.owner&&!tg.master){W().msg2('Avval trek tanlang yoki «Master» ni belgilang.');return}W().hist();const nf=DAWFX.add(tg.list,id,preset);if(!tg.master&&!tg.owner.fx)tg.owner.fx=tg.list;ST.fTab='chain';rewire();render();setTimeout(()=>{window.__dawui.edit&&window.__dawui.edit(nf,tgtList())},60);W().msg2('➕ '+DAWFX.REG[id].name+(preset?' · '+preset:'')+' → '+tg.name)}
@@ -12001,7 +12008,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
    el.querySelectorAll('input[data-k]').forEach(inp=>{const pr=d.params.find(x=>x.k==inp.dataset.k);inp.onpointerdown=()=>W().hist();inp.oninput=()=>{const v=+inp.value;(f.p=f.p||{})[pr.k]=v;inp.parentElement.querySelector('em').textContent=fmtV(pr,v);liveSet(f);W().persist()};inp.ondblclick=()=>{inp.value=pr.def;inp.oninput()}});
    el.querySelectorAll('select[data-k]').forEach(sel=>{sel.onchange=()=>{W().hist();(f.p=f.p||{})[sel.dataset.k]=sel.value;rewire();render()}})})}
  /* ---------- umumiy chizish ---------- */
- function render(){const p=panel();if(!p||p.hidden)return;const m=ST.mode;const tabs=m=='snd'?[['sounds','Sounds'],['packs','Packs'],['online','Online'],['local','Mening fayllarim']]:[['fx','Effektlar'],['chain','Zanjir']];const cur=m=='snd'?ST.sTab:ST.fTab;
+ function render(){const p=panel();if(!p||p.hidden)return;const m=ST.mode;if(EXT.includes(m)){const x=window.__dawui.ext&&window.__dawui.ext[m];if(x)x(p);return}const tabs=m=='snd'?[['sounds','Sounds'],['packs','Packs'],['online','Online'],['local','Mening fayllarim']]:[['fx','Effektlar'],['chain','Zanjir']];const cur=m=='snd'?ST.sTab:ST.fTab;
   p.innerHTML=`<div class=pnh><b>${m=='snd'?'Sound library':'Effects library'}</b><button id=pnx title="Yopish">✕</button></div><div class=pnt>${tabs.map(t=>`<button data-t="${t[0]}" class="${cur==t[0]?'on':''}">${t[1]}</button>`).join('')}</div><div style="display:flex;flex-direction:column;flex:1;min-height:0" id=pnbody></div>`;
   p.querySelector('#pnx').onclick=close;p.querySelectorAll('.pnt button').forEach(x=>x.onclick=()=>{if(m=='snd')ST.sTab=x.dataset.t;else ST.fTab=x.dataset.t;render()});
   const b=p.querySelector('#pnbody');if(m=='snd'){stopPrev();({sounds:viewSounds,packs:viewPacks,online:viewOnline,local:viewLocal})[ST.sTab](b)}else{({fx:viewFx,chain:viewChain})[ST.fTab](b)}
@@ -12129,6 +12136,176 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   const le=W.querySelector('#azlg');const key=lg.map(x=>x[1]).join('|');if(le&&le.dataset.k!==key){le.dataset.k=key;le.innerHTML=lg.map(x=>`<span><i style="background:${x[0]}"></i>${E(x[1])}</span>`).join('')}}
  function loop(){raf=requestAnimationFrame(loop);if(!W||!document.body.contains(W)){cancelAnimationFrame(raf);return}try{draw()}catch(e){if(!loop.w){loop.w=1;console.warn('azplg',e)}}}
  window.__dawui.edit=open;window.__dawui.editClose=close;
+})();
+
+/* ===== f6zpro: AI Studio (tahlil + avto-zanjir) va Pro vositalar (Stem, Spectral, Automation, Bus, Sidechain, Export) ===== */
+(()=>{
+ if(!window.__dawui||!window.__daw||!window.DAWFX)return;
+ const DW=()=>window.__daw,DD=()=>DW().get(),E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),db10=x=>10*Math.log10(Math.max(x,1e-20)),rewire=()=>{try{window.__dawui.ctl.rewire()}catch(_){}} ,msg=t=>DW().msg2(t);
+ const ST={sys:0,src:1,lvl:0,res:null,busy:false,auTrack:null,spec:null};
+ /* ---------- CSS ---------- */
+ const CSS=`#dawv .xp{display:flex;flex-direction:column;min-height:0;flex:1}#dawv .xp .xh{display:flex;align-items:center;gap:8px;padding:10px 12px 2px}#dawv .xp .xh b{flex:1;font-size:16px;color:#f0f4fb}#dawv .xp .xh button{width:28px;height:28px;padding:0}
+#dawv .xp .xb{flex:1;overflow:auto;padding:6px 12px 12px}#dawv .xp .xs{color:#8ea0c2;font-size:11px;margin:0 0 8px}
+#dawv .xq{margin:8px 0}#dawv .xq>b{display:block;color:#eaf0fc;margin-bottom:4px}#dawv .xo{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border:1px solid #2b3445;border-radius:8px;margin-bottom:4px;background:#1e2532;cursor:pointer}#dawv .xo i{width:12px;height:12px;border-radius:50%;border:2px solid #5b6b8f;flex:none;margin-top:2px}#dawv .xo.s{border-color:#a855f7;background:#251a45}#dawv .xo.s i{background:#a855f7;border-color:#e9d5ff}
+#dawv .xgo{display:block;width:100%;background:linear-gradient(90deg,#a855f7,#22d3ee);color:#fff;border:0;border-radius:8px;padding:9px;font-weight:700;margin-top:8px;cursor:pointer}#dawv .xgo:disabled{opacity:.5}
+#dawv .xcd{background:#1e2532;border:1px solid #2b3445;border-radius:10px;padding:8px 10px;margin-bottom:8px}#dawv .xcd>b{display:flex;gap:6px;align-items:center;color:#eaf0fc}#dawv .xcd small{color:#8ea0c2;display:block;margin:2px 0 5px}
+#dawv .xcd .xb2{margin-left:auto;background:#f59e0b;color:#111;border:0;border-radius:6px;padding:3px 9px;font-weight:700;font-size:11px;cursor:pointer}
+#dawv .xt{width:100%;border-collapse:collapse;margin:4px 0 8px}#dawv .xt td,#dawv .xt th{border-bottom:1px solid #2b3445;padding:3px 4px;text-align:left;font-size:11px;background:none}#dawv .xt th{color:#8ea0c2;font-weight:600}
+#dawv .xg{color:#34d399}#dawv .xy{color:#fbbf24}#dawv .xr{color:#f87171}
+#dawv .xch{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:11px;margin:4px 0}#dawv .xch span{background:#14203a;border:1px solid #33466b;border-radius:6px;padding:3px 7px}
+#dawv .xrw{display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap}#dawv .xrw select,#dawv .xrw input[type=text]{background:#14203a;color:#d8e2f2;border:1px solid #33466b;border-radius:6px;padding:3px 5px;font:inherit;max-width:130px}#dawv .xrw input[type=range]{flex:1;min-width:60px}
+#dawv .xp button.xs2{background:#14203a;color:#d8e2f2;border:1px solid #33466b;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px}#dawv .xp button.xs2:hover{background:#1c2c4d}
+#dawv .xau{display:block;width:100%;height:110px;background:#0b1222;border:1px solid #2b3445;border-radius:8px;touch-action:none;cursor:crosshair}
+#azspec{position:fixed;z-index:99999;left:50%;top:60px;transform:translateX(-50%);width:min(980px,96vw);background:#0b1222;color:#d8e2f2;border:1px solid #3b4d73;border-radius:12px;padding:12px;box-shadow:0 20px 70px #000c;font:12px system-ui}
+#azspec canvas{display:block;width:100%;height:330px;background:#000;border-radius:8px;cursor:crosshair}#azspec .zr{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}#azspec button{background:#14203a;color:#d8e2f2;border:1px solid #33466b;border-radius:7px;padding:6px 12px;cursor:pointer;font:inherit}#azspec button.p{background:#f59e0b;color:#111;border:0;font-weight:700}`;
+ let cssd=0;const css=()=>{if(cssd)return;cssd=1;const s=document.createElement('style');s.textContent=CSS;document.head.appendChild(s)};
+ const shell=(p,title,body,wire)=>{css();p.innerHTML=`<div class=xp><div class=xh><b>${title}</b><button id=xpx title="Yopish">✕</button></div><div class=xb>${body}</div></div>`;p.querySelector('#xpx').onclick=()=>window.__dawui.close();wire&&wire(p)};
+ /* ---------- DSP yordamchilar ---------- */
+ function fft(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
+  for(let len=2;len<=n;len<<=1){const a=-2*Math.PI/len,wr=Math.cos(a),wi=Math.sin(a);for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<len/2;k++){const ur=re[i+k],ui=im[i+k],vr=re[i+k+len/2]*cr-im[i+k+len/2]*ci,vi=re[i+k+len/2]*ci+im[i+k+len/2]*cr;re[i+k]=ur+vr;im[i+k]=ui+vi;re[i+k+len/2]=ur-vr;im[i+k+len/2]=ui-vi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t}}}}
+ const hann=n=>{const w=new Float32Array(n);for(let i=0;i<n;i++)w[i]=.5-.5*Math.cos(2*Math.PI*i/(n-1));return w};
+ function seg(buf,off,dur,maxS){const sr=buf.sampleRate,a=Math.floor(off*sr),n=Math.min(buf.length-a,Math.floor(Math.min(dur,maxS)*sr)),L=buf.getChannelData(0).subarray(a,a+n),R=(buf.numberOfChannels>1?buf.getChannelData(1):buf.getChannelData(0)).subarray(a,a+n);return{L,R,n,sr}}
+ function biq(x,b,a){const y=new Float32Array(x.length);let x1=0,x2=0,y1=0,y2=0;for(let i=0;i<x.length;i++){const v=b[0]*x[i]+b[1]*x1+b[2]*x2-a[0]*y1-a[1]*y2;x2=x1;x1=x[i];y2=y1;y1=v;y[i]=v}return y}
+ function kw(x,sr){let f0=1681.974450955533,G=3.999843853973347,Q=.7071752369554196,K=Math.tan(Math.PI*f0/sr),Vh=Math.pow(10,G/20),Vb=Math.pow(Vh,.4996667741545416),a0=1+K/Q+K*K;const s1=[[(Vh+Vb*K/Q+K*K)/a0,2*(K*K-Vh)/a0,(Vh-Vb*K/Q+K*K)/a0],[2*(K*K-1)/a0,(1-K/Q+K*K)/a0]];
+  f0=38.13547087602444;Q=.5003270373238773;K=Math.tan(Math.PI*f0/sr);a0=1+K/Q+K*K;const s2=[[1,-2,1],[2*(K*K-1)/a0,(1-K/Q+K*K)/a0]];return biq(biq(x,s1[0],s1[1]),s2[0],s2[1])}
+ function analyze(buf,off,dur){const {L,R,n,sr}=seg(buf,off,dur,75);if(n<sr*.5)return null;
+  // spektr (mono)
+  const N=4096,w=hann(N),re=new Float32Array(N),im=new Float32Array(N),pw=new Float64Array(N/2);let fr=0;const hop=Math.max(N,Math.floor((n-N)/60));
+  for(let p=0;p+N<=n;p+=hop){for(let i=0;i<N;i++){re[i]=(L[p+i]+R[p+i])*.5*w[i];im[i]=0}fft(re,im);for(let k=0;k<N/2;k++)pw[k]+=re[k]*re[k]+im[k]*im[k];fr++}
+  const dens=(f1,f2)=>{const k1=Math.max(1,Math.floor(f1/sr*N)),k2=Math.min(N/2-1,Math.ceil(f2/sr*N));let s=0;for(let k=k1;k<=k2;k++)s+=pw[k];return db10(s/(k2-k1+1)/Math.max(1,fr))};
+  const ref=dens(500,1500),B={past:dens(40,100)-ref,loy:dens(200,400)-ref,vokal:dens(2000,4000)-ref,ssh:dens(6000,9000)-ref,havo:dens(10000,16000)-ref};
+  const R0={past:6,loy:4,vokal:-8,ssh:-15,havo:-19},D={};for(const k in B)D[k]=B[k]-R0[k];
+  // LUFS
+  const kl=kw(L,sr),kr=kw(R,sr),bl=Math.floor(.4*sr),st=Math.floor(.1*sr),bk=[];for(let p=0;p+bl<=n;p+=st){let a=0,b=0;for(let i=p;i<p+bl;i++){a+=kl[i]*kl[i];b+=kr[i]*kr[i]}bk.push((a+b)/bl)}
+  const lu=m=>-.691+db10(m);let gated=bk.filter(m=>lu(m)>-70);let lufs=-70;if(gated.length){const m1=gated.reduce((s,x)=>s+x,0)/gated.length,g2=gated.filter(m=>lu(m)>lu(m1)-10);if(g2.length)lufs=lu(g2.reduce((s,x)=>s+x,0)/g2.length)}
+  const sl=Math.floor(3*sr),sh=Math.floor(1*sr),stv=[];for(let p=0;p+sl<=n;p+=sh){let a=0,b=0;for(let i=p;i<p+sl;i+=2){a+=kl[i]*kl[i];b+=kr[i]*kr[i]}stv.push(lu((a+b)/(sl/2)))}
+  let lra=0;{const g=stv.filter(v=>v>-70);if(g.length>2){const mean=db10(g.reduce((s,v)=>s+Math.pow(10,(v+.691)/10),0)/g.length)-.691,g2=g.filter(v=>v>mean-20).sort((a,b)=>a-b);if(g2.length>2)lra=g2[Math.floor(g2.length*.95)]-g2[Math.floor(g2.length*.1)]}}
+  let pk=0,sLR=0,sLL=0,sRR=0,sM=0,sS=0;for(let i=0;i<n;i++){const a=Math.abs(L[i]),b=Math.abs(R[i]);if(a>pk)pk=a;if(b>pk)pk=b;sLR+=L[i]*R[i];sLL+=L[i]*L[i];sRR+=R[i]*R[i];const m=(L[i]+R[i])*.5,s=(L[i]-R[i])*.5;sM+=m*m;sS+=s*s}
+  return{B,D,lufs,peak:20*Math.log10(Math.max(pk,1e-6)),lra,corr:sLR/Math.sqrt(sLL*sRR+1e-20),width:Math.sqrt(sS/(sM+1e-20)),secs:n/sr}}
+ /* ---------- qoidalar -> reja ---------- */
+ const LV=[{n:'Professional Studio',lufs:-14,amt:.6,ceil:-1},{n:'Advanced AI Processing',lufs:-14,amt:.85,ceil:-1},{n:'Broadcast / Commercial',lufs:-12,amt:.7,ceil:-1}];
+ function plan(an,lv){const L=LV[lv],D=an.D,pl={lv:L,items:[],cub:[]};
+  const eq={},eqn=[];if(D.past>3){eq.hp=35;eqn.push('HP 35 Hz')}if(D.loy>3){eq.m1f=300;eq.m1q=1;eq.m1g=-cl(D.loy*.7,1.5,6);eqn.push('300 Hz '+eq.m1g.toFixed(1)+' dB')}if(D.havo<-4){eq.hf=11000;eq.hg=cl(-D.havo*.4,1,3.5);eqn.push('11k +'+eq.hg.toFixed(1)+' dB')}if(D.vokal<-3){eq.m2f=3200;eq.m2g=cl(-D.vokal*.5,1,4);eqn.push('3.2k +'+eq.m2g.toFixed(1)+' dB')}
+  const vr=D.ssh>2||D.loy>4;if(vr){const vp={tunnel:D.loy>4?cl(D.loy/10,.25,.7):.2,room:.3,breath:.2,ch:.3,s:D.ssh>2?cl(D.ssh/9,.35,.9):.3};pl.items.push({id:'azvr',p:vp,t:'AZ Vocal Repair'});pl.cub.push('De-esser: 6–8 kHz, siqish '+Math.round(vp.s*10)+'/10'+(D.loy>4?'; 300–400 Hz da tunnel/loy kesimi':''))}
+  if(Object.keys(eq).length){pl.items.push({id:'eq4',p:eq,t:'EQ'});pl.cub.push('EQ: '+eqn.join(', '))}
+  const cp=an.lra>9?{th:-24,ratio:3.5,att:8,rel:140,mk:4}:{th:-14,ratio:2,att:30,rel:200,knee:20,mk:2};pl.items.push({id:'comp',p:cp,t:'Compressor'});pl.cub.push('Compressor: '+cp.ratio+':1, attack '+cp.att+' ms, release '+cp.rel+' ms'+(an.lra>9?' (dinamika keng: LRA '+an.lra.toFixed(1)+' LU)':''));
+  pl.items.push({id:'azclean',p:{amt:L.amt,ceil:L.ceil},t:'AZ Audio Cleanup'});
+  const gain=cl(L.lufs-an.lufs,0,12);pl.items.push({id:'limiter',p:{gain:+gain.toFixed(1),ceil:L.ceil,rel:80},t:'Limiter '+L.lufs+' LUFS'});pl.cub.push('Master limiter: ceiling '+L.ceil+' dBTP, kirish +'+gain.toFixed(1)+' dB (maqsad '+L.lufs+' LUFS)');
+  return pl}
+ function applyPlan(list,pl){pl.items.forEach(it=>{DAWFX.add(list,it.id);list[list.length-1].p=Object.assign({},it.p)})}
+ const cls=(v,a,b)=>v>b?'xr':v>a?'xy':'xg';
+ function reportHtml(an,pl){const D=an.D,row=(n,d,tip)=>`<tr><td>${n}</td><td class=${d>3?'xr':d<-3?'xy':'xg'}>${d>3?'+'+d.toFixed(1)+' dB ortiq':d<-3?d.toFixed(1)+' dB kam':'yaxshi'}</td><td>${tip}</td></tr>`;
+  return`<table class=xt><tr><th>Chastota</th><th>Holat</th><th>Tavsiya</th></tr>${row('Past 40–100 Hz',D.past,D.past>3?'HP 35 Hz':'—')}${row('Loy 200–400 Hz',D.loy,D.loy>3?'−'+cl(D.loy*.7,1.5,6).toFixed(1)+' dB':'—')}${row('Vokal 2–4 kHz',D.vokal,D.vokal<-3?'+'+cl(-D.vokal*.5,1,4).toFixed(1)+' dB':'—')}${row('S/SH 6–9 kHz',D.ssh,D.ssh>3?'De-ess':'—')}${row('Havo 10k+',D.havo,D.havo<-4?'+'+cl(-D.havo*.4,1,3.5).toFixed(1)+' dB':'—')}</table>
+  <table class=xt><tr><th>Ko‘rsatkich</th><th>Qiymat</th><th>Maqsad</th></tr><tr><td>LUFS</td><td class=${Math.abs(an.lufs-pl.lv.lufs)>3?'xy':'xg'}>${an.lufs.toFixed(1)}</td><td>${pl.lv.lufs}</td></tr><tr><td>Peak (sample)</td><td class=${an.peak>-1?'xr':'xg'}>${an.peak.toFixed(1)} dBFS</td><td>≤ ${pl.lv.ceil}</td></tr><tr><td>Dinamika (LRA)</td><td class=${an.lra>10?'xy':'xg'}>${an.lra.toFixed(1)} LU</td><td>5–8</td></tr><tr><td>Stereo kenglik</td><td class=${an.width>1?'xy':'xg'}>${an.width.toFixed(2)}</td><td>0.3–0.9</td></tr><tr><td>Korrelyatsiya</td><td class=${an.corr<0?'xr':'xg'}>${an.corr.toFixed(2)}</td><td>&gt; 0</td></tr></table>`}
+ function chainHtml(pl){return`<div class=xch>${pl.items.map(i=>`<span>${E(i.t)}</span>`).join('→')}</div>`}
+ /* ---------- AI panel ---------- */
+ const SYS=['Avto EQ, Compression va Mastering','Tahlil va chastota xaritasi','Suno + Cubase hybrid (tavsiyalar)'],SRC=['Suno Stems (har bir trek alohida)','Tayyor stereo WAV (tanlangan klip)','Stereo WAV + Stems'],LVN=LV.map(x=>x.n);
+ const radio=(arr,k)=>arr.map((t,i)=>`<div class="xo ${ST[k]==i?'s':''}" data-k=${k} data-i=${i}><i></i>${E(t)}</div>`).join('');
+ function firstClip(t){return t.clips.find(c=>{const a=DW().A.get(c.asset);return a&&a.buf})}
+ async function runAI(){const D=DD(),sc=DW().selClip();const targets=[];
+  if(ST.src==1||ST.src==2){const t=sc?sc.t:D.tracks.find(x=>firstClip(x));if(!t){msg('Avval klip tanlang yoki audio qo‘shing.');return}const c=sc?sc.c:firstClip(t);targets.push({t,c,main:1})}
+  if(ST.src==0||ST.src==2){D.tracks.forEach(t=>{if(t.dm)return;const c=firstClip(t);if(c&&!targets.some(x=>x.t==t))targets.push({t,c})})}
+  if(!targets.length){msg('Tahlil uchun audio topilmadi.');return}
+  ST.busy=true;window.__dawui.render();await new Promise(r=>setTimeout(r,60));const out=[];
+  for(const x of targets){const a=DW().A.get(x.c.asset);try{const an=analyze(a.buf,x.c.off,x.c.dur);if(an)out.push({t:x.t,an,pl:plan(an,ST.lvl),main:x.main})}catch(e){console.warn(e)}await new Promise(r=>setTimeout(r,10))}
+  ST.res=out;ST.busy=false;window.__dawui.render()}
+ function cubText(){const r=ST.res||[];return r.map(x=>'['+x.t.n+'] LUFS '+x.an.lufs.toFixed(1)+' · peak '+x.an.peak.toFixed(1)+' dBFS · LRA '+x.an.lra.toFixed(1)+'\n  - '+x.pl.cub.join('\n  - ')).join('\n\n')}
+ function aiPanel(p){let res='';
+  if(ST.busy)res='<p class=xs>⏳ Tahlil qilinmoqda…</p>';
+  else if(ST.res){const m=ST.res.find(x=>x.main)||ST.res[0];res=`<hr style="border:0;border-top:1px solid #2b3445;margin:10px 0"><b style="color:#eaf0fc">Tahlil natijasi · ${E(m.t.n)}</b><div class=xs>${LVN[ST.lvl]} · taxminiy, qoidaga asoslangan (haqiqiy AI emas)</div>${reportHtml(m.an,m.pl)}${ST.sys==1?'':'<b style="color:#eaf0fc">Avto-zanjir</b>'+chainHtml(m.pl)}`;
+   if(ST.res.length>1&&ST.src!=1)res+=`<table class=xt><tr><th>Trek</th><th>LUFS</th><th>Peak</th><th>Asosiy muammo</th></tr>${ST.res.filter(x=>x!=m).map(x=>{const D=x.an.D,iss=D.ssh>3?'S/SH o‘tkir':D.loy>3?'loy ortiq':D.past>3?'past ortiq':D.havo<-4?'havo kam':'yaxshi';return`<tr><td>${E(x.t.n)}</td><td>${x.an.lufs.toFixed(1)}</td><td>${x.an.peak.toFixed(1)}</td><td>${iss}</td></tr>`}).join('')}</table>`;
+   if(ST.sys!=1)res+=`<button class=xgo id=xapply>＋ Zanjirga qo‘shish${ST.res.length>1?' ('+ST.res.length+' trek)':''}</button>`;
+   if(ST.sys==2)res+=`<b style="color:#eaf0fc;display:block;margin-top:10px">Cubase uchun tavsiyalar</b><pre style="white-space:pre-wrap;color:#9fb0c9;font-size:11px;margin:4px 0">${E(cubText())}</pre><div class=xrw><button class=xs2 id=xcp>Nusxa olish</button><button class=xs2 id=xtx>.txt yuklab olish</button></div>`}
+  shell(p,'🤖 AI Studio',`<p class=xs>Audioni tahlil qilib (chastota, LUFS, peak, dinamika, stereo) ishlov zanjirini tuzadi. Hammasi brauzerda, internetsiz.</p>
+  <div class=xq><b>1. Qaysi tizim?</b>${radio(SYS,'sys')}</div><div class=xq><b>2. Audio manba</b>${radio(SRC,'src')}</div><div class=xq><b>3. Ishlash darajasi</b>${radio(LVN,'lvl')}</div>
+  <button class=xgo id=xrun ${ST.busy?'disabled':''}>▶ Tahlil qilish va zanjir tuzish</button>${res}`,p=>{
+   p.querySelectorAll('.xo').forEach(o=>o.onclick=()=>{ST[o.dataset.k]=+o.dataset.i;window.__dawui.render()});p.querySelector('#xrun').onclick=runAI;
+   const ap=p.querySelector('#xapply');if(ap)ap.onclick=()=>{DW().hist();ST.res.forEach(x=>{if(!x.t.fx)x.t.fx=[];applyPlan(x.t.fx,x.pl)});DW().persist();DW().buildHeads();rewire();window.__dawui.render();msg('➕ AI zanjiri qo‘shildi ('+ST.res.length+' trek). Fx tugmasi orqali ko‘ring/sozlang.')};
+   const cp=p.querySelector('#xcp');if(cp)cp.onclick=()=>{try{navigator.clipboard.writeText(cubText());msg('📋 Nusxa olindi')}catch(_){msg('Nusxa olib bo‘lmadi')}};
+   const tx=p.querySelector('#xtx');if(tx)tx.onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([cubText()],{type:'text/plain'}));a.download='AI-Studio-tavsiyalar.txt';document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}})}
+ /* ---------- Stem (taxminiy) ---------- */
+ async function stems(){const sc=DW().selClip();if(!sc){msg('Avval ajratiladigan klipni tanlang.');return}const a=DW().A.get(sc.c.asset);if(!a||!a.buf){msg('Klip audiosi yuklanmagan.');return}
+  msg('⏳ Taxminiy ajratish (chastota/stereo bo‘yicha)…');const b=a.buf,sr=b.sampleRate,n=b.length,Lc=b.getChannelData(0),Rc=b.numberOfChannels>1?b.getChannelData(1):Lc;
+  const M=new Float32Array(n),S=new Float32Array(n);for(let i=0;i<n;i++){M[i]=(Lc[i]+Rc[i])*.5;S[i]=(Lc[i]-Rc[i])*.5}
+  const defs=[['Bas (<160 Hz)',M,0,[['lowpass',160]]],['Markaz — vokal/asosiy',M,0,[['highpass',160],['lowpass',5000]]],['Yon — stereo kenglik',S,1,[['highpass',160]]],['Yuqori — havo/perkussiya',M,0,[['highpass',5000]]]];
+  const files=[];for(const [nm,src,side,fl] of defs){const oc=new OfflineAudioContext(2,n,sr),bf=oc.createBuffer(2,n,sr);bf.getChannelData(0).set(src);const r=bf.getChannelData(1);for(let i=0;i<n;i++)r[i]=side?-src[i]:src[i];const s=oc.createBufferSource();s.buffer=bf;let prev=s;fl.forEach(([t,f])=>{const q=oc.createBiquadFilter();q.type=t;q.frequency.value=f;q.Q.value=.707;prev.connect(q);prev=q});prev.connect(oc.destination);s.start();const out=await oc.startRendering();files.push(new File([DAWSND.wav(out)],sc.c.name+' — '+nm+'.wav',{type:'audio/wav'}))}
+  await DW().importFiles(files,null,sc.c.start);msg('✅ 4 ta trek ajratildi (taxminiy; AI model emas — vokalni to‘liq ajratmaydi).')}
+ /* ---------- Spectral editor ---------- */
+ const specClose=()=>{const e=document.getElementById('azspec');if(e)e.remove();ST.spec=null};
+ function specOpen(){const sc=DW().selClip();if(!sc){msg('Avval klipni tanlang.');return}const a=DW().A.get(sc.c.asset);if(!a||!a.buf){msg('Klip audiosi yuklanmagan.');return}css();specClose();
+  const b=a.buf,sr=b.sampleRate,c=sc.c,dur=Math.min(c.dur,180),W=900,H=330,N=1024,w=hann(N),fr=Math.min(700,Math.ceil(dur*sr/N)),hop=Math.max(1,Math.floor((dur*sr-N)/fr)),x0=Math.floor(c.off*sr),ch=b.getChannelData(0);
+  const mag=new Float32Array(fr*(N/2)),re=new Float32Array(N),im=new Float32Array(N),avg=new Float32Array(N/2);
+  for(let f=0;f<fr;f++){const p=x0+f*hop;for(let i=0;i<N;i++){re[i]=(ch[p+i]||0)*w[i];im[i]=0}fft(re,im);for(let k=0;k<N/2;k++){const v=10*Math.log10(re[k]*re[k]+im[k]*im[k]+1e-12);mag[f*(N/2)+k]=v;avg[k]+=v/fr}}
+  const e=document.createElement('div');e.id='azspec';e.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><b style="font-size:14px;flex:1">🔬 Spectral Editing · ${E(c.name||'')}</b><span style="color:#8ea0c2" id=sinf>Spektrda to‘rtburchak chizib tanlang</span><button id=sx>✕</button></div><canvas id=scv></canvas>
+  <div class=zr><span>Pasaytirish</span><input type=range id=sdb min=3 max=36 value=9 step=1 style="width:180px"><b id=sdbv>−9 dB</b><button class=p id=sap>Pasaytirish (qo‘llash)</button><button id=sau>Rezonanslarni avto-topish</button><span style="color:#8ea0c2;margin-left:auto">Asl audio saqlanadi (Ctrl+Z — qaytarish)</span></div>`;document.body.appendChild(e);
+  const cv=e.querySelector('#scv');cv.width=W;cv.height=H;const g=cv.getContext('2d'),img=g.createImageData(W,H),fmax=sr/2,fmin=30;
+  const fy=y=>fmin*Math.pow(fmax/fmin,1-y/H),yf=f=>H*(1-Math.log(f/fmin)/Math.log(fmax/fmin));
+  for(let y=0;y<H;y++){const k=Math.min(N/2-1,Math.round(fy(y)/fmax*(N/2)));for(let x=0;x<W;x++){const f=Math.min(fr-1,Math.floor(x/W*fr)),v=cl((mag[f*(N/2)+k]+10-0)/90,0,1)*0+cl((mag[f*(N/2)+k]+20)/70,0,1),i=(y*W+x)*4,h=(1-v)*250,s=1,l=v*.55;const q=l*Math.min(1,1-l)*0+0;let r1,g1,b1;const A=s*Math.min(l,1-l),fn=n=>{const kk=(n+h/30)%12;return l-A*Math.max(-1,Math.min(kk-3,9-kk,1))};r1=fn(0);g1=fn(8);b1=fn(4);img.data[i]=r1*255;img.data[i+1]=g1*255;img.data[i+2]=b1*255;img.data[i+3]=255}}
+  const base=()=>{g.putImageData(img,0,0);g.fillStyle='#fff';g.font='10px system-ui';[100,500,1e3,5e3,1e4].forEach(f=>{const y=yf(f);g.globalAlpha=.25;g.fillRect(0,y,W,1);g.globalAlpha=1;g.fillText(f>=1e3?f/1e3+'k':f,3,y-2)})};
+  const selDraw=()=>{base();const s=ST.spec&&ST.spec.sel;if(!s)return;g.strokeStyle='#fff';g.lineWidth=2;g.fillStyle='rgba(255,255,255,.2)';g.fillRect(s.x1,s.y1,s.x2-s.x1,s.y2-s.y1);g.strokeRect(s.x1,s.y1,s.x2-s.x1,s.y2-s.y1)};
+  ST.spec={sel:null};selDraw();
+  const inf=()=>{const s=ST.spec.sel;if(!s)return;const t0=s.x1/W*dur,t1=s.x2/W*dur,f1=fy(s.y2),f2=fy(s.y1);e.querySelector('#sinf').textContent=`${t0.toFixed(2)}–${t1.toFixed(2)} s · ${Math.round(f1)}–${Math.round(f2)} Hz`};
+  let dr=null;cv.onpointerdown=ev=>{const r=cv.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width*W,y=(ev.clientY-r.top)/r.height*H;dr={x,y};ST.spec.sel={x1:x,y1:y,x2:x,y2:y};cv.setPointerCapture(ev.pointerId)};
+  cv.onpointermove=ev=>{if(!dr)return;const r=cv.getBoundingClientRect(),x=cl((ev.clientX-r.left)/r.width*W,0,W),y=cl((ev.clientY-r.top)/r.height*H,0,H);ST.spec.sel={x1:Math.min(dr.x,x),x2:Math.max(dr.x,x),y1:Math.min(dr.y,y),y2:Math.max(dr.y,y)};selDraw();inf()};cv.onpointerup=()=>{dr=null};
+  e.querySelector('#sx').onclick=specClose;const sdb=e.querySelector('#sdb');sdb.oninput=()=>e.querySelector('#sdbv').textContent='−'+sdb.value+' dB';
+  e.querySelector('#sau').onclick=()=>{const med=new Float32Array(N/2),wd=Math.max(2,Math.round(N/2*.04));for(let k=0;k<N/2;k++){let s=0,c2=0;for(let j=Math.max(0,k-wd);j<=Math.min(N/2-1,k+wd);j++){s+=avg[j];c2++}med[k]=s/c2}
+   let best=-1,bv=6;for(let k=Math.round(200/fmax*(N/2));k<Math.round(12000/fmax*(N/2));k++){const d=avg[k]-med[k];if(d>bv){bv=d;best=k}}
+   if(best<0){e.querySelector('#sinf').textContent='Aniq rezonans topilmadi';return}const f=best/(N/2)*fmax;ST.spec.sel={x1:0,x2:W,y1:yf(f*1.12),y2:yf(f/1.12)};selDraw();inf();e.querySelector('#sinf').textContent+=` · topildi: ${Math.round(f)} Hz (+${bv.toFixed(1)} dB)`};
+  e.querySelector('#sap').onclick=async()=>{const s=ST.spec.sel;if(!s||s.x2-s.x1<3||s.y2-s.y1<3){e.querySelector('#sinf').textContent='Avval spektrda to‘rtburchak chizing';return}
+   const t0=c.off+s.x1/W*dur,t1=c.off+s.x2/W*dur,fh=fy(s.y1),fl=fy(s.y2),fc=Math.sqrt(fh*fl),Q=cl(fc/Math.max(20,fh-fl),.5,25),dbv=-(+sdb.value);msg('⏳ Spektral tahrir…');
+   const oc=new OfflineAudioContext(b.numberOfChannels,b.length,sr),src=oc.createBufferSource();src.buffer=b;const f=oc.createBiquadFilter();f.type='peaking';f.frequency.value=fc;f.Q.value=Q;f.gain.setValueAtTime(0,0);f.gain.setTargetAtTime(dbv,t0,.004);f.gain.setTargetAtTime(0,t1,.004);src.connect(f);f.connect(oc.destination);src.start();const out=await oc.startRendering();
+   const ab=DAWSND.wav(out),id=DW().rid();await DW().IDB.put(id,ab.slice(0));DW().hist();DW().A.set(id,{buf:out,peaks:DW().peaksOf(out),name:(c.name||'audio')+' (spektral)'});DD().assets[id]={name:(c.name||'audio')+' (spektral)',dur:out.duration,sr:out.sampleRate,ch:out.numberOfChannels};c.asset=id;DW().persist();DW().draw();rewire();msg('✅ '+Math.round(fh-fl)+' Hz kenglikdagi bo‘lak '+(-dbv)+' dB pasaytirildi.');specClose()}}
+ /* ---------- ZIP (store) ---------- */
+ const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+ const crc32=u=>{let c=~0;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return(~c)>>>0};
+ function zip(files){const enc=new TextEncoder(),parts=[],cen=[];let off=0;files.forEach(f=>{const nm=enc.encode(f.name),d=new Uint8Array(f.data),crc=crc32(d),h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint32(14,crc,true);h.setUint32(18,d.length,true);h.setUint32(22,d.length,true);h.setUint16(26,nm.length,true);parts.push(h.buffer,nm,d);
+   const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint32(16,crc,true);c.setUint32(20,d.length,true);c.setUint32(24,d.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);cen.push(c.buffer,nm);off+=30+nm.length+d.length});
+  let cs=0;cen.forEach(x=>cs+=x.byteLength||x.length);const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);return new Blob([...parts,...cen,e.buffer],{type:'application/zip'})}
+ const dl=(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)};
+ async function exportStems(){const D=DD(),ts=D.tracks.filter(t=>t.clips.length||t.dm);if(!ts.length){msg('Eksport uchun trek yo‘q.');return}const files=[];let i=1;for(const t of ts){msg('⏳ Stem '+i+'/'+ts.length+': '+t.n);const r=await DW().renderBuf(t.id);if(r)files.push({name:String(i).padStart(2,'0')+' - '+String(t.n).replace(/[\\/:*?"<>|]/g,'_')+'.wav',data:DAWSND.wav(r)});i++}
+  if(!files.length)return;dl(zip(files),'stemlar.zip');msg('✅ '+files.length+' ta stem ZIP sifatida yuklandi.')}
+ /* ---------- Automation editor ---------- */
+ function auPanelWire(p){const cv=p.querySelector('#xau');if(!cv)return;const D=DD(),t=D.tracks.find(x=>x.id==ST.auTrack);if(!t)return;const g=cv.getContext('2d');const dpr=Math.min(2,devicePixelRatio||1),cw=cv.clientWidth,ch=cv.clientHeight;cv.width=cw*dpr;cv.height=ch*dpr;g.setTransform(dpr,0,0,dpr,0,0);
+  const end=Math.max(8,DW().projEnd()),X=tm=>tm/end*cw,Y=v=>ch-6-(v/1.5)*(ch-12),T=x=>cl(x/cw*end,0,end),V=y=>cl((ch-6-y)/(ch-12)*1.5,0,1.5);let hit=-1,pt=null;
+  const draw=()=>{g.clearRect(0,0,cw,ch);g.strokeStyle='#17223a';g.fillStyle='#53648a';g.font='10px system-ui';[0,.5,1,1.5].forEach(v=>{g.beginPath();g.moveTo(0,Y(v));g.lineTo(cw,Y(v));g.stroke();g.fillText(v==1?'0 dB':Math.round(20*Math.log10(Math.max(v,.001)))+' dB',3,Y(v)-2)});
+   const a=(t.au||[]).slice().sort((x,y)=>x.t-y.t);if(a.length){g.strokeStyle='#f59e0b';g.lineWidth=2.5;g.beginPath();g.moveTo(0,Y(a[0].v));a.forEach(q=>g.lineTo(X(q.t),Y(q.v)));g.lineTo(cw,Y(a[a.length-1].v));g.stroke();g.fillStyle='#fff';a.forEach(q=>{g.beginPath();g.arc(X(q.t),Y(q.v),4.5,0,7);g.fill()})}else{g.fillStyle='#6b7ca0';g.fillText('Chiziqqa bosing — nuqta qo‘shiladi. Sudrab siljiting, ikki marta bosib o‘chiring.',8,ch/2)}
+   if(DW().V.playing){const x=X(DW().curP());g.strokeStyle='#fff';g.globalAlpha=.6;g.beginPath();g.moveTo(x,0);g.lineTo(x,ch);g.stroke();g.globalAlpha=1}};draw();
+  const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width*cw,(e.clientY-r.top)/r.height*ch]};
+  const near=(x,y)=>{const a=t.au||[];let b=-1,bd=100;a.forEach((q,i)=>{const d=Math.hypot(X(q.t)-x,Y(q.v)-y);if(d<10&&d<bd){bd=d;b=i}});return b};
+  cv.onpointerdown=e=>{const[x,y]=pos(e);if(!t.au)t.au=[];DW().hist();hit=near(x,y);if(hit<0){t.au.push({t:+T(x).toFixed(2),v:+V(y).toFixed(2)});hit=t.au.length-1}cv.setPointerCapture(e.pointerId);draw()};
+  cv.onpointermove=e=>{if(hit<0||!t.au[hit])return;const[x,y]=pos(e);t.au[hit].t=+T(x).toFixed(2);t.au[hit].v=+V(y).toFixed(2);draw()};
+  cv.onpointerup=()=>{if(hit>=0){hit=-1;DW().persist();rewire()}};
+  cv.ondblclick=e=>{const[x,y]=pos(e),i=near(x,y);if(i>=0){DW().hist();t.au.splice(i,1);DW().persist();rewire();draw()}};
+  p.querySelector('#xauk').onclick=()=>{DW().hist();const e=end;t.au=[{t:0,v:.75},{t:+(e*.4).toFixed(2),v:.75},{t:+(e*.45).toFixed(2),v:1},{t:e,v:1}];DW().persist();rewire();draw()};
+  p.querySelector('#xauc').onclick=()=>{DW().hist();t.au=[];DW().persist();rewire();draw()};
+  let raf=0;const anim=()=>{raf=requestAnimationFrame(anim);if(!document.body.contains(cv)){cancelAnimationFrame(raf);return}if(DW().V.playing)draw()};anim()}
+ /* ---------- Pro panel ---------- */
+ function proPanel(p){const D=DD();if(!D.buses)D.buses=[];if(!D.sc)D.sc=[];const trs=D.tracks.filter(t=>!t.dm||true),sel=DW().selTrack();if(!ST.auTrack||!D.tracks.some(t=>t.id==ST.auTrack))ST.auTrack=sel?sel.id:(D.tracks[0]&&D.tracks[0].id);
+  const opt=(arr,v)=>arr.map(t=>`<option value="${t.id}" ${t.id==v?'selected':''}>${E(t.n)}</option>`).join('');
+  const busHtml=D.buses.map(b=>`<div class=xcd style="background:#232b3a" data-b="${b.id}"><div class=xrw><input type=text value="${E(b.n)}" data-a=bn><input type=range min=0 max=1.5 step=.01 value="${b.vol==null?1:b.vol}" data-a=bv title="Bus balandligi"><button class=xs2 data-a=bfx title="Bus uchun effektlar">Fx</button><button class=xs2 data-a=bd>✕</button></div><div class=xrw>${D.tracks.map(t=>`<label style="font-size:11px;display:flex;gap:3px;align-items:center"><input type=checkbox data-a=bt data-t="${t.id}" ${t.bus==b.id?'checked':''}>${E(t.n)}</label>`).join('')}</div></div>`).join('');
+  const scHtml=D.sc.map((s,i)=>`<div class=xcd style="background:#232b3a" data-s="${i}"><div class=xrw><select data-a=ss>${opt(D.tracks,s.src)}</select>→<select data-a=sd>${opt(D.tracks,s.dst)}</select><button class=xs2 data-a=son style="${s.on===0?'opacity:.5':''}">${s.on===0?'o‘chiq':'yoniq'}</button><button class=xs2 data-a=sx>✕</button></div><div class=xrw><small style="width:62px">Pasayish</small><input type=range min=1 max=18 step=.5 value="${s.db==null?6:s.db}" data-a=sdb><b style="font-size:11px">${s.db==null?6:s.db} dB</b></div><div class=xrw><small style="width:62px">Qaytish</small><input type=range min=40 max=400 step=5 value="${s.rel||120}" data-a=srl><b style="font-size:11px">${s.rel||120} ms</b></div></div>`).join('');
+  shell(p,'🛠 Pro vositalar',`<p class=xs>Cubase'dagi zamonaviy funksiyalar — Daftar DAW ichida.</p>
+  <div class=xcd><b>① Stem Separation <button class=xb2 id=xst>Ajratish</button></b><small>Tanlangan klipni 4 ta trekka ajratadi: bas, markaz (vokal), yon (stereo), yuqori. <u>Taxminiy</u> — chastota/stereo bo‘yicha, AI model emas.</small></div>
+  <div class=xcd><b>② Spectral Editing <button class=xb2 id=xsp>Ochish</button></b><small>Spektrdan keraksiz shovqin va rezonansni belgilab pasaytirish (avto-topish bor).</small></div>
+  <div class=xcd><b>③ Automation</b><small>Trek balandligi (volume) chizig‘i — kuplet/naqorat dinamikasi.</small><div class=xrw><select id=xaut>${opt(D.tracks,ST.auTrack)}</select><button class=xs2 id=xauk>Kuplet → Naqorat</button><button class=xs2 id=xauc>Tozalash</button></div>${D.tracks.length?'<canvas class=xau id=xau></canvas>':'<small>Avval trek qo‘shing.</small>'}</div>
+  <div class=xcd><b>④ Group Channels (Bus) <button class=xb2 id=xbadd>＋ Bus</button></b><small>Orkestr, xor, baraban — treklarni bitta Bus'ga yig‘ing; Bus'ga alohida Fx qo‘yish mumkin.</small>${busHtml}</div>
+  <div class=xcd><b>⑤ Sidechain <button class=xb2 id=xsadd>＋ Qo‘shish</button></b><small>Manba trek (kick) bosilganda nishon trek (bas) pasayadi.</small>${scHtml}</div>
+  <div class=xcd><b>⑥ Pattern Sequencer <button class=xb2 id=xpat>Ochish</button></b><small>Qo‘shimcha baraban va ritm — BeatBox 16 (16 pad, step-sequencer).</small></div>
+  <div class=xcd><b>⑦ Quick Export</b><small>Tezkor audio: butun miks yoki har bir trek alohida (ZIP).</small><div class=xrw><button class=xs2 id=xmx>Miks (WAV)</button><button class=xs2 id=xsm>Stemlar (ZIP)</button></div><small>Format: WAV 16-bit (MP3 brauzerda mavjud emas).</small></div>`,p=>{
+   p.querySelector('#xst').onclick=stems;p.querySelector('#xsp').onclick=specOpen;p.querySelector('#xpat').onclick=()=>{const b=document.getElementById('dawdm');if(b)b.click()};p.querySelector('#xmx').onclick=()=>DW().mixdown();p.querySelector('#xsm').onclick=exportStems;
+   const au=p.querySelector('#xaut');if(au)au.onchange=()=>{ST.auTrack=au.value;proPanel(p)};setTimeout(()=>auPanelWire(p),0);
+   p.querySelector('#xbadd').onclick=()=>{DW().hist();D.buses.push({id:DW().rid(),n:'Bus '+(D.buses.length+1),vol:1,fx:[]});DW().persist();proPanel(p)};
+   p.querySelectorAll('[data-b]').forEach(el=>{const b=D.buses.find(x=>x.id==el.dataset.b);el.querySelector('[data-a=bn]').onchange=e=>{b.n=e.target.value||b.n;DW().persist()};
+    el.querySelector('[data-a=bv]').oninput=e=>{b.vol=+e.target.value;DW().persist();const n=DW().V.tn.get(b.id);}
+    el.querySelector('[data-a=bv]').onchange=()=>rewire();
+    el.querySelector('[data-a=bfx]').onclick=()=>{window.__dawui.open('fx',b.id)};
+    el.querySelector('[data-a=bd]').onclick=()=>{DW().hist();D.tracks.forEach(t=>{if(t.bus==b.id)delete t.bus});D.buses.splice(D.buses.indexOf(b),1);DW().persist();rewire();proPanel(p)};
+    el.querySelectorAll('[data-a=bt]').forEach(cb=>cb.onchange=()=>{DW().hist();const t=D.tracks.find(x=>x.id==cb.dataset.t);if(cb.checked)t.bus=b.id;else if(t.bus==b.id)delete t.bus;DW().persist();rewire();proPanel(p)})});
+   p.querySelector('#xsadd').onclick=()=>{if(D.tracks.length<2){msg('Sidechain uchun kamida 2 ta trek kerak.');return}DW().hist();const k=D.tracks.find(t=>/kick|baraban|drum/i.test(t.n)&&!/bas/i.test(t.n))||D.tracks[0],bs=D.tracks.find(t=>/\bbas|bass/i.test(t.n)&&t!==k)||D.tracks.find(t=>t!==k);D.sc.push({id:DW().rid(),src:k.id,dst:bs.id,db:6,rel:120,on:1});DW().persist();rewire();proPanel(p)};
+   p.querySelectorAll('[data-s]').forEach(el=>{const s=D.sc[+el.dataset.s];const g=a=>el.querySelector('[data-a='+a+']');g('ss').onchange=e=>{DW().hist();s.src=e.target.value;DW().persist();rewire()};g('sd').onchange=e=>{DW().hist();s.dst=e.target.value;DW().persist();rewire()};g('son').onclick=()=>{DW().hist();s.on=s.on===0?1:0;DW().persist();rewire();proPanel(p)};g('sx').onclick=()=>{DW().hist();D.sc.splice(+el.dataset.s,1);DW().persist();rewire();proPanel(p)};
+    g('sdb').oninput=e=>{s.db=+e.target.value;e.target.nextElementSibling.textContent=s.db+' dB'};g('sdb').onchange=()=>{DW().persist();rewire()};g('srl').oninput=e=>{s.rel=+e.target.value;e.target.nextElementSibling.textContent=s.rel+' ms'};g('srl').onchange=()=>{DW().persist();rewire()}})})}
+ window.__dawui.ext={ai:aiPanel,pro:proPanel};window.__dawui.specClose=specClose;window.__dawui.analyze=analyze;window.__dawui.plan=plan;
 })();
 
 /* ===== f6zq: ilova o'rnatilganda qurilmada «Ma'lumot papkasi» — yaratish, yozuv, har ochilishda tiklash ===== */
