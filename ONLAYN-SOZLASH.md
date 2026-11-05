@@ -99,3 +99,9 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 - DAW asboblar panelida «🎼 Akkord»: tanlangan klip yoki butun miksdan akkordlar, kalit, lad, tempo va uslub (top-3, foizda) aniqlanadi. Brauzerda, internetsiz.
 - Natija: akkordlar ketma-ketligi (takt jadvali), rim raqamlari, vaqt chizig‘i, «Akkordlar» treki (ovozsiz markerlar), MIDI akkordlar, .txt va nusxa.
 - Uslub — qoidalarga asoslangan taxmin (AI emas). Server/yangi sozlama kerak emas. UZ/RU/EN.
+
+## v94 — DAW: kanal to‘lqinlari, Mono/Stereo tinglash, treklarni sudrab tartiblash
+- Mono audio — bitta qator, stereo — L/R ikki qator, ko‘p kanalli — har kanal alohida qator (Logic/Cubase kabi). Klip nomida «Mono/Stereo/N ch» yoziladi.
+- Trek sarlavhasida «St/Mo» tugmasi: trekni mono (L+R birlashgan) yoki stereo tinglash.
+- Trek sarlavhasini sudrab tartibini almashtirish (Ctrl+Z bilan qaytariladi).
+- Yangi sozlama/server kerak emas.
