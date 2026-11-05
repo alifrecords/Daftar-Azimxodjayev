@@ -11120,6 +11120,44 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   add(list,id,preset){const d=REG[id];const f={id,uid:uid(),on:1,p:Object.assign({},preset&&d.presets[preset]||{})};list.push(f);return f}};
 })();
 
+/* ===== f6zaz: AZ Azimxodjayev Music effektlari — Vocal Repair, Audio Cleanup (Web Audio versiyalari) + vokal zanjiri ===== */
+(()=>{
+ if(!window.DAWFX)return;
+ const F=window.DAWFX,dB=x=>Math.pow(10,x/20),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+ const G=(c,v)=>{const g=c.createGain();g.gain.value=v==null?1:v;return g};
+ const bi=(c,t,f,q,g)=>{const b=c.createBiquadFilter();b.type=t;b.frequency.value=f;if(q!=null)b.Q.value=q;if(g!=null)b.gain.value=g;return b};
+ const P=(k,n,min,max,def,step,u,opts)=>({k,n,min,max,def,step:step||.01,u:u||'',opts});
+ const curve=(fn,n)=>{const c=new Float32Array(n*2+1);for(let i=-n;i<=n;i++)c[i+n]=fn(i/n);return c};
+ function reg(id,name,cat,desc,params,presets,make){F.REG[id]={id,name,cat,desc,params,presets:presets||{},make};F.ORDER.push(id)}
+ /* ajratilgan polosali dinamik kompressor (de-esser / CH-K yumshatgich): LP + HP bo'lib, faqat yuqori polosa siqiladi */
+ function deband(c){const inp=G(c),out=G(c),lp=bi(c,'lowpass',6000,.707),hp=bi(c,'highpass',6000,.707),cm=c.createDynamicsCompressor(),mk=G(c);cm.attack.value=.001;cm.release.value=.06;cm.knee.value=6;
+  inp.connect(lp);inp.connect(hp);lp.connect(out);hp.connect(cm);cm.connect(mk);mk.connect(out);
+  return{in:inp,out,set(f,th,r,mkdb){lp.frequency.value=f;hp.frequency.value=f;cm.threshold.value=th;cm.ratio.value=r;mk.gain.value=dB(mkdb||0)}}}
+ /* pastga ekspander (gate yumshoq): envelope -> egri chiziq -> VCA gain */
+ function expander(c){const inp=G(c),dl=c.createDelay(.05),vca=G(c,0),out=G(c),pre=G(c,10),ab=c.createWaveShaper(),l1=bi(c,'lowpass',14,.5),l2=bi(c,'lowpass',14,.5),sh=c.createWaveShaper();dl.delayTime.value=.006;
+  ab.curve=curve(x=>Math.abs(x),256);inp.connect(dl);dl.connect(vca);vca.connect(out);inp.connect(pre);pre.connect(ab);ab.connect(l1);l1.connect(l2);l2.connect(sh);sh.connect(vca.gain);
+  let key='';
+  return{in:inp,out,set(thDb,k,depthDb,fc){const kk=[thDb,k,depthDb].join('|');if(kk!==key){key=kk;const th=dB(thDb),fl=dB(-depthDb);sh.curve=curve(x=>{const e=Math.abs(x)/10;if(e>=th)return 1;return Math.max(fl,Math.pow(Math.max(e,1e-6)/th,k))},4096)}l1.frequency.value=fc||14;l2.frequency.value=fc||14},bypass(on){}}}
+ reg('azvr','AZ Vocal Repair','AZ','Azimxodjayev Music — vokal nuqsonlarini tozalash: tunnel/quti ovoz, xona aks-sadosi, nafas, CH/K va S/SH',
+  [P('hp','Past shovqin (HP)',20,200,70,1,'Hz'),P('tunnel','Tunnel / quti ovozi',0,1,.4,.01),P('room','Xona aks-sadosi (De-Room)',0,1,.5,.01),P('breath','Nafas boshqaruvi',0,1,.3,.01),P('ch','CH / K / klik',0,1,.4,.01),P('s','S / SH (de-ess)',0,1,.5,.01),P('sf','S chastotasi',4500,10000,6800,50,'Hz')],
+  {'Vokal: yengil tozalash':{room:.3,breath:.2,ch:.3,s:.4,tunnel:.25},'Vokal: kuchli tozalash':{room:.8,breath:.6,ch:.6,s:.7,tunnel:.6},'Tunnel ketkazish':{tunnel:.9,room:.2,breath:0,ch:0,s:0},'Faqat de-ess':{tunnel:0,room:0,breath:0,ch:.2,s:.8},'Xona sadosini kamaytirish':{room:.9,breath:.2,tunnel:.3,ch:0,s:0}},
+  (c)=>{const hp=bi(c,'highpass',70,.7),tn=bi(c,'peaking',380,1.1,0),tn2=bi(c,'peaking',1100,1.4,0),e1=expander(c),e2=expander(c),d1=deband(c),d2=deband(c);hp.connect(tn);tn.connect(tn2);tn2.connect(e1.in);e1.out.connect(e2.in);e2.out.connect(d1.in);d1.out.connect(d2.in);
+   return{in:hp,out:d2.out,set(p){hp.frequency.value=p.hp;tn.gain.value=-9*p.tunnel;tn2.gain.value=-3.5*p.tunnel;
+    e1.set(-56+30*p.room,1+2.5*p.room,4+20*p.room,12);
+    e2.set(-44+8*p.breath,1+1.5*p.breath,2+10*p.breath,22);
+    d1.set(3300,-20-20*p.ch,1.5+6*p.ch,0);
+    d2.set(p.sf,-22-20*p.s,1.5+8*p.s,0)},dispose(){}}});
+ reg('azclean','AZ Audio Cleanup','AZ','Azimxodjayev Music — eng oxirgi insert: loy, qattiqlik va balansni avtomatik ideallashtirish',
+  [P('amt','Smart darajasi',0,1,.6,.01),P('hp','Past kesim (HP)',20,150,40,1,'Hz'),P('mud','Loy (mud) kesimi',0,6,3,.5,'dB'),P('harsh','Qattiqlik (harsh) kesimi',0,6,2.5,.5,'dB'),P('air','Havo (air)',0,6,1.5,.5,'dB'),P('glue','Muvozanat (auto-level)',0,1,.5,.01),P('ceil','Shift (ceiling)',-6,0,-1,.5,'dB')],
+  {'Vokal: oxirgi insert':{amt:.6,mud:3,harsh:2.5,air:1.5,glue:.5},'Mix: yengil':{amt:.4,mud:2,harsh:1.5,air:1,glue:.35,hp:30},'Kuchli tozalash':{amt:.9,mud:4.5,harsh:4,air:2,glue:.7},'Sho\'x-suvsiz (bypass-ga yaqin)':{amt:.15}},
+  (c)=>{const hp=bi(c,'highpass',40,.7),md=bi(c,'peaking',260,1,0),hs=bi(c,'peaking',3300,1.6,0),ar=bi(c,'highshelf',11000,.7,0),cm=c.createDynamicsCompressor(),mk=G(c),lm=c.createDynamicsCompressor();cm.knee.value=14;cm.attack.value=.02;cm.release.value=.22;lm.knee.value=0;lm.ratio.value=20;lm.attack.value=.001;lm.release.value=.08;
+   hp.connect(md);md.connect(hs);hs.connect(ar);ar.connect(cm);cm.connect(mk);mk.connect(lm);
+   return{in:hp,out:lm,set(p){const a=p.amt;hp.frequency.value=p.hp;md.gain.value=-p.mud*a;hs.gain.value=-p.harsh*a;ar.gain.value=p.air*a;const g=p.glue*a;cm.threshold.value=-12-14*g;cm.ratio.value=1+2.6*g;mk.gain.value=dB(g*3.5);lm.threshold.value=p.ceil},dispose(){}}});
+ F.cats.unshift('AZ');
+ /* vokal zanjiri: 1) Vocal Repair 2) EQ + kompressor 3) Audio Cleanup (eng oxirida) */
+ F.azChain=list=>{[['azvr','Vokal: yengil tozalash'],['eq4','Vocal Presence'],['comp','Vocal Control'],['azclean','Vokal: oxirgi insert']].forEach(x=>F.add(list,x[0],x[1]))};
+})();
+
 /* ===== f6zd: DAW — audio sekvenser (Cubase tuzilishida): treklar, timeline, import, to'lqin, transport, miks, WAV eksport ===== */
 (()=>{
  const byId=i=>document.getElementById(i);
@@ -11937,16 +11975,18 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  function liveSet(f){const V=W().V,tg=tgtList(),d=DAWFX.merged(f);if(tg.master){V.mfx&&V.mfx.set(f.uid,d)}else if(tg.owner){const n=V.tn.get(tg.owner.id);n&&n.fx&&n.fx.set(f.uid,d)}}
  function addFx(id,preset){const D=DD(),tg=tgtList(true);if(!tg.owner&&!tg.master){W().msg2('Avval trek tanlang yoki «Master» ni belgilang.');return}W().hist();DAWFX.add(tg.list,id,preset);if(!tg.master&&!tg.owner.fx)tg.owner.fx=tg.list;ST.fTab='chain';rewire();render();W().msg2('➕ '+DAWFX.REG[id].name+(preset?' · '+preset:'')+' → '+tg.name)}
  const fmtV=(p,v)=>(p.step>=1?Math.round(v):(+v).toFixed(p.step<.05?2:1))+(p.u?' '+p.u:'');
+ const F_AZ=1;
+ function addAzChain(){const tg=tgtList(true);if(!tg.owner&&!tg.master){W().msg2('Avval trek tanlang yoki «Master» ni belgilang.');return}W().hist();DAWFX.azChain(tg.list);if(!tg.master&&!tg.owner.fx)tg.owner.fx=tg.list;ST.fTab='chain';rewire();render();W().msg2('➕ AZ vokal zanjiri → '+tg.name)}
  function viewFx(b){
   const cats=['Hammasi',...DAWFX.cats],q=ST.fq.trim().toLowerCase(),L=DAWFX.ORDER.map(i=>DAWFX.REG[i]).filter(d=>(ST.fcat=='Hammasi'||d.cat==ST.fcat)&&(!q||(d.name+' '+d.cat+' '+d.desc+' '+Object.keys(d.presets).join(' ')).toLowerCase().includes(q)));
   b.innerHTML=`<div class=ztg><span>Maqsad:</span><select id=fxt>${targets().map(t=>`<option value="${t.id}" ${ST.tgt==t.id?'selected':''}>${E(t.n)}</option>`).join('')}</select></div>
   <div class=pns><input type=search id=fxq placeholder="Overdrive, Equalizer, Delay, Reverb…" value="${E(ST.fq)}"></div>
   <div class=pnc>${cats.map(c=>`<button data-c="${E(c)}" class="${ST.fcat==c?'on':''}">${E(c)}</button>`).join('')}</div>
-  <div class=pnb>${L.length?L.map(d=>`<div class=fxc><div class=zt><b>${E(d.name)}</b><button class=zad data-add="${d.id}" title="Zanjirga qo‘shish">＋</button></div><p>${E(d.desc)}</p><div class=zpr>${Object.keys(d.presets).map(n=>`<button data-add="${d.id}" data-pr="${E(n)}">${E(n)}</button>`).join('')}</div></div>`).join(''):'<div class=zemp>Hech narsa topilmadi.</div>'}</div>
+  <div class=pnb>${F_AZ&&ST.fcat=='AZ'?`<div class=fxc><div class=zt><b>AZ vokal zanjiri</b><button class=zad id=azch title="Zanjirga qo‘shish">＋</button></div><p>1) AZ Vocal Repair → 2) EQ + kompressor → 3) AZ Audio Cleanup (eng oxirida). Bir bosishda to‘liq vokal zanjiri.</p></div>`:''}${L.length?L.map(d=>`<div class=fxc><div class=zt><b>${E(d.name)}</b><button class=zad data-add="${d.id}" title="Zanjirga qo‘shish">＋</button></div><p>${E(d.desc)}</p><div class=zpr>${Object.keys(d.presets).map(n=>`<button data-add="${d.id}" data-pr="${E(n)}">${E(n)}</button>`).join('')}</div></div>`).join(''):'<div class=zemp>Hech narsa topilmadi.</div>'}</div>
   <div class=pnf>Effektlar shu brauzerning o‘zida ishlaydi (Web Audio) — VST/AU plaginlarni brauzerga ulab bo‘lmaydi. AutoTune (pitch-correction) kiritilmagan.</div>`;
   b.querySelector('#fxt').onchange=e=>{ST.tgt=e.target.value;render()};const q2=b.querySelector('#fxq');q2.oninput=()=>{ST.fq=q2.value;render();const i=panel().querySelector('#fxq');if(i){i.focus();i.setSelectionRange(99,99)}};
   b.querySelectorAll('.pnc button').forEach(x=>x.onclick=()=>{ST.fcat=x.dataset.c;render()});
-  b.querySelectorAll('[data-add]').forEach(x=>x.onclick=()=>addFx(x.dataset.add,x.dataset.pr))}
+  b.querySelectorAll('[data-add]').forEach(x=>x.onclick=()=>addFx(x.dataset.add,x.dataset.pr));const az=b.querySelector('#azch');if(az)az.onclick=addAzChain}
  function viewChain(b){
   const tg=tgtList(),D=DD();
   b.innerHTML=`<div class=ztg><span>Maqsad:</span><select id=fxt>${targets().map(t=>`<option value="${t.id}" ${ST.tgt==t.id?'selected':''}>${E(t.n)}</option>`).join('')}</select></div>
