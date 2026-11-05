@@ -72,3 +72,9 @@ Daftar ma'lumotlari qurilmaning **o'zida** (brauzer/ilova xotirasi, IndexedDB + 
 ## 🤖 AI Studio va 🛠 Pro vositalar (DAW)
 - **AI Studio**: tanlangan klip/treklarni tahlil qiladi (chastota, LUFS, peak, LRA, stereo) va qoidalar bo'yicha avto-zanjir tuzadi (Vocal Repair, EQ, Compressor, Audio Cleanup, Limiter). Cubase uchun matnli tavsiyalar. Haqiqiy AI emas.
 - **Pro**: Stem Separation (taxminiy, chastota/stereo), Spectral Editing, Automation (volume), Group Bus, Sidechain, BeatBox ulanishi, Quick Export (miks WAV / stemlar ZIP).
+
+## DAW yangiliklari (v88)
+- **Studio Setup (F4 yoki ⚙ Studio):** chiqish/kirish qurilmasi, kechikish rejimi, sample rate, fon rejimi, yozish sozlamalari, test ovozi.
+- **Mixer (F3 yoki 🎚 Mixer):** treklar soniga qarab shakllanadi, ochiladi/yopiladi; fader, pan, M/S, metr, Fx, bus va MASTER. "🤖 Avto balans" — LUFS va trek nomiga asoslangan avtomatik balans (Ctrl+Z bilan qaytariladi).
+- **Klip tutqichlari:** sichqoncha yaqinlashganda fade-in/out, klip ovozi (gain) va chetlarni kesish belgilari chiqadi; bosib turib suriladi.
+- **Sizing:** Oddiy / Sizing Moves Contents / Sizing Applies Time Stretch (balandlik saqlansin belgisi bilan).

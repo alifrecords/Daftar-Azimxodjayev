@@ -11174,6 +11174,33 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  F.azChain=list=>{[['azvr','Vokal: yengil tozalash'],['eq4','Vocal Presence'],['comp','Vocal Control'],['azclean','Vokal: oxirgi insert']].forEach(x=>F.add(list,x[0],x[1]))};
 })();
 
+/* ===== f6zts: Time-stretch (WSOLA — tovush balandligini saqlaydi) va tape rejimi (resample) ===== */
+(()=>{
+ const yieldUI=()=>new Promise(r=>setTimeout(r,0));
+ async function stretch(buf,off,dur,newDur,keep){
+  const sr=buf.sampleRate,nch=buf.numberOfChannels,a=Math.floor(off*sr),n=Math.max(64,Math.min(buf.length-a,Math.floor(dur*sr))),M=Math.max(64,Math.floor(newDur*sr)),alpha=M/n;
+  const src=[];for(let c=0;c<nch;c++)src.push(buf.getChannelData(c).subarray(a,a+n));
+  const oc=new OfflineAudioContext(nch,M,sr),out=oc.createBuffer(nch,M,sr),dst=[];for(let c=0;c<nch;c++)dst.push(out.getChannelData(c));
+  if(!keep||Math.abs(alpha-1)<.003){ // tape: chiziqli interpolyatsiya
+   for(let c=0;c<nch;c++){const x=src[c],y=dst[c];for(let i=0;i<M;i++){const p=i/alpha,i0=Math.floor(p),f=p-i0;y[i]=(x[Math.min(n-1,i0)]||0)*(1-f)+(x[Math.min(n-1,i0+1)]||0)*f}}
+   return out}
+  // WSOLA
+  const Nw=Math.max(512,Math.round(sr*.04)),Hs=Nw>>1,Ha=Hs/alpha,Dl=Math.round(sr*.012),win=new Float32Array(Nw);for(let i=0;i<Nw;i++)win[i]=.5-.5*Math.cos(2*Math.PI*i/Nw);
+  const mono=new Float32Array(n);for(let i=0;i<n;i++){let s=0;for(let c=0;c<nch;c++)s+=src[c][i];mono[i]=s/nch}
+  const frames=Math.ceil((M+Nw)/Hs),norm=new Float32Array(M+Nw);let prev=0,step=Math.max(1,Math.floor(Nw/128));
+  for(let k=0;k<frames;k++){
+   const tgt=Math.round(k*Ha);let best=tgt;
+   if(k>0){const ref=prev+Hs;let bs=-1e30;const lo=Math.max(0,tgt-Dl),hi=Math.min(n-Nw,tgt+Dl);if(ref+Nw<=n){for(let p=lo;p<=hi;p+=2){let s=0;for(let i=0;i<Nw;i+=step)s+=mono[p+i]*mono[ref+i];if(s>bs){bs=s;best=p}}}else best=Math.min(Math.max(0,n-Nw),tgt)}
+   else best=Math.max(0,Math.min(n-Nw,tgt));
+   prev=best;const o=k*Hs;
+   for(let c=0;c<nch;c++){const x=src[c],y=dst[c];for(let i=0;i<Nw;i++){const j=o+i;if(j>=M)break;y[j]+=(x[best+i]||0)*win[i]}}
+   for(let i=0;i<Nw;i++){const j=o+i;if(j<M)norm[j]+=win[i]}
+   if(k%150==149)await yieldUI()}
+  for(let c=0;c<nch;c++){const y=dst[c];for(let i=0;i<M;i++){const w=norm[i];if(w>1e-3)y[i]/=w}}
+  return out}
+ window.DAWTS={stretch};
+})();
+
 /* ===== f6zd: DAW — audio sekvenser (Cubase tuzilishida): treklar, timeline, import, to'lqin, transport, miks, WAV eksport ===== */
 (()=>{
  const byId=i=>document.getElementById(i);
@@ -11187,6 +11214,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   async get(k){const d=await this.open();return new Promise((res,no)=>{const q=d.transaction('a').objectStore('a').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>no(q.error)})}};
  /* ---------- holat ---------- */
  let AC=null,MG=null,AN=null;
+ const AS=(()=>{let o={latency:'interactive',sr:0,sink:'',inDev:'',bg:0,raw:1};try{o=Object.assign(o,JSON.parse(localStorage.getItem('daftar-daw-audio')||'{}'))}catch(_){}return o})();const saveAS=()=>{try{localStorage.setItem('daftar-daw-audio',JSON.stringify(AS))}catch(_){}};
  const A=new Map(); /* assetId -> {buf,peaks,name} */
  const V={tool:'sel',sx:0,sy:0,playing:false,t0:0,p0:0,srcs:[],tn:new Map(),drag:null,hist:[],redo:[],cw:800,ch:400,rec:null,nb:0,raf:0,taps:[],sh:null,loading:0,shown:null,saveT:0};
  let s=null,D=null; /* joriy varaq va uning daw ma'lumoti */
@@ -11210,7 +11238,9 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  function undo(){if(!V.hist.length)return;V.redo.push(JSON.stringify(D));restore(V.hist.pop())}
  function redo(){if(!V.redo.length)return;V.hist.push(JSON.stringify(D));restore(V.redo.pop())}
  /* ---------- audio dvigatel ---------- */
- function ctxOn(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();AN=AC.createAnalyser();AN.fftSize=1024;MG.connect(AN);AN.connect(AC.destination)}if(AC.state=='suspended')AC.resume();return AC}
+ const micC=()=>{const a={echoCancellation:!AS.raw,noiseSuppression:!AS.raw,autoGainControl:!AS.raw};if(AS.inDev)a.deviceId={ideal:AS.inDev};return a};
+ function resetAudio(){try{stop()}catch(_){}try{AC&&AC.close()}catch(_){}AC=null;MG=null;AN=null;V.tn=new Map();ctxOn();return AC}
+ function ctxOn(){if(!AC){const Ctor=window.AudioContext||window.webkitAudioContext,o={latencyHint:AS.latency||'interactive'};if(AS.sr)o.sampleRate=AS.sr;try{AC=new Ctor(o)}catch(_){AC=new Ctor()}try{if(AS.sink&&AC.setSinkId)AC.setSinkId(AS.sink).catch(()=>{})}catch(_){}MG=AC.createGain();AN=AC.createAnalyser();AN.fftSize=1024;MG.connect(AN);AN.connect(AC.destination)}if(AC.state=='suspended')AC.resume();return AC}
  function peaksOf(buf){const n=buf.length,B=128,m=Math.ceil(n/B),P=new Float32Array(m*2),chs=[];for(let c=0;c<buf.numberOfChannels;c++)chs.push(buf.getChannelData(c));
   for(let i=0;i<m;i++){let mn=1,mx=-1;const e=Math.min(n,(i+1)*B);for(let j=i*B;j<e;j++){for(let c=0;c<chs.length;c++){const v=chs[c][j];if(v<mn)mn=v;if(v>mx)mx=v}}P[i*2]=mn;P[i*2+1]=mx}return P}
  async function decode(ab){const c=AC||ctxOn();return await new Promise((res,no)=>{const p=c.decodeAudioData(ab,res,no);if(p&&p.catch)p.catch(no)})}
@@ -11230,18 +11260,19 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   if(count){msg2('🎛 '+count+' ta audio qo‘shildi');buildHeads();draw();persist()}}
  /* ---------- pleyer ---------- */
  function mixGain(t){const solo=D.tracks.some(x=>x.s);return(t.m||(solo&&!t.s))?0:t.vol}
+ function fadeSched(par,c,skip,when){const fi=c.fi||0,fo=c.fo||0;if(!fi&&!fo)return;const g=c.g,gAt=tt=>{let m=1;if(fi&&tt<fi)m=Math.min(m,tt/fi);if(fo&&tt>c.dur-fo)m=Math.min(m,Math.max(0,(c.dur-tt)/fo));return g*m};par.setValueAtTime(gAt(skip),when);if(fi&&skip<fi)par.linearRampToValueAtTime(gAt(fi),when+fi-skip);if(fo){const tf=c.dur-fo;if(skip<tf)par.setValueAtTime(gAt(Math.max(tf,skip)),when+Math.max(0,tf-skip));par.linearRampToValueAtTime(0,when+Math.max(0,c.dur-skip))}}
  function autoVal(a,tm){if(tm<=a[0].t)return a[0].v;for(let i=1;i<a.length;i++)if(tm<=a[i].t){const u=(tm-a[i-1].t)/((a[i].t-a[i-1].t)||1);return a[i-1].v+(a[i].v-a[i-1].v)*u}return a[a.length-1].v}
  function autoSched(par,a,base,t0,p0){a=a.slice().sort((x,y)=>x.t-y.t);par.value=base*autoVal(a,p0);par.setValueAtTime(base*autoVal(a,p0),t0);a.forEach(pt=>{if(pt.t>p0)par.linearRampToValueAtTime(base*pt.v,t0+pt.t-p0)})}
  function scWire(ctx,srcG,par,sc){const pre=ctx.createGain();pre.gain.value=10;const ab=ctx.createWaveShaper();ab.curve=new Float32Array([1,0,1]);const fc=Math.max(6,Math.min(40,2400/(sc.rel||120)));const l1=ctx.createBiquadFilter(),l2=ctx.createBiquadFilter();l1.type=l2.type='lowpass';l1.frequency.value=l2.frequency.value=fc;l1.Q.value=l2.Q.value=.5;const sh=ctx.createWaveShaper();const th=.02,fl=Math.pow(10,-(sc.db==null?6:sc.db)/20),N=2048,c=new Float32Array(N*2+1);for(let i=-N;i<=N;i++){const e=Math.abs(i/N)/10,u=Math.min(1,Math.max(0,(e-th)/(th*3)));c[i+N]=1-(1-fl)*u}sh.curve=c;srcG.connect(pre);pre.connect(ab);ab.connect(l1);l1.connect(l2);l2.connect(sh);sh.connect(par)}
  function buildGraph(ctx,dest,t0,p0,limit){const out=[];const tn=new Map();let mfx=null;if(window.DAWFX&&D.mfx&&D.mfx.some(f=>f.on!==0)){try{const mi=ctx.createGain();mfx=DAWFX.chain(ctx,D.mfx,mi,dest);dest=mi}catch(e){console.warn('mfx',e);mfx=null}}
   const busM=new Map();(D.buses||[]).forEach(b=>{try{const bi=ctx.createGain(),bg=ctx.createGain();bg.gain.value=b.vol==null?1:b.vol;bg.connect(dest);let bf=null;if(window.DAWFX&&b.fx&&b.fx.some(f=>f.on!==0)){try{bf=DAWFX.chain(ctx,b.fx,bi,bg)}catch(e){console.warn('busfx',e);bi.connect(bg)}}else bi.connect(bg);busM.set(b.id,bi);tn.set(b.id,{g:bi,fx:bf,bus:1})}catch(e){console.warn('bus',e)}});
-  D.tracks.forEach(t=>{const g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;g.gain.value=mixGain(t);if(t.au&&t.au.length>1)autoSched(g.gain,t.au,mixGain(t),t0,p0);let fxi=null;const dst=busM.get(t.bus)||dest;if(p){p.pan.value=t.pan;p.connect(dst)}const snk0=p||dst;let dk=null;const scd=(D.sc||[]).find(x=>x.on!==0&&x.dst==t.id&&x.src!=t.id&&D.tracks.some(y=>y.id==x.src));if(scd){dk=ctx.createGain();dk.gain.value=0;dk.connect(snk0)}const snk=dk||snk0;if(window.DAWFX&&t.fx&&t.fx.some(f=>f.on!==0)){try{fxi=DAWFX.chain(ctx,t.fx,g,snk)}catch(e){console.warn('fx',e);fxi=null;g.connect(snk)}}else g.connect(snk);tn.set(t.id,{g,p,fx:fxi,dk,scd});if(t.dm){try{schedDrum(ctx,t,g,t0,p0,limit)}catch(e){console.warn('drum',e)}return}
+  D.tracks.forEach(t=>{const g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;g.gain.value=mixGain(t);if(t.au&&t.au.length>1)autoSched(g.gain,t.au,mixGain(t),t0,p0);let fxi=null;const dst=busM.get(t.bus)||dest;if(p){p.pan.value=t.pan;p.connect(dst)}const snk0=p||dst;let dk=null;const scd=(D.sc||[]).find(x=>x.on!==0&&x.dst==t.id&&x.src!=t.id&&D.tracks.some(y=>y.id==x.src));if(scd){dk=ctx.createGain();dk.gain.value=0;dk.connect(snk0)}const snk=dk||snk0;if(window.DAWFX&&t.fx&&t.fx.some(f=>f.on!==0)){try{fxi=DAWFX.chain(ctx,t.fx,g,snk)}catch(e){console.warn('fx',e);fxi=null;g.connect(snk)}}else g.connect(snk);let an=null;if(typeof OfflineAudioContext=='undefined'||!(ctx instanceof OfflineAudioContext)){try{an=ctx.createAnalyser();an.fftSize=512;g.connect(an)}catch(_){an=null}}tn.set(t.id,{g,p,fx:fxi,dk,scd,an});if(t.dm){try{schedDrum(ctx,t,g,t0,p0,limit)}catch(e){console.warn('drum',e)}return}
    t.clips.forEach(c=>{if(c.m)return;const a=A.get(c.asset);if(!a||!a.buf)return;const end=c.start+c.dur;if(end<=p0)return;if(limit!=null&&c.start>=limit)return;
     const skip=Math.max(0,p0-c.start),when=t0+Math.max(0,c.start-p0),off=c.off+skip;let dur=c.dur-skip;if(limit!=null)dur=Math.min(dur,limit-Math.max(c.start,p0));if(dur<=0)return;
-    const src=ctx.createBufferSource();src.buffer=a.buf;const cg=ctx.createGain();cg.gain.value=c.g;src.connect(cg);cg.connect(g);try{src.start(when,off,dur)}catch(_){}out.push(src)})});
+    const src=ctx.createBufferSource();src.buffer=a.buf;const cg=ctx.createGain();cg.gain.value=c.g;fadeSched(cg.gain,c,skip,when);src.connect(cg);cg.connect(g);try{src.start(when,off,dur)}catch(_){}out.push(src)})});
   D.tracks.forEach(t=>{const n=tn.get(t.id);if(!n||!n.dk)return;const sN=tn.get(n.scd.src);if(sN)try{scWire(ctx,sN.g,n.dk.gain,n.scd)}catch(e){console.warn('sc',e)}});
   return{srcs:out,tn,mfx}}
- function startAt(p){stopSrcs();ctxOn();V.p0=p;V.t0=AC.currentTime+0.05;const gph=buildGraph(AC,MG,V.t0,p);V.srcs=gph.srcs;V.tn=gph.tn;V.mfx=gph.mfx;V.nb=Math.ceil(p/beat()-1e-6)}
+ function startAt(p){stopSrcs();ctxOn();V.p0=p;V.t0=AC.currentTime+0.05;MG.gain.value=D.mv==null?1:D.mv;const gph=buildGraph(AC,MG,V.t0,p);V.srcs=gph.srcs;V.tn=gph.tn;V.mfx=gph.mfx;V.nb=Math.ceil(p/beat()-1e-6)}
  function stopSrcs(){V.srcs.forEach(x=>{try{x.stop()}catch(_){}try{x.disconnect()}catch(_){}});V.srcs=[];V.tn.forEach(n=>{try{n.g.disconnect()}catch(_){}try{n.fx&&n.fx.dispose()}catch(_){}});V.tn=new Map();try{V.mfx&&V.mfx.dispose()}catch(_){}V.mfx=null}
  function play(){if(V.playing)return;if(!D.tracks.some(t=>t.clips.length)){msg2('Avval audio qo‘shing (Import yoki faylni shu yerga tashlang).');return}
   let p=D.ph;if(D.loop.on&&(p<D.loop.a||p>=D.loop.b))p=D.loop.a;startAt(p);V.playing=true;tick();ui()}
@@ -11255,10 +11286,10 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   if(D.click){const bt=beat();while(V.t0+V.nb*bt-V.p0<AC.currentTime+.15){const at=V.t0+(V.nb*bt-V.p0);if(at>AC.currentTime-.01)click(at,V.nb%D.ts==0);V.nb++}}
   const vw=V.cw/D.zx;if(p>V.sx+vw*.92||p<V.sx){V.sx=Math.max(0,p-vw*.1)}
   draw();meter();V.raf=requestAnimationFrame(tick)}
- function applyMix(){V.tn.forEach((n,id)=>{const t=D.tracks.find(x=>x.id==id);if(!t)return;if(!(t.au&&t.au.length>1))n.g.gain.value=mixGain(t);if(n.p)n.p.pan.value=t.pan})}
+ function applyMix(){if(MG)MG.gain.value=D.mv==null?1:D.mv;V.tn.forEach((n,id)=>{const t=D.tracks.find(x=>x.id==id);if(!t)return;if(!(t.au&&t.au.length>1))n.g.gain.value=mixGain(t);if(n.p)n.p.pan.value=t.pan})}
  /* yozish */
  async function startRec(){
-  try{const st=await navigator.mediaDevices.getUserMedia({audio:true});ctxOn();const mr=new MediaRecorder(st),ch=[];const tr=selTrack()||addTrack();const at=D.ph;
+  try{const st=await navigator.mediaDevices.getUserMedia({audio:micC()});ctxOn();const mr=new MediaRecorder(st),ch=[];const tr=selTrack()||addTrack();const at=D.ph;
    mr.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};
    mr.onstop=async()=>{st.getTracks().forEach(x=>x.stop());const b=new Blob(ch,{type:mr.mimeType});if(!b.size)return;const f=new File([b],'Yozuv '+fmtT(at).replace(/:/g,'-')+'.webm',{type:b.type});await importFiles([f],D.tracks.indexOf(tr),at)};
    mr.start();V.rec={mr,st};if(!V.playing)play2();ui()}
@@ -11266,10 +11297,10 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  function play2(){/* yozish paytida bo'sh bo'lsa ham vaqt yursin */if(V.playing)return;startAt(D.ph);V.playing=true;tick()}
  function stopRec(){const r=V.rec;V.rec=null;try{r.mr.stop()}catch(_){}ui()}
  /* ---------- eksport ---------- */
-async function renderBuf(onlyId){const end=projEnd();if(end<=0)return null;const sv=D.tracks.map(t=>t.s);if(onlyId)D.tracks.forEach(t=>{t.s=t.id==onlyId?1:0});try{const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+(window.DAWFX?DAWFX.tail(D):.3))*sr),sr);const dest=oc.createGain();dest.connect(oc.destination);buildGraph(oc,dest,0,0);return await oc.startRendering()}finally{D.tracks.forEach((t,i)=>{t.s=sv[i]})}}
+async function renderBuf(onlyId){const end=projEnd();if(end<=0)return null;const sv=D.tracks.map(t=>t.s);if(onlyId)D.tracks.forEach(t=>{t.s=t.id==onlyId?1:0});try{const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+(window.DAWFX?DAWFX.tail(D):.3))*sr),sr);const dest=oc.createGain();dest.gain.value=D.mv==null?1:D.mv;dest.connect(oc.destination);buildGraph(oc,dest,0,0);return await oc.startRendering()}finally{D.tracks.forEach((t,i)=>{t.s=sv[i]})}}
  async function mixdown(){
   const end=projEnd();if(end<=0){msg2('Eksport qilish uchun audio yo‘q.');return}msg2('⏳ Miks tayyorlanmoqda…');
-  const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+(window.DAWFX?DAWFX.tail(D):.3))*sr),sr);const dest=oc.createGain();dest.connect(oc.destination);buildGraph(oc,dest,0,0);
+  const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+(window.DAWFX?DAWFX.tail(D):.3))*sr),sr);const dest=oc.createGain();dest.gain.value=D.mv==null?1:D.mv;dest.connect(oc.destination);buildGraph(oc,dest,0,0);
   const r=await oc.startRendering(),n=r.length,L=r.getChannelData(0),R=r.getChannelData(1),buf=new ArrayBuffer(44+n*4),v=new DataView(buf);
   const w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};w(0,'RIFF');v.setUint32(4,36+n*4,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,2,true);v.setUint32(24,sr,true);v.setUint32(28,sr*4,true);v.setUint16(32,4,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*4,true);
   let o=44;const cl=x=>Math.max(-1,Math.min(1,x));for(let i=0;i<n;i++){v.setInt16(o,cl(L[i])*32767,true);v.setInt16(o+2,cl(R[i])*32767,true);o+=4}
@@ -11309,12 +11340,16 @@ async function renderBuf(onlyId){const end=projEnd();if(end<=0)return null;const
   cx.globalAlpha=mu?.45:1;cx.fillStyle=a&&a.missing?'#6a2b30':'#8a96a8';cx.beginPath();cx.roundRect?cx.roundRect(x,y,w,h,4):cx.rect(x,y,w,h);cx.fill();
   cx.fillStyle=t.col;cx.globalAlpha=(mu?.45:1)*.9;cx.fillRect(x,y,Math.max(0,w),3);cx.globalAlpha=mu?.45:1;
   if(a&&a.peaks){const P=a.peaks,sr=a.buf.sampleRate,mid=y+3+(h-3)/2,amp=(h-8)/2;cx.fillStyle='#1b222c';
-   const x0=Math.max(0,-x),x1=Math.min(w,V.cw-x);for(let px=x0;px<x1;px+=1){const ta=c.off+px/D.zx,tb=c.off+(px+1)/D.zx;let i0=Math.floor(ta*sr/128),i1=Math.max(i0+1,Math.ceil(tb*sr/128));let mn=1,mx=-1;const e=Math.min(P.length/2,i1);for(let i=Math.max(0,i0);i<e;i++){const a1=P[i*2],b1=P[i*2+1];if(a1<mn)mn=a1;if(b1>mx)mx=b1}if(mn>mx){mn=0;mx=0}
+   const x0=Math.max(0,-x),x1=Math.min(w,V.cw-x);for(let px=x0;px<x1;px+=1){const rr=c._r||1,ta=c.off+px/D.zx/rr,tb=c.off+(px+1)/D.zx/rr;let i0=Math.floor(ta*sr/128),i1=Math.max(i0+1,Math.ceil(tb*sr/128));let mn=1,mx=-1;const e=Math.min(P.length/2,i1);for(let i=Math.max(0,i0);i<e;i++){const a1=P[i*2],b1=P[i*2+1];if(a1<mn)mn=a1;if(b1>mx)mx=b1}if(mn>mx){mn=0;mx=0}
     const yy=mid-mx*amp,hh=Math.max(1,(mx-mn)*amp);cx.fillRect(x+px,yy,1,hh)}}
   if(t.dm){const pat=t.dm.pats[c.pat||0],L=pat.len||16,sd=beat()/4,sw=sd*D.zx,rh=(h-8)/16,ph=Math.round((c.off||0)/sd);cx.fillStyle='#1b222c';const k0=Math.max(0,Math.floor(-x/sw)-1),k1=Math.min(Math.ceil(w/sw),Math.ceil((V.cw-x)/sw));
    for(let k=k0;k<k1;k++){const i=(((k+ph)%L)+L)%L;for(let r=0;r<16;r++)if(pat.st[r+':'+i])cx.fillRect(x+k*sw,y+5+r*rh,Math.max(1,sw-1),Math.max(1,rh-.6))}}
   cx.globalAlpha=1;cx.fillStyle='#0f141b';cx.font='11px system-ui';cx.textBaseline='top';cx.save();cx.beginPath();cx.rect(x,y,w,h);cx.clip();cx.fillText((a&&a.missing?'⚠ yo‘q: ':'')+c.name,x+5,y+5);cx.restore();
-  if(sel){cx.strokeStyle='#ffb84d';cx.lineWidth=2;cx.strokeRect(x+1,y+1,w-2,h-2);cx.lineWidth=1}else{cx.strokeStyle='rgba(0,0,0,.45)';cx.strokeRect(x+.5,y+.5,w-1,h-1)}}
+  const fiP=(c.fi||0)*D.zx,foP=(c.fo||0)*D.zx;cx.save();cx.beginPath();cx.rect(x,y,w,h);cx.clip();cx.fillStyle='rgba(10,14,22,.45)';if(fiP>1){cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+fiP,y);cx.lineTo(x,y+h);cx.fill();cx.strokeStyle='#fff';cx.beginPath();cx.moveTo(x,y+h);cx.lineTo(x+fiP,y+4);cx.stroke()}if(foP>1){cx.beginPath();cx.moveTo(x+w,y);cx.lineTo(x+w-foP,y);cx.lineTo(x+w,y+h);cx.fill();cx.strokeStyle='#fff';cx.beginPath();cx.moveTo(x+w,y+h);cx.lineTo(x+w-foP,y+4);cx.stroke()}cx.restore();
+  if(sel){cx.strokeStyle='#ffb84d';cx.lineWidth=2;cx.strokeRect(x+1,y+1,w-2,h-2);cx.lineWidth=1}else{cx.strokeStyle='rgba(0,0,0,.45)';cx.strokeRect(x+.5,y+.5,w-1,h-1)}
+  if((V.hov===c.id||sel)&&!t.dm&&w>40&&!V.alt){cx.fillStyle='rgba(170,30,40,.85)';cx.fillRect(x,y+3,5,h-3);cx.fillRect(x+w-5,y+3,5,h-3);cx.fillStyle='#fff';cx.fillRect(x+1.5,y+h/2-6,2,12);cx.fillRect(x+w-3.5,y+h/2-6,2,12);
+   const sq=(px,py)=>{cx.fillStyle='#1b222c';cx.fillRect(px-5,py-5,10,10);cx.strokeStyle='#fff';cx.lineWidth=1.5;cx.strokeRect(px-5,py-5,10,10);cx.lineWidth=1};sq(x+Math.max(6,fiP),y+7);sq(x+w-Math.max(6,foP),y+7);
+   cx.fillStyle='#ffb84d';cx.fillRect(x+w/2-9,y+3,18,6);cx.strokeStyle='#1b222c';cx.strokeRect(x+w/2-9,y+3,18,6)}}
  const lenB=d=>{const bt=beat(),b=d/bt,bars=Math.floor(b/D.ts+1e-9),bb=Math.floor(b-bars*D.ts+1e-9),tk=Math.round((b-Math.floor(b+1e-9))*480)%480;return bars+'.'+bb+'.'+String(tk).padStart(3,'0')};
  function setTip(c,x,y){V.tip={gx:X(c.start),x,y,t:'Boshi '+fmtB(c.start)+'  ·  Oxiri '+fmtB(c.start+c.dur)+'  ·  Uzun. '+lenB(c.dur)}}
  function times(){const p=D.ph,a=byId('dawt'),b=byId('dawb');if(a)a.textContent=fmtT(p);if(b)b.textContent=fmtB(p)}
@@ -11369,6 +11404,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
 #dawv .dlbl{color:#8ea0c0;font-size:11px}#dawv input[type=number]{width:62px}
 #dawv #dawm{width:90px;height:10px;border-radius:5px;border:1px solid #2f3a4c}
 
+#dawv #dawmx{display:none;flex:none;height:310px;background:#141a25;border-top:2px solid #6b7bff;overflow:hidden}#dawv #dawmxb.on{background:#6b7bff;border-color:#99a5ff;color:#fff}
 #dawv #dawdr{display:none;flex:none;flex-direction:column;background:#161c27;border-top:2px solid #ff8a4c;max-height:330px;font-size:11.5px}
 #dawv .drh{display:flex;align-items:center;gap:6px;padding:4px 8px;background:#1d2533;flex-wrap:wrap;color:#9fb0c9}#dawv .drh b{color:#ffb27a;font-size:13px}
 #dawv .drh label{display:flex;align-items:center;gap:4px}#dawv .drh input[type=range]{width:70px;accent-color:#ff8a4c;height:14px;padding:0;background:none;border:0}
@@ -11393,13 +11429,14 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   root=mk('div');root.id='dawv';root.tabIndex=0;
   root.innerHTML=`<div class=dtop>
  <button id=dawun title="Bekor qilish (Ctrl+Z)">↶</button><button id=dawre title="Qaytarish (Ctrl+Y)">↷</button><span class=dsep></span>
- <button data-tool=sel title="Tanlash (1)">⬉ Tanlash</button><button data-tool=split title="Kesish (2) — bosilgan joydan bo‘ladi">✂ Kesish</button><button data-tool=erase title="O‘chirish (3)">⌫ O‘chirgich</button><button data-tool=mute title="Ovozsiz (4)">🔇 Mute</button><span class=dsep></span>
+ <button data-tool=sel title="Tanlash (1)">⬉ Tanlash</button><select id=dawszm title="Klip chetini cho‘zish rejimi"><option value=0>Oddiy o‘lcham<option value=1>Sizing Moves Contents<option value=2>Sizing Applies Time Stretch</select><label id=dawszl style="display:none;font-size:11px;align-items:center;gap:3px;color:#9fb0c9" title="Time stretch: tovush balandligi o‘zgarmasin (o‘chirilsa — tape kabi)"><input type=checkbox id=dawszp checked>balandlik saqlansin</label><button data-tool=split title="Kesish (2) — bosilgan joydan bo‘ladi">✂ Kesish</button><button data-tool=erase title="O‘chirish (3)">⌫ O‘chirgich</button><button data-tool=mute title="Ovozsiz (4)">🔇 Mute</button><span class=dsep></span>
  <button id=dawsn title="Tarmoqqa yopishish">🧲 Snap</button><select id=dawg title="Tarmoq turi"><option value=bar>Bar<option value=half>1/2<option value=beat>1/4<option value=eighth>1/8<option value=sixteenth>1/16<option value=off>Off</select><span class=dsep></span>
  <button id=dawzi title="Kattalashtirish (H yoki +)">🔍＋</button><button id=dawzo title="Kichraytirish (G yoki −)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><button id=dawty1 title="Treklarni balandroq qilish (Ctrl+↓ yoki Alt+g‘ildirak)">↕＋</button><button id=dawty2 title="Treklarni pastroq qilish (Ctrl+↑ yoki Alt+g‘ildirak)">↕−</button><button id=dawtyf title="Hamma treklarni bir ko‘rinishga sig‘dirish">⇕ Treklar</button><button id=dawfa title="Hamma narsani ekranga sig‘dirish — vaqt va treklar (Ctrl+Shift+A)">⛶ Hammasi</button><span class=dsep></span>
- <button id=dawsnd title="Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv">🎵 Sounds</button><button id=dawfx title="Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)">Fx</button><button id=dawai title="AI Studio: tahlil + avto-zanjir (EQ, kompressor, master)">🤖 AI</button><button id=dawpro title="Pro vositalar: Stem, Spectral, Automation, Bus, Sidechain, Export">🛠 Pro</button><button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
+ <button id=dawsnd title="Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv">🎵 Sounds</button><button id=dawfx title="Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)">Fx</button><button id=dawmxb title="MixConsole — kanal qatorlari, balans (F3)">🎚 Mixer</button><button id=dawst title="Studio Setup: audio qurilma, kechikish, yozish (F4)">⚙ Studio</button><button id=dawai title="AI Studio: tahlil + avto-zanjir (EQ, kompressor, master)">🤖 AI</button><button id=dawpro title="Pro vositalar: Stem, Spectral, Automation, Bus, Sidechain, Export">🛠 Pro</button><button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
 </div>
 <div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · Ctrl+Shift+A — hammasini ekranga sig‘dirish · Ctrl+↑/↓ yoki Alt+g‘ildirak — trek balandligi · S — kesish · Alt (bosib tur) — vaqtincha ✂ qaychi · Ctrl+Alt+sudrash — nusxa · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
 <div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div><div class=dfxp id=dawpan hidden></div></div>
+<div id=dawmx></div>
 <div class=dbot>
  <div class=dtp style="display:flex;gap:4px"><button id=dawl title="Cycle / Loop (L)">🔁</button><button id=dawhm title="Boshiga (Home)">⏮</button><button id=daws title="To‘xtatish">⏹</button><button id=dawp title="O‘ynash / Pauza (Space)">▶</button><button id=dawr title="Yozish — mikrofon (R)">●</button></div>
  <div class=dtime id=dawt>0:00:000</div><div class=dbars id=dawb>001.1.000</div><canvas id=dawm width=90 height=10 title="Master daraja"></canvas>
@@ -11416,7 +11453,8 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   q('dawun').onclick=undo;q('dawre').onclick=redo;
   root.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{V.tool=b.dataset.tool;ui()});
   q('dawsn').onclick=()=>{D.snap=!D.snap;ui();persist()};q('dawg').onchange=e=>{D.grid=e.target.value;persist()};
-  q('dawsnd').onclick=()=>{window.__dawui&&__dawui.toggle('snd')};q('dawfx').onclick=()=>{window.__dawui&&__dawui.toggle('fx')};q('dawai').onclick=()=>{window.__dawui&&__dawui.toggle('ai')};q('dawpro').onclick=()=>{window.__dawui&&__dawui.toggle('pro')};q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
+  {const sz=q('dawszm'),sl=q('dawszl'),sp=q('dawszp');try{V.szm=+localStorage.getItem('daftar-daw-szm')||0;V.szp=localStorage.getItem('daftar-daw-szp')!=='0'}catch(_){V.szm=0;V.szp=true}sz.value=V.szm;sp.checked=V.szp!==false;sl.style.display=V.szm==2?'inline-flex':'none';sz.onchange=()=>{V.szm=+sz.value;sl.style.display=V.szm==2?'inline-flex':'none';try{localStorage.setItem('daftar-daw-szm',V.szm)}catch(_){}};sp.onchange=()=>{V.szp=sp.checked;try{localStorage.setItem('daftar-daw-szp',sp.checked?'1':'0')}catch(_){}}}
+  q('dawsnd').onclick=()=>{window.__dawui&&__dawui.toggle('snd')};q('dawfx').onclick=()=>{window.__dawui&&__dawui.toggle('fx')};q('dawmxb').onclick=()=>{window.__dawmx&&__dawmx.toggle()};q('dawst').onclick=()=>{window.__dawst&&__dawst.open()};q('dawai').onclick=()=>{window.__dawui&&__dawui.toggle('ai')};q('dawpro').onclick=()=>{window.__dawui&&__dawui.toggle('pro')};q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
   const addT=()=>{hist();const t=addTrack();D.selT=t.id;buildHeads();draw();persist()};q('dawat').onclick=addT;q('dawat2').onclick=addT;q('dawdm').onclick=()=>menu(q('dawdm'),[{t:'🥁 Trap beat',fn:()=>addDrum('trap')},{t:'🥁 Boom Bap',fn:()=>addDrum('boombap')},{t:'🥁 House',fn:()=>addDrum('house')},{t:'🥁 Drill',fn:()=>addDrum('drill')},{t:'🥁 Bo‘sh pattern',fn:()=>addDrum('empty')}]);
   q('dawim').onclick=()=>q('dawfile').click();q('dawfile').onchange=e=>{const f=[...e.target.files];e.target.value='';const tr=selTrack();importFiles(f,tr?D.tracks.indexOf(tr):null,tr?D.ph:null)};
   q('dawex').onclick=()=>mixdown().catch(e=>{console.warn(e);msg2('❌ Miks tayyorlanmadi: '+(e&&e.message||'xato'))});
@@ -11442,9 +11480,10 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   const altSet=on=>{if(!!V.alt===on)return;V.alt=on;if(cv)cv.style.cursor=on?CUR:'';const b=root.querySelector('[data-tool=split]');if(b)b.classList.toggle('on',on||V.tool=='split');if(!on){V.cutx=null;draw()}};
   addEventListener('keydown',e=>{if(e.key!='Alt'||!document.body.classList.contains('dawon'))return;if(!e.ctrlKey&&!e.metaKey)altSet(true);e.preventDefault()},true);
   addEventListener('keyup',e=>{if(e.key!='Alt')return;if(V.alt)e.preventDefault();altSet(false)},true);
-  addEventListener('blur',()=>altSet(false));document.addEventListener('visibilitychange',()=>{if(document.hidden)altSet(false)});
+  addEventListener('blur',()=>altSet(false));document.addEventListener('visibilitychange',()=>{if(document.hidden){altSet(false);if(AS.bg&&AC&&!V.playing&&!V.rec)try{AC.suspend()}catch(_){}}else if(AS.bg&&AC&&AC.state=='suspended')try{AC.resume()}catch(_){}});
   cv.addEventListener('mousemove',e=>{if(V.drag)return;if(e.altKey&&!e.ctrlKey&&!e.metaKey){altSet(true);const r=cv.getBoundingClientRect(),y=e.clientY-r.top;if(y>=RULER){V.cutx=snapT(T(e.clientX-r.left));draw()}}else if(V.alt)altSet(false)});
-  cv.addEventListener('mouseleave',()=>{if(V.cutx!=null){V.cutx=null;draw()}});
+  cv.addEventListener('mouseleave',()=>{if(V.cutx!=null){V.cutx=null;draw()}if(V.hov){V.hov=null;draw()}});
+  cv.addEventListener('mousemove',e=>{if(V.drag||V.alt)return;const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let id=null,cur='';const ti=Math.floor((y-RULER+V.sy)/D.zy),t=D.tracks[ti];if(t&&y>=RULER&&!t.dm){for(let i=t.clips.length-1;i>=0;i--){const c=t.clips[i],xa=X(c.start),xb=X(c.start+c.dur);if(x>=xa-8&&x<=xb+8){id=c.id;if(V.tool=='sel'&&xb-xa>40){const rowY=RULER+ti*D.zy-V.sy+2,near=(px,py)=>Math.abs(x-px)<=9&&Math.abs(y-py)<=9;if(near(xa+Math.max(6,(c.fi||0)*D.zx),rowY+7)||near(xb-Math.max(6,(c.fo||0)*D.zx),rowY+7))cur='col-resize';else if(Math.abs(x-(xa+(xb-xa)/2))<=11&&y>=rowY&&y<=rowY+12)cur='ns-resize';else if(x-xa<7||xb-x<7)cur='ew-resize'}break}}}cv.style.cursor=cur;if(V.hov!==id){V.hov=id;draw()}});
   new ResizeObserver(()=>size()).observe(cv.parentElement);
   const ep=byId('dawp');drMk();
  }
@@ -11467,8 +11506,12 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   if(V.tool=='erase'){hist();h.t.clips.splice(h.t.clips.indexOf(c),1);D.sel=null;draw();persist();return}
   if(V.tool=='mute'){hist();c.m=c.m?0:1;draw();persist();return}
   const grp=selAll();const inGrp=grp.length>1&&grp.some(o=>o.c===c);if(!inGrp){D.ms=[]}D.sel=c.id;const xa=X(c.start),xb=X(c.start+c.dur);hist();
-  if(x-xa<7&&xb-xa>20)V.drag={k:'trimL',c,t:h.t,st:c.start,off:c.off,dur:c.dur,x0:x};
-  else if(xb-x<7&&xb-xa>20)V.drag={k:'trimR',c,t:h.t,dur:c.dur,x0:x};
+  const rowY=RULER+h.ti*D.zy-V.sy+2,nearH=(px,py)=>Math.abs(x-px)<=9&&Math.abs(y-py)<=9,wC=xb-xa;
+  if(V.tool=='sel'&&!h.t.dm&&wC>40&&!(inGrp)&&nearH(xa+Math.max(6,(c.fi||0)*D.zx),rowY+7))V.drag={k:'fi',c,t:h.t,x0:x,v0:c.fi||0};
+  else if(V.tool=='sel'&&!h.t.dm&&wC>40&&!(inGrp)&&nearH(xb-Math.max(6,(c.fo||0)*D.zx),rowY+7))V.drag={k:'fo',c,t:h.t,x0:x,v0:c.fo||0};
+  else if(V.tool=='sel'&&!h.t.dm&&wC>40&&!(inGrp)&&Math.abs(x-(xa+wC/2))<=11&&y>=rowY&&y<=rowY+12)V.drag={k:'cg',c,t:h.t,x0:x,y0:y,g0:c.g};
+  else if(x-xa<7&&xb-xa>20)V.drag={k:'trimL',c,t:h.t,st:c.start,off:c.off,dur:c.dur,x0:x,m:V.szm|0};
+  else if(xb-x<7&&xb-xa>20)V.drag={k:'trimR',c,t:h.t,dur:c.dur,off:c.off,st:c.start,x0:x,m:V.szm|0};
   else if(inGrp){V.drag={k:'gmove',c,t:h.t,st:c.start,x0:x,list:grp.map(o=>({c:o.c,st:o.c.start}))}}
   else V.drag={k:'move',c,t:h.t,st:c.start,x0:x,y0:y,dup:e.altKey};
   if(V.drag.k=='move'&&e.altKey){const n=Object.assign({},c,{id:rid()});h.t.clips.push(n);V.drag.c=n;D.sel=n.id}
@@ -11484,17 +11527,30 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   const dx=(x-d.x0)/D.zx;
   if(d.k=='gmove'){const delta=Math.max(-Math.min(...d.list.map(o=>o.st)),snapT(d.st+dx)-d.st);d.list.forEach(o=>{o.c.start=o.st+delta});setTip(d.c,x,y);draw();return}
   if(d.k=='move'){d.c.start=snapT(d.st+dx);const ti=Math.max(0,Math.min(D.tracks.length-1,Math.floor((y-RULER+V.sy)/D.zy)));const nt=D.tracks[ti];if(nt&&nt!==d.t){d.t.clips.splice(d.t.clips.indexOf(d.c),1);nt.clips.push(d.c);d.t=nt;D.selT=nt.id}}
-  else if(d.k=='trimR'){const a=A.get(d.c.asset),mx=a&&a.buf?a.buf.duration-d.c.off:1e9;d.c.dur=Math.max(.02,Math.min(mx,snapT(d.c.start+d.dur+dx)-d.c.start))}
-  else if(d.k=='trimL'){let ns=snapT(d.st+dx);ns=Math.max(d.st-d.off,Math.min(ns,d.st+d.dur-.02));const dd=ns-d.st;d.c.start=ns;d.c.off=d.off+dd;d.c.dur=d.dur-dd}
+  else if(d.k=='fi'){d.c.fi=Math.max(0,Math.min(d.c.dur-(d.c.fo||0),d.v0+dx))}
+  else if(d.k=='fo'){d.c.fo=Math.max(0,Math.min(d.c.dur-(d.c.fi||0),d.v0-dx))}
+  else if(d.k=='cg'){const db0=d.g0>0?20*Math.log10(d.g0):-60,nd=Math.max(-60,Math.min(12,db0+(d.y0-y)*.25));d.c.g=nd<=-59.9?0:Math.pow(10,nd/20);V.tip={gx:X(d.c.start),x,y,t:'Klip ovozi: '+(d.c.g>0?nd.toFixed(1):'-∞')+' dB'}}
+  else if(d.k=='trimR'){const a=A.get(d.c.asset),bd=a&&a.buf?a.buf.duration:1e9,m=d.m|0;
+   if(m==2){const nd=Math.max(.05,Math.min(d.dur*8,snapT(d.st+d.dur+dx)-d.st));d.c.dur=nd;d.c._r=nd/d.dur}
+   else if(m==1){const ne=snapT(d.st+d.dur+dx)-d.st,dd=Math.max(-(d.dur-.05),Math.min(ne-d.dur,d.off));d.c.dur=d.dur+dd;d.c.off=d.off-dd}
+   else{const mx=bd-d.c.off;d.c.dur=Math.max(.02,Math.min(mx,snapT(d.c.start+d.dur+dx)-d.c.start))}}
+  else if(d.k=='trimL'){const a=A.get(d.c.asset),bd=a&&a.buf?a.buf.duration:1e9,m=d.m|0;let ns=snapT(d.st+dx);
+   if(m==2){let nd=Math.max(.05,Math.min(d.dur*8,d.st+d.dur-ns));ns=d.st+d.dur-nd;d.c.start=Math.max(0,ns);nd=d.st+d.dur-d.c.start;d.c.dur=nd;d.c._r=nd/d.dur}
+   else if(m==1){ns=Math.max(0,Math.min(ns,d.st+d.dur-.05));let dd=ns-d.st;if(d.dur-dd+d.off>bd)dd=d.dur+d.off-bd;d.c.start=d.st+dd;d.c.dur=d.dur-dd}
+   else{ns=Math.max(d.st-d.off,Math.min(ns,d.st+d.dur-.02));const dd=ns-d.st;d.c.start=ns;d.c.off=d.off+dd;d.c.dur=d.dur-dd}}
   if(d.k=='move'||d.k=='trimL'||d.k=='trimR')setTip(d.c,x,y);
   draw()}
- function up(){const d=V.drag;if(!d)return;V.drag=null;V.tip=null;if(d.k=='mq'){V.mq=null;if(D.ms&&D.ms.length<2){D.ms=[]}ui();draw();return}if(d.k=='ph'&&V.playing)startAt(D.ph);if(d.k=='move'||d.k=='gmove'||d.k=='trimL'||d.k=='trimR'){if(V.playing)startAt(curP())}if(d.k=='loopa'||d.k=='loopb'||d.k=='loopn'){D.loop.on=d.k=='loopn'?true:D.loop.on;ui()}buildHeads();draw();persist()}
+ function up(){const d=V.drag;if(!d)return;V.drag=null;V.tip=null;if(d.k=='mq'){V.mq=null;if(D.ms&&D.ms.length<2){D.ms=[]}ui();draw();return}if(d.k=='ph'&&V.playing)startAt(D.ph);if((d.k=='trimL'||d.k=='trimR')&&d.m==2&&d.c._r&&Math.abs(d.c._r-1)>.004){bakeStretch(d);return}if(d.c&&d.c._r)delete d.c._r;if(d.k=='move'||d.k=='gmove'||d.k=='trimL'||d.k=='trimR'||d.k=='fi'||d.k=='fo'||d.k=='cg'){if(V.playing)startAt(curP())}if(d.k=='loopa'||d.k=='loopb'||d.k=='loopn'){D.loop.on=d.k=='loopn'?true:D.loop.on;ui()}buildHeads();draw();persist()}
+ async function newAsset(buf,name){const id=rid();await IDB.put(id,DAWSND.wav(buf));A.set(id,{buf,peaks:peaksOf(buf),name});D.assets[id]={name,dur:buf.duration,sr:buf.sampleRate,ch:buf.numberOfChannels};return id}
+ async function bakeStretch(d){const c=d.c,a=A.get(c.asset);const fail=m=>{c.dur=d.dur;c.start=d.st;delete c._r;msg2(m);buildHeads();draw()};if(!a||!a.buf||!window.DAWTS||!window.DAWSND){fail('Time-stretch uchun audio topilmadi.');return}
+  const newDur=c.dur,keep=V.szp!==false;msg2('⏳ Time-stretch'+(keep?' (tovush balandligi saqlanadi)':'')+'…');
+  try{const out=await DAWTS.stretch(a.buf,d.off,d.dur,newDur,keep);const id=await newAsset(out,(c.name||'audio')+(keep?' (stretch)':' (tape)'));c.asset=id;c.off=0;c.dur=out.duration;delete c._r;if(c.fi>c.dur)c.fi=0;if(c.fo>c.dur)c.fo=0;if(V.playing)startAt(curP());buildHeads();draw();persist();msg2('✅ Time-stretch: '+(newDur/d.dur).toFixed(2)+'× ('+(keep?'tovush balandligi saqlandi':'tape rejimi: balandlik ham o‘zgardi')+')')}catch(e){console.warn(e);fail('Time-stretch bajarilmadi.')}}
  function splitAt(c,t){if(t<=c.start+.01||t>=c.start+c.dur-.01){msg2('Kesish uchun audio ichidagi joyni tanlang.');return}const t0=D.tracks.find(x=>x.clips.includes(c));const d=t-c.start;const n=Object.assign({},c,{id:rid(),start:t,off:c.off+d,dur:c.dur-d});c.dur=d;t0.clips.push(n);D.sel=n.id;if(V.playing)startAt(curP());draw();persist()}
  function splitHead(){const p=D.ph,ins=c=>p>c.start+.01&&p<c.start+c.dur-.01;const x=selC();let list=[];if(x&&ins(x.c))list=[[x.t,x.c]];else D.tracks.forEach(t=>t.clips.forEach(c=>{if(ins(c))list.push([t,c])}));if(!list.length){msg2('Kesish uchun pleyer boshini audio ustiga qo‘ying.');return}hist();list.forEach(([t,c])=>splitAt(c,p))}
  function dup(){const L=selAll();if(!L.length)return;hist();const a=Math.min(...L.map(o=>o.c.start)),b=Math.max(...L.map(o=>o.c.start+o.c.dur)),sp=L.length>1?b-a:L[0].c.dur;const ids=[];L.forEach(x=>{const n=Object.assign({},x.c,{id:rid(),start:x.c.start+sp});x.t.clips.push(n);ids.push(n.id)});D.sel=ids[0];D.ms=ids.length>1?ids:[];draw();persist()}
  function delSel(){const L=selAll();if(!L.length)return;hist();L.forEach(x=>x.t.clips.splice(x.t.clips.indexOf(x.c),1));D.sel=null;D.ms=[];if(V.playing)startAt(curP());draw();persist()}
  function key(e){
-  if(!document.body.classList.contains('dawon')||!D)return;const tg=e.target;if(tg&&tg.closest&&tg.closest('#dawpan,#azplg')&&tg.closest('input,select,textarea,button'))return;if(tg&&tg.closest&&tg.closest('input,select,textarea,[contenteditable=true]')&&e.key!=' ')return;
+  if(!document.body.classList.contains('dawon')||!D)return;if(e.key=='F3'){e.preventDefault();window.__dawmx&&__dawmx.toggle();return}if(e.key=='F4'){e.preventDefault();window.__dawst&&__dawst.open();return}const tg=e.target;if(tg&&tg.closest&&tg.closest('#dawpan,#azplg')&&tg.closest('input,select,textarea,button'))return;if(tg&&tg.closest&&tg.closest('input,select,textarea,[contenteditable=true]')&&e.key!=' ')return;
   if(tg&&tg.closest&&tg.closest('#dlg,#pm,.mdl')&&!tg.closest('#dawv'))return;
   const k=e.key,ct=e.ctrlKey||e.metaKey;if(tg&&tg.closest&&tg.closest('#dawdr')&&!ct&&!e.altKey&&PADKEYS.includes(k.toLowerCase()))return;let h=true;
   if(k==' '){V.playing?stop():play()}
@@ -11731,7 +11787,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  const add=byId('add'),oh=add&&add.onclick;
  if(add&&oh){add.title='Yangi varaq yoki DAW (audio sekvenser)';add.onclick=function(ev){if(ev&&ev.isTrusted===false)return oh.call(add);menu(add,[{t:'📄 Varaq (jadval)',fn:()=>oh.call(add)},{t:'🎛 DAW — audio sekvenser',fn:()=>{try{create()}catch(e){console.warn(e);msg2('❌ DAW ochilmadi: '+e.message)}}}])}}
  const oRender=render;render=function(){const r=oRender.apply(this,arguments);try{sync()}catch(e){console.warn('daw',e)}return r};
- window.__daw={rid,IDB,peaksOf,projEnd,decode,renderBuf,selClip:()=>{for(const t of D.tracks){const c=t.clips.find(x=>x.id==D.sel);if(c)return{c,t}}return null},create,get:()=>D,A,play,stop,importFiles,mixdown,V,hist,persist,selTrack,startAt,curP,buildHeads,draw,addTrack,beat,ctxOn,msg2,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
+ window.__daw={ctxOn2:()=>ctxOn(),AS,saveAS,resetAudio,applyMix,mixGain,rid,IDB,peaksOf,projEnd,decode,renderBuf,selClip:()=>{for(const t of D.tracks){const c=t.clips.find(x=>x.id==D.sel);if(c)return{c,t}}return null},create,get:()=>D,A,play,stop,importFiles,mixdown,V,hist,persist,selTrack,startAt,curP,buildHeads,draw,addTrack,beat,ctxOn,msg2,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
 })();
 
 /* ===== f6zsn: DAW ichki sound kutubxonasi — kino, teatr FX, aranjirovka (sintez qilingan, oflayn, litsenziyasiz) ===== */
@@ -12322,6 +12378,130 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
    p.querySelectorAll('[data-s]').forEach(el=>{const s=D.sc[+el.dataset.s];const g=a=>el.querySelector('[data-a='+a+']');g('ss').onchange=e=>{DW().hist();s.src=e.target.value;DW().persist();rewire()};g('sd').onchange=e=>{DW().hist();s.dst=e.target.value;DW().persist();rewire()};g('son').onclick=()=>{DW().hist();s.on=s.on===0?1:0;DW().persist();rewire();proPanel(p)};g('sx').onclick=()=>{DW().hist();D.sc.splice(+el.dataset.s,1);DW().persist();rewire();proPanel(p)};
     g('sdb').oninput=e=>{s.db=+e.target.value;e.target.nextElementSibling.textContent=s.db+' dB'};g('sdb').onchange=()=>{DW().persist();rewire()};g('srl').oninput=e=>{s.rel=+e.target.value;e.target.nextElementSibling.textContent=s.rel+' ms'};g('srl').onchange=()=>{DW().persist();rewire()}})})}
  window.__dawui.ext={ai:aiPanel,pro:proPanel};window.__dawui.specClose=specClose;window.__dawui.analyze=analyze;window.__dawui.plan=plan;
+})();
+
+/* ===== f6zst: Studio Setup — audio tizim sozlamalari (qurilma, kechikish, sample rate, yozish) ===== */
+(()=>{
+ if(!window.__daw)return;
+ const DW=()=>window.__daw,AS=()=>DW().AS,E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const DEF={latency:'interactive',sr:0,sink:'',inDev:'',bg:0,raw:1},msg=t=>DW().msg2(t);
+ let W=null,sec='audio',draft=null,devs={out:[],inp:[],named:false},midi=null;
+ const css=`#azst{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.55);display:grid;place-items:center;font:13px system-ui,Segoe UI,sans-serif}
+#azst .bx{width:min(860px,96vw);height:min(600px,92vh);background:#2b2f36;color:#e6e9ef;border:1px solid #4a505b;border-radius:10px;display:flex;flex-direction:column;box-shadow:0 20px 70px #000b}
+#azst .hd{padding:10px 14px;border-bottom:1px solid #3d424c;font-weight:700;display:flex}#azst .hd b{flex:1}#azst .hd button{background:none;border:0;color:#aab;font-size:16px;cursor:pointer}
+#azst .md{display:flex;flex:1;min-height:0}#azst .lf{width:220px;background:#1f2329;border-right:1px solid #3d424c;padding:10px 8px;overflow:auto}
+#azst .lf h5{margin:10px 6px 4px;color:#7f8794;font-size:11px;text-transform:uppercase;letter-spacing:.5px}#azst .lf div.it{padding:6px 10px;border-radius:5px;cursor:pointer;color:#cfd5df}#azst .lf div.it.on{background:#e8eaee;color:#111;font-weight:600}
+#azst .rt{flex:1;padding:16px 20px;overflow:auto}#azst .rt h3{margin:0 0 14px;font-size:20px}
+#azst .rw{display:grid;grid-template-columns:200px 1fr;gap:10px;align-items:center;margin:9px 0}#azst .rw>span{color:#c6ccd6}
+#azst select,#azst input[type=text]{background:#3a3f48;color:#eef;border:1px solid #555c68;border-radius:4px;padding:6px 8px;font:inherit;width:100%}
+#azst .ro{background:#3a3f48;border:1px solid #4a505b;border-radius:4px;padding:6px 8px;text-align:right;color:#dfe3ea}
+#azst .nt{color:#8d96a5;font-size:12px;margin:10px 0;line-height:1.45}#azst .sm{background:#3a3f48;color:#eef;border:1px solid #555c68;border-radius:5px;padding:6px 12px;cursor:pointer;font:inherit}#azst .sm:hover{background:#464c57}
+#azst .ft{display:flex;gap:8px;padding:10px 14px;border-top:1px solid #3d424c;align-items:center}#azst .ft .xsp{flex:1}#azst .ft button{min-width:86px;padding:7px 14px;border-radius:5px;border:1px solid #555c68;background:#3a3f48;color:#eef;cursor:pointer;font:inherit}#azst .ft button.pr{border-color:#6ea8ff;box-shadow:0 0 0 1px #6ea8ff inset}#azst .ft button:disabled{opacity:.45;cursor:default}`;
+ const MS=v=>v==null||!isFinite(v)?'—':(v*1000).toFixed(1)+' ms';
+ async function listDevs(ask){try{if(ask){const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop())}const L=await navigator.mediaDevices.enumerateDevices();devs.out=L.filter(d=>d.kind=='audiooutput');devs.inp=L.filter(d=>d.kind=='audioinput');devs.named=L.some(d=>d.label)}catch(e){msg('Qurilmalar ro‘yxatini olib bo‘lmadi: '+(e&&e.name||''))}}
+ function info(){const ac=DW().ac();return{state:ac?ac.state:'(hali ishga tushmagan)',sr:ac?ac.sampleRate:null,base:ac?ac.baseLatency:null,out:ac?ac.outputLatency:null}}
+ function body(){const d=draft,i=info(),has=!!(window.AudioContext&&AudioContext.prototype.setSinkId);
+  if(sec=='audio')return`<h3>Audio System</h3>
+  <div class=rw><span>Audio draiver</span><div class=ro style="text-align:left">Web Audio (brauzer) — ASIO yo‘q</div></div>
+  <div class=rw><span>Chiqish qurilmasi</span><select id=so ${has?'':'disabled'}><option value="">Tizim standarti</option>${devs.out.map((x,k)=>`<option value="${E(x.deviceId)}" ${d.sink==x.deviceId?'selected':''}>${E(x.label||('Chiqish '+(k+1)))}</option>`).join('')}</select></div>
+  <div class=rw><span>Kirish (mikrofon)</span><select id=si><option value="">Tizim standarti</option>${devs.inp.map((x,k)=>`<option value="${E(x.deviceId)}" ${d.inDev==x.deviceId?'selected':''}>${E(x.label||('Kirish '+(k+1)))}</option>`).join('')}</select></div>
+  <div class=rw><span></span><div><button class=sm id=sdv>${devs.named?'Ro‘yxatni yangilash':'Qurilma nomlarini ko‘rsatish (mikrofon ruxsati)'}</button> <button class=sm id=stst title="Tanlangan chiqishda sinov tovushi">▶ Sinov tovushi</button></div></div>
+  <div class=rw><span>Kechikish rejimi</span><select id=sl><option value=interactive ${d.latency=='interactive'?'selected':''}>Interaktiv — eng kam kechikish</option><option value=balanced ${d.latency=='balanced'?'selected':''}>Muvozanat</option><option value=playback ${d.latency=='playback'?'selected':''}>Barqaror — katta bufer (og‘ir loyiha, ASIO-Guard kabi)</option></select></div>
+  <div class=rw><span>Sample rate</span><select id=sr><option value=0 ${!d.sr?'selected':''}>Avto (qurilma)</option><option value=44100 ${d.sr==44100?'selected':''}>44.1 kHz</option><option value=48000 ${d.sr==48000?'selected':''}>48 kHz</option><option value=96000 ${d.sr==96000?'selected':''}>96 kHz</option></select></div>
+  <div class=rw><span>Fonda qurilmani bo‘shatish</span><label><input type=checkbox id=sb ${d.bg?'checked':''}> Dastur fonda bo‘lganda (ijro yo‘q) audio qurilmani bo‘shatish — Release Driver</label></div>
+  <div class=rw><span>Kirish kechikishi</span><div class=ro>${MS(i.base)} (taxminiy)</div></div><div class=rw><span>Chiqish kechikishi</span><div class=ro>${MS(i.out!=null?i.out:null)}${i.out==null?' — brauzer bermaydi':''}</div></div>
+  <div class=rw><span>ASIO-Guard kechikishi</span><div class=ro>${d.latency=='playback'?'katta bufer':'o‘chiq'}</div></div>
+  <div class=rw><span>HW Sample Rate</span><div class=ro>${i.sr?(i.sr/1000).toFixed(3)+' kHz':'—'}</div></div><div class=rw><span>Holat</span><div class=ro>${E(i.state)}</div></div>
+  <div class=nt>Eslatma: brauzer ASIO draiverlarni ko‘rmaydi — Windows/macOS audio tizimidan (WASAPI/CoreAudio) foydalanadi. Eng kam kechikish uchun «Interaktiv» rejimni tanlang va tizimda «exclusive» rejimli qurilmani yoqing. Chiqish qurilmasini tanlash faqat Chrome/Edge (110+) da ishlaydi.${has?'':' <b style="color:#f6a">Bu brauzer chiqish qurilmasini tanlashni qo‘llamaydi.</b>'}</div>`;
+  if(sec=='rec'){let q='';return`<h3>Yozish (Record)</h3>
+  <div class=rw><span>Yozish formati</span><div class=ro style="text-align:left" id=rf>${E(['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'brauzer standarti')} (MediaRecorder)</div></div>
+  <div class=rw><span>Mikrofon ishlovi</span><label><input type=checkbox id=sraw ${d.raw?'checked':''}> Echo / shovqin / avto-gain <b>o‘chirilsin</b> (musiqa va vokal yozish uchun tavsiya)</label></div>
+  <div class=rw><span>Maksimal yozish vaqti</span><div class=ro id=smax>hisoblanmoqda…</div></div>
+  <div class=nt>Yozuv loyihaga trek sifatida qo‘shiladi. Brauzer yozuvni siqilgan (Opus) formatda saqlaydi, shuning uchun «44.1 kHz / 24-bit» kabi aniq format tanlab bo‘lmaydi.</div>`}
+  if(sec=='midi')return`<h3>MIDI Port Setup</h3><div class=nt>Daftar DAW hozircha MIDI yozishni qo‘llamaydi. Quyida brauzer ko‘rayotgan MIDI qurilmalar ro‘yxati (faqat ma’lumot uchun).</div><button class=sm id=smd>MIDI qurilmalarini ko‘rsatish</button><div class=nt id=sml>${midi?E(midi):''}</div>`;
+  return''}
+ function render(){const w=W;w.innerHTML=`<div class=bx><div class=hd><b>Studio Setup</b><button id=sx>✕</button></div><div class=md><div class=lf><h5>Qurilmalar</h5><div class="it ${sec=='audio'?'on':''}" data-s=audio>🔊 Audio System</div><h5>MIDI</h5><div class="it ${sec=='midi'?'on':''}" data-s=midi>🎹 MIDI Port Setup</div><h5>Transport</h5><div class="it ${sec=='rec'?'on':''}" data-s=rec>⏺ Yozish (Record)</div></div><div class=rt>${body()}</div></div><div class=ft><button id=sreset>Reset</button><span class=xsp></span><button id=sok class=pr>OK</button><button id=scn>Bekor</button><button id=sap>Apply</button></div></div>`;wire()}
+ function readDom(){const g=id=>W.querySelector('#'+id);if(g('so'))draft.sink=g('so').value;if(g('si'))draft.inDev=g('si').value;if(g('sl'))draft.latency=g('sl').value;if(g('sr'))draft.sr=+g('sr').value;if(g('sb'))draft.bg=g('sb').checked?1:0;if(g('sraw'))draft.raw=g('sraw').checked?1:0}
+ function apply(){readDom();const a=AS(),need=a.latency!==draft.latency||a.sr!==draft.sr,sinkCh=a.sink!==draft.sink;Object.assign(a,draft);DW().saveAS();
+  try{if(need){DW().resetAudio();msg('🔊 Audio tizim qayta ishga tushirildi ('+(a.sr?(a.sr/1000)+' kHz':'avto')+', '+a.latency+').')}else if(sinkCh){const ac=DW().ac();if(ac&&ac.setSinkId)ac.setSinkId(a.sink||'').then(()=>msg('🔊 Chiqish qurilmasi o‘zgartirildi.')).catch(e=>msg('❌ Chiqishni o‘zgartirib bo‘lmadi: '+(e&&e.name||'')));else msg('Sozlamalar saqlandi.')}else msg('✅ Studio Setup saqlandi.')}catch(e){console.warn(e);msg('Sozlamalarni qo‘llashda xato.')}}
+ function wire(){const w=W,g=id=>w.querySelector('#'+id);g('sx').onclick=g('scn').onclick=close;g('sok').onclick=()=>{apply();close()};g('sap').onclick=()=>{apply();render()};g('sreset').onclick=()=>{draft=Object.assign({},DEF);render()};
+  w.querySelectorAll('.it').forEach(x=>x.onclick=()=>{readDom();sec=x.dataset.s;render()});
+  if(g('sdv'))g('sdv').onclick=async()=>{readDom();await listDevs(true);render()};
+  if(g('stst'))g('stst').onclick=async()=>{readDom();try{const ac=DW().ctxOn();const o=ac.createOscillator(),gn=ac.createGain();if(draft.sink&&ac.setSinkId)await ac.setSinkId(draft.sink);o.frequency.value=440;gn.gain.setValueAtTime(.0001,ac.currentTime);gn.gain.exponentialRampToValueAtTime(.2,ac.currentTime+.03);gn.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.5);o.connect(gn);gn.connect(ac.destination);o.start();o.stop(ac.currentTime+.55);if(!draft.sink&&AS().sink&&ac.setSinkId)ac.setSinkId(AS().sink).catch(()=>{})}catch(e){msg('Sinov tovushi chalinmadi: '+(e&&e.name||''))}};
+  if(g('smax'))(async()=>{try{const e=await navigator.storage.estimate(),free=Math.max(0,e.quota-e.usage),h=free/60e6;g('smax').textContent='≈ '+(h>999?'999+':h.toFixed(0))+' soat (bo‘sh joy: '+(free/1e9).toFixed(1)+' GB)'}catch(_){if(g('smax'))g('smax').textContent='noma’lum'}})();
+  if(g('smd'))g('smd').onclick=async()=>{try{const m=await navigator.requestMIDIAccess();const L=[...m.inputs.values()].map(x=>'⬅ '+x.name).concat([...m.outputs.values()].map(x=>'➡ '+x.name));midi=L.length?L.join('\n'):'MIDI qurilma topilmadi.'}catch(e){midi='MIDI ruxsati berilmadi yoki brauzer qo‘llamaydi.'}g('sml').style.whiteSpace='pre-line';g('sml').textContent=midi}}
+ async function open(){close();if(!document.getElementById('azstcss')){const s=document.createElement('style');s.id='azstcss';s.textContent=css;document.head.appendChild(s)}draft=Object.assign({},DEF,AS());W=document.createElement('div');W.id='azst';document.body.appendChild(W);sec='audio';render();await listDevs(false);if(W&&W.isConnected&&sec=='audio'){readDom();render()}}
+ function close(){if(W){W.remove();W=null}}
+ window.__dawst={open,close};
+})();
+
+/* ===== f6zmx: MixConsole — treklar soniga qarab shakllanadigan mikser + AI avto-balans ===== */
+(()=>{
+ if(!window.__daw)return;
+ const DW=()=>window.__daw,DD=()=>DW().get(),E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),msg=t=>DW().msg2(t),dbv=x=>20*Math.log10(Math.max(x,1e-6)),lin=db=>Math.pow(10,db/20);
+ const f2db=t=>t<=.001?-Infinity:-60+66*t*t,db2f=db=>db<=-59.9?0:Math.sqrt((cl(db,-60,6)+60)/66);
+ let root=null,raf=0,sig='',busy=false,res=null,css0=false;
+ const CSS=`#dawv #dawmx .mxh{display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid #26334f;background:#101620}#dawv #dawmx .mxh b{color:#eaf0fc;font-size:13px}#dawv #dawmx .mxh .mxsp{flex:1}
+#dawv #dawmx .mxh button{height:26px;padding:0 10px;font-size:12px}#dawv #dawmx .mxh .ai{background:linear-gradient(90deg,#a855f7,#22d3ee);color:#fff;border:0;font-weight:700}
+#dawv #dawmx .mxs{display:flex;gap:6px;overflow-x:auto;padding:8px 8px 6px;height:calc(100% - 40px)}
+#dawv #dawmx .st{flex:none;width:86px;background:linear-gradient(180deg,#232b3a,#1b2230);border:1px solid #2f3a50;border-radius:8px;padding:5px;display:flex;flex-direction:column;gap:4px;align-items:center}#dawv #dawmx .st.ms{width:96px;border-color:#6b7bff}#dawv #dawmx .st.bs{border-color:#f59e0b}
+#dawv #dawmx .nm{width:100%;text-align:center;font-weight:700;font-size:11px;color:#eaf0fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:3px solid var(--c);padding-top:3px}
+#dawv #dawmx .bt{display:flex;gap:3px}#dawv #dawmx .bt button{width:24px;height:22px;padding:0;font-size:11px}#dawv #dawmx .bt button.on.m{background:#f2c25b;color:#111}#dawv #dawmx .bt button.on.s{background:#4cc38a;color:#111}
+#dawv #dawmx .pn{width:100%;height:14px}#dawv #dawmx .pl{font-size:10px;color:#8ea0c2;margin-top:-3px}
+#dawv #dawmx .fr{display:flex;gap:5px;height:100px;align-items:stretch}#dawv #dawmx .mt{width:10px;background:#0b1018;border-radius:2px}#dawv #dawmx .fd{width:26px;background:#0b1018;border-radius:4px;position:relative;touch-action:none;cursor:ns-resize}
+#dawv #dawmx .fd:before{content:'';position:absolute;left:12px;top:6px;bottom:6px;width:2px;background:#33415e}#dawv #dawmx .fd i{position:absolute;left:2px;width:22px;height:12px;background:linear-gradient(180deg,#e8edf8,#aab5cc);border-radius:3px;margin-top:-6px;border:1px solid #fff}
+#dawv #dawmx .sc{display:flex;flex-direction:column;justify-content:space-between;font-size:8.5px;color:#6b7ca0;text-align:right;padding:2px 0}
+#dawv #dawmx .vl{background:#0b1018;border-radius:4px;padding:2px 6px;font-size:11px;color:#dfe8f8;min-width:52px;text-align:center}
+#dawv #dawmx .fxb{width:100%;height:22px;padding:0;font-size:11px}#dawv #dawmx .fxb.on{background:#8b6cff;color:#fff}
+#dawv #dawmx .rs{position:absolute;right:14px;top:44px;width:360px;max-height:210px;overflow:auto;background:#0e1422;border:1px solid #3b4d73;border-radius:10px;padding:8px 10px;z-index:5;font-size:11px;color:#cfd8e6;box-shadow:0 10px 30px #000a}
+#dawv #dawmx .rs table{width:100%;border-collapse:collapse}#dawv #dawmx .rs td,#dawv #dawmx .rs th{border-bottom:1px solid #26334f;padding:2px 4px;text-align:left;background:none}#dawv #dawmx .rs th{color:#8ea0c2}`;
+ const root0=()=>document.getElementById('dawmx');
+ const show=()=>{const r=root0();if(!r)return;if(!css0){css0=true;const s=document.createElement('style');s.textContent=CSS;document.head.appendChild(s)}r.style.display='flex';r.style.flexDirection='column';r.style.position='relative';root=r;sig='';const b=document.getElementById('dawmxb');if(b)b.classList.add('on');loop();setTimeout(()=>window.dispatchEvent(new Event('resize')),30)};
+ const hide=()=>{const r=root0();if(r)r.style.display='none';root=null;cancelAnimationFrame(raf);const b=document.getElementById('dawmxb');if(b)b.classList.remove('on');setTimeout(()=>window.dispatchEvent(new Event('resize')),30)};
+ const toggle=()=>{const r=root0();if(r&&r.style.display=='flex')hide();else show()};
+ const mix=()=>{try{DW().applyMix()}catch(_){}};
+ function structSig(){const D=DD();return D.tracks.map(t=>t.id+t.n+t.col+(t.bus||'')+(t.fx&&t.fx.length?'f':'')).join('|')+'#'+(D.buses||[]).map(b=>b.id+b.n+(b.fx&&b.fx.length?'f':'')).join('|')+(D.mfx&&D.mfx.length?'F':'')}
+ function strip(o){const{id,n,col,kind,vol,pan,m,s,fx}=o;return`<div class="st ${kind=='m'?'ms':kind=='b'?'bs':''}" data-k="${kind}" data-id="${id}" style="--c:${col}"><div class=nm title="${E(n)}">${E(n)}</div>
+  ${kind=='t'?`<div class=bt><button class="m ${m?'on':''}" data-a=m title="Mute">M</button><button class="s ${s?'on':''}" data-a=s title="Solo">S</button></div><input class=pn type=range min=-1 max=1 step=.01 value="${pan||0}" title="Pan (ikki marta bosing = markaz)"><div class=pl>${panT(pan||0)}</div>`:'<div style="height:22px"></div><div style="height:28px"></div>'}
+  <div class=fr><canvas class=mt width=10 height=100></canvas><div class=fd><i></i></div><div class=sc><span>6</span><span>0</span><span>-6</span><span>-18</span><span>-40</span><span>-∞</span></div></div>
+  <div class=vl>0.0</div><button class="fxb ${fx?'on':''}" data-a=fx>Fx${kind=='t'?'':''}</button></div>`}
+ const panT=p=>Math.abs(p)<.02?'C':(p<0?'L':'R')+Math.round(Math.abs(p)*100);
+ function build(){const D=DD(),r=root;if(!D)return;const items=D.tracks.map(t=>({id:t.id,n:t.n,col:t.col,kind:'t',vol:t.vol,pan:t.pan,m:t.m,s:t.s,fx:t.fx&&t.fx.length})).concat((D.buses||[]).map(b=>({id:b.id,n:'🎻 '+b.n,col:'#f59e0b',kind:'b',vol:b.vol==null?1:b.vol,fx:b.fx&&b.fx.length}))).concat([{id:'master',n:'MASTER',col:'#6b7bff',kind:'m',vol:D.mv==null?1:D.mv,fx:D.mfx&&D.mfx.length}]);
+  r.innerHTML=`<div class=mxh><b>🎚 MixConsole</b><span style="color:#8ea0c2;font-size:11px">${D.tracks.length} ta kanal${(D.buses||[]).length?' · '+D.buses.length+' bus':''}</span><span class=mxsp></span><button id=mxab class=ai title="Treklar balandligi va panini avtomatik muvozanatlaydi">🤖 Avto balans</button><button id=mxz title="Hamma fader 0 dB, pan markazda">Nolga qaytarish</button><button id=mxx title="Yopish (F3)">✕</button></div><div class=mxs>${items.map(strip).join('')}</div><div id=mxrs></div>`;
+  r.querySelector('#mxx').onclick=hide;r.querySelector('#mxz').onclick=()=>{DW().hist();D.tracks.forEach(t=>{t.vol=1;t.pan=0});(D.buses||[]).forEach(b=>b.vol=1);D.mv=1;mix();DW().buildHeads();DW().persist();try{window.__dawui.ctl.rewire()}catch(_){}build()};r.querySelector('#mxab').onclick=autoBalance;
+  r.querySelectorAll('.st').forEach(el=>{const k=el.dataset.k,id=el.dataset.id,tr=k=='t'?D.tracks.find(x=>x.id==id):null,bs=k=='b'?(D.buses||[]).find(x=>x.id==id):null;
+   const get=()=>k=='m'?(D.mv==null?1:D.mv):k=='b'?(bs.vol==null?1:bs.vol):tr.vol,set=v=>{if(k=='m'){D.mv=v;mix()}else if(k=='b'){bs.vol=v;const n=DW().V.tn.get(id);if(n&&n.g&&n.g.context){}}else{tr.vol=v;mix()}};
+   const fd=el.querySelector('.fd');let drag=false,hist0=false;
+   const fromY=y=>{const r2=fd.getBoundingClientRect(),t=cl(1-(y-r2.top-6)/(r2.height-12),0,1);return t};
+   const upd=()=>{const v=get(),t=db2f(dbv(v));fd.querySelector('i').style.top=(6+(1-t)*(fd.clientHeight-12))+'px';el.querySelector('.vl').textContent=v<=.001?'-∞':dbv(v).toFixed(1)};upd();
+   fd.onpointerdown=e=>{drag=true;hist0=false;fd.setPointerCapture(e.pointerId);fd.onpointermove(e)};
+   fd.onpointermove=e=>{if(!drag)return;if(!hist0){DW().hist();hist0=true}let t=fromY(e.clientY);if(Math.abs(t-db2f(0))<.025)t=db2f(0);const db=f2db(t);set(db==-Infinity?0:lin(db));upd()};
+   fd.onpointerup=()=>{if(!drag)return;drag=false;DW().persist();if(k=='b')try{window.__dawui.ctl.rewire()}catch(_){}else DW().buildHeads()};
+   fd.ondblclick=()=>{DW().hist();set(1);upd();DW().persist();if(k=='b')try{window.__dawui.ctl.rewire()}catch(_){}else DW().buildHeads()};
+   if(tr){const pn=el.querySelector('.pn');pn.oninput=()=>{tr.pan=+pn.value;mix();el.querySelector('.pl').textContent=panT(tr.pan)};pn.onpointerdown=()=>DW().hist();pn.onchange=()=>{DW().persist();DW().buildHeads()};pn.ondblclick=()=>{DW().hist();pn.value=0;pn.oninput();pn.onchange()};
+    el.querySelectorAll('.bt button').forEach(b=>b.onclick=()=>{DW().hist();if(b.dataset.a=='m')tr.m=tr.m?0:1;else tr.s=tr.s?0:1;mix();b.classList.toggle('on');DW().buildHeads();DW().draw();DW().persist()})}
+   el.querySelector('[data-a=fx]').onclick=()=>{try{window.__dawui.open('fx',k=='m'?'master':id)}catch(_){}};
+   el._upd=upd});
+  sig=structSig()}
+ const MP={};function meter(cv,an,key){if(!cv)return;const g=cv.getContext('2d'),h=cv.height;let pk=-90;if(an){const b=new Float32Array(an.fftSize);an.getFloatTimeDomainData(b);let m=0;for(let i=0;i<b.length;i++){const a=Math.abs(b[i]);if(a>m)m=a}pk=dbv(m)}
+  const o=MP[key]||(MP[key]={v:-90,h:-90,t:0}),now=performance.now();o.v=pk>o.v?pk:Math.max(pk,o.v-1.2);if(pk>o.h||now-o.t>1200){if(pk>o.h){o.h=pk;o.t=now}else o.h=Math.max(pk,o.h-.8)}
+  const y=db=>h-6-cl((db+60)/66,0,1)*(h-12);g.clearRect(0,0,10,h);g.fillStyle='#0b1018';g.fillRect(0,0,10,h);const yy=y(o.v);const gr=g.createLinearGradient(0,h,0,0);gr.addColorStop(0,'#22c55e');gr.addColorStop(.72,'#eab308');gr.addColorStop(1,'#ef4444');g.fillStyle=gr;g.fillRect(1,yy,8,h-6-yy);g.fillStyle=o.h>-1?'#ef4444':'#e8eefb';g.fillRect(1,y(o.h)-1,8,2)}
+ function loop(){raf=requestAnimationFrame(loop);if(!root||root.style.display!='flex')return;const D=DD();if(!D)return;if(structSig()!==sig&&!document.activeElement?.closest?.('#dawmx .fd'))build();const V=DW().V,an=DW().an();
+  root.querySelectorAll('.st').forEach(el=>{const k=el.dataset.k,id=el.dataset.id;let a=null;if(k=='m')a=an;else if(k=='t'){const n=V.tn&&V.tn.get(id);a=n&&n.an}meter(el.querySelector('.mt'),a,id);if(el._upd&&!el.querySelector('.fd').matches(':active'))el._upd()})}
+ /* ---------- AI avto-balans ---------- */
+ const ROLE=[['lead',/vokal|vocal|ovoz|voice|vox|golos|голос|ашула|qo.?shiq|lead/i,0,'Asosiy ovoz'],['drum',/kick|baraban|drum|perc|snare|beat|hat|rit/i,-3,'Rit-seksiya'],['bass',/\bbas\b|bass|\bbas[ _-]/i,-4,'Bas'],['fx',/fx|sfx|effekt|riser|ambient|pad|atmos|foley|shov/i,-9,'Effekt/fon']];
+ const role=n=>{for(const r of ROLE)if(r[1].test(n))return r;return['inst',null,-6,'Cholg‘u']};
+ async function autoBalance(){if(busy)return;const D=DD(),A=DW().A;const trs=D.tracks.filter(t=>!t.dm&&t.clips.some(c=>{const a=A.get(c.asset);return a&&a.buf}));if(trs.length<2){msg('Balans uchun kamida 2 ta audio trek kerak.');return}
+  if(!window.__dawui||!__dawui.analyze){msg('Tahlil moduli topilmadi.');return}busy=true;const btn=root.querySelector('#mxab');if(btn)btn.textContent='⏳ Tahlil…';await new Promise(r=>setTimeout(r,40));
+  const rows=[];for(const t of trs){const c=t.clips.filter(c=>{const a=A.get(c.asset);return a&&a.buf}).sort((a,b)=>b.dur-a.dur)[0],a=A.get(c.asset);let an=null;try{an=__dawui.analyze(a.buf,c.off,c.dur)}catch(e){console.warn(e)}if(an&&an.lufs>-69)rows.push({t,an,r:role(t.n)});await new Promise(r=>setTimeout(r,5))}
+  busy=false;if(btn)btn.textContent='🤖 Avto balans';if(rows.length<2){msg('Tahlil uchun yetarli audio topilmadi.');return}
+  DW().hist();const lead=rows.find(x=>x.r[0]=='lead')||rows.slice().sort((a,b)=>b.an.lufs-a.an.lufs)[0],anchor=lead.an.lufs;let side=0;const out=[];
+  rows.forEach(x=>{const want=anchor+(x===lead?0:x.r[2]),g=x===lead?0:cl(want-x.an.lufs,-24,12);x.g=g;x.t.vol=lin(g);if(x.r[0]=='inst'||x.r[0]=='fx'){if(!x.t.pan){const k=Math.floor(side/2),p=cl(.25+.15*k,.2,.7);x.t.pan=side%2?p:-p;side++;x.pan=x.t.pan}}else if(x.r[0]=='lead'||x.r[0]=='bass'||x.r[0]=='drum'){x.t.pan=x.t.pan||0}});
+  let mvNote='';D.mv=1;try{if(DW().projEnd()<=360){const b=await DW().renderBuf();let pk=0;for(let c=0;c<b.numberOfChannels;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}}if(pk>.89){D.mv=+(.89/pk).toFixed(3);mvNote='Master '+dbv(D.mv).toFixed(1)+' dB (peak −1 dBFS dan oshmasligi uchun)'}else mvNote='Miks peak '+dbv(pk).toFixed(1)+' dBFS — xavfsiz'}}catch(e){console.warn(e)}
+  mix();DW().buildHeads();DW().draw();DW().persist();try{window.__dawui.ctl.rewire()}catch(_){}build();
+  const r=root.querySelector('#mxrs');r.innerHTML=`<div class=rs><div style="display:flex;align-items:center"><b style="color:#eaf0fc;flex:1">🤖 Avto balans natijasi</b><button id=mxrc style="height:22px">✕</button></div><div style="color:#8ea0c2;margin:2px 0 4px">Asos: ${E(lead.t.n)} (${anchor.toFixed(1)} LUFS) · LUFS bo‘yicha taxminiy balans</div><table><tr><th>Trek</th><th>Rol</th><th>LUFS</th><th>Ovoz</th><th>Pan</th></tr>${rows.map(x=>`<tr><td>${E(x.t.n)}</td><td>${x.r[3]}</td><td>${x.an.lufs.toFixed(1)}</td><td>${x.g>0?'+':''}${x.g.toFixed(1)} dB</td><td>${x.pan?panT(x.pan):'—'}</td></tr>`).join('')}</table><div style="margin-top:4px;color:#9fb0c9">${mvNote}</div><div style="margin-top:4px;color:#8ea0c2">Ctrl+Z — qaytarish. Quloq bilan tekshiring.</div></div>`;r.querySelector('#mxrc').onclick=()=>{r.innerHTML=''};msg('🤖 Avto balans qo‘llandi ('+rows.length+' trek).')}
+ window.__dawmx={toggle,show,hide,autoBalance,render:()=>root&&build()};
 })();
 
 /* ===== f6zq: ilova o'rnatilganda qurilmada «Ma'lumot papkasi» — yaratish, yozuv, har ochilishda tiklash ===== */
