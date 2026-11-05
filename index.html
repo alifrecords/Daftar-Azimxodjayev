@@ -11112,11 +11112,11 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  let uidN=0;const uid=()=>'fx'+Date.now().toString(36)+(uidN++).toString(36);
  function chain(ctx,list,input,output){
   const inst=[];let prev=input;
-  (list||[]).forEach(f=>{const d=REG[f.id];if(!d||f.on===0)return;let n;try{n=d.make(ctx,merged(f));n.set(merged(f),true)}catch(e){console.warn('fx',f.id,e);return}prev.connect(n.in);prev=n.out;inst.push({uid:f.uid,id:f.id,n})});
+  (list||[]).forEach(f=>{const d=REG[f.id];if(!d||f.on===0)return;let n;try{n=d.make(ctx,merged(f));n.set(merged(f),true)}catch(e){console.warn('fx',f.id,e);return}prev.connect(n.in);prev=n.out;let an=null;if(typeof OfflineAudioContext=='undefined'||!(ctx instanceof OfflineAudioContext)){try{const mk=()=>{const a=ctx.createAnalyser();a.fftSize=2048;a.smoothingTimeConstant=.55;return a};an={i:mk(),o:mk()};n.in.connect(an.i);n.out.connect(an.o)}catch(_){an=null}}inst.push({uid:f.uid,id:f.id,n,an})});
   prev.connect(output);
   return{inst,set(u,p){const x=inst.find(i=>i.uid===u);if(x)try{x.n.set(p)}catch(e){console.warn(e)}},dispose(){inst.forEach(i=>{try{i.n.dispose()}catch(_){}try{i.n.out.disconnect()}catch(_){}});try{prev.disconnect(output)}catch(_){}}}}
  function tail(D){let t=.3;const look=l=>(l||[]).forEach(f=>{if(f.on===0)return;if(f.id=='dverb'){const p=merged(f);t=Math.max(t,Math.min(12,p.decay*((ALG[p.alg]||ALG.Hall).dm)*1.2)+.3)}else if(/delay|pingpong|tapeecho/.test(f.id)){const p=merged(f);t=Math.max(t,Math.min(8,syncT(p)*(1+4*p.fb)+.3))}});D.tracks.forEach(x=>look(x.fx));look(D.mfx);return t}
- window.DAWFX={REG,ORDER,chain,tail,uid,merged,defs,makeIR,setBpm:f=>{bpmFn=f},cats:['Distortion','Reverb','Delay','EQ','Dynamics','Modulation','Stereo','Creative'],
+ window.DAWFX={syncT:p=>syncT(p),REG,ORDER,chain,tail,uid,merged,defs,makeIR,setBpm:f=>{bpmFn=f},cats:['Distortion','Reverb','Delay','EQ','Dynamics','Modulation','Stereo','Creative'],
   add(list,id,preset){const d=REG[id];const f={id,uid:uid(),on:1,p:Object.assign({},preset&&d.presets[preset]||{})};list.push(f);return f}};
 })();
 
@@ -11472,7 +11472,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  function dup(){const L=selAll();if(!L.length)return;hist();const a=Math.min(...L.map(o=>o.c.start)),b=Math.max(...L.map(o=>o.c.start+o.c.dur)),sp=L.length>1?b-a:L[0].c.dur;const ids=[];L.forEach(x=>{const n=Object.assign({},x.c,{id:rid(),start:x.c.start+sp});x.t.clips.push(n);ids.push(n.id)});D.sel=ids[0];D.ms=ids.length>1?ids:[];draw();persist()}
  function delSel(){const L=selAll();if(!L.length)return;hist();L.forEach(x=>x.t.clips.splice(x.t.clips.indexOf(x.c),1));D.sel=null;D.ms=[];if(V.playing)startAt(curP());draw();persist()}
  function key(e){
-  if(!document.body.classList.contains('dawon')||!D)return;const tg=e.target;if(tg&&tg.closest&&tg.closest('#dawpan')&&tg.closest('input,select,textarea,button'))return;if(tg&&tg.closest&&tg.closest('input,select,textarea,[contenteditable=true]')&&e.key!=' ')return;
+  if(!document.body.classList.contains('dawon')||!D)return;const tg=e.target;if(tg&&tg.closest&&tg.closest('#dawpan,#azplg')&&tg.closest('input,select,textarea,button'))return;if(tg&&tg.closest&&tg.closest('input,select,textarea,[contenteditable=true]')&&e.key!=' ')return;
   if(tg&&tg.closest&&tg.closest('#dlg,#pm,.mdl')&&!tg.closest('#dawv'))return;
   const k=e.key,ct=e.ctrlKey||e.metaKey;if(tg&&tg.closest&&tg.closest('#dawdr')&&!ct&&!e.altKey&&PADKEYS.includes(k.toLowerCase()))return;let h=true;
   if(k==' '){V.playing?stop():play()}
@@ -11973,7 +11973,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  function tgtList(create){const D=DD();if(ST.tgt=='master'){if(create&&!D.mfx)D.mfx=[];return{list:D.mfx||[],owner:null,master:true,name:'Master'}}let t=ST.tgt=='sel'?W().selTrack():D.tracks.find(x=>x.id==ST.tgt);if(!t)return{list:[],owner:null,name:'—'};if(create&&!t.fx)t.fx=[];return{list:t.fx||[],owner:t,name:t.n}}
  function rewire(){const V=W().V;if(V.playing)W().startAt(W().curP());W().persist();try{W().buildHeads()}catch(_){}}
  function liveSet(f){const V=W().V,tg=tgtList(),d=DAWFX.merged(f);if(tg.master){V.mfx&&V.mfx.set(f.uid,d)}else if(tg.owner){const n=V.tn.get(tg.owner.id);n&&n.fx&&n.fx.set(f.uid,d)}}
- function addFx(id,preset){const D=DD(),tg=tgtList(true);if(!tg.owner&&!tg.master){W().msg2('Avval trek tanlang yoki «Master» ni belgilang.');return}W().hist();DAWFX.add(tg.list,id,preset);if(!tg.master&&!tg.owner.fx)tg.owner.fx=tg.list;ST.fTab='chain';rewire();render();W().msg2('➕ '+DAWFX.REG[id].name+(preset?' · '+preset:'')+' → '+tg.name)}
+ function addFx(id,preset){const D=DD(),tg=tgtList(true);if(!tg.owner&&!tg.master){W().msg2('Avval trek tanlang yoki «Master» ni belgilang.');return}W().hist();const nf=DAWFX.add(tg.list,id,preset);if(!tg.master&&!tg.owner.fx)tg.owner.fx=tg.list;ST.fTab='chain';rewire();render();setTimeout(()=>{window.__dawui.edit&&window.__dawui.edit(nf,tgtList())},60);W().msg2('➕ '+DAWFX.REG[id].name+(preset?' · '+preset:'')+' → '+tg.name)}
  const fmtV=(p,v)=>(p.step>=1?Math.round(v):(+v).toFixed(p.step<.05?2:1))+(p.u?' '+p.u:'');
  const F_AZ=1;
  function addAzChain(){const tg=tgtList(true);if(!tg.owner&&!tg.master){W().msg2('Avval trek tanlang yoki «Master» ni belgilang.');return}W().hist();DAWFX.azChain(tg.list);if(!tg.master&&!tg.owner.fx)tg.owner.fx=tg.list;ST.fTab='chain';rewire();render();W().msg2('➕ AZ vokal zanjiri → '+tg.name)}
@@ -11990,12 +11990,12 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  function viewChain(b){
   const tg=tgtList(),D=DD();
   b.innerHTML=`<div class=ztg><span>Maqsad:</span><select id=fxt>${targets().map(t=>`<option value="${t.id}" ${ST.tgt==t.id?'selected':''}>${E(t.n)}</option>`).join('')}</select></div>
-  <div class=pnb>${tg.list.length?tg.list.map((f,i)=>{const d=DAWFX.REG[f.id];if(!d)return'';const p=DAWFX.merged(f),op=ST.open[f.uid]!==false;return`<div class="fxi ${f.on===0?'off':''}" data-u="${f.uid}"><div class=zh><button class="zbyp ${f.on===0?'on':''}" title="Bypass (o‘chirib-yoqish)">⏻</button><b title="Parametrlarni ochish/yopish">${E(d.name)}</b><button data-a=up title="Yuqoriga">↑</button><button data-a=dn title="Pastga">↓</button><button data-a=rm title="O‘chirish">✕</button></div>${op?`<div class=zbd><div class=zpp><span>Preset</span><select data-a=pre><option value="">— tanlang —</option>${Object.keys(d.presets).map(n=>`<option>${E(n)}</option>`).join('')}</select><em></em></div>${d.params.map(pr=>pr.opts?`<div class=zpp><span>${E(pr.n)}</span><select data-k="${pr.k}">${pr.opts.map(o=>`<option ${p[pr.k]==o?'selected':''}>${E(o)}</option>`).join('')}</select><em></em></div>`:`<div class=zpp><span title="${E(pr.n)}">${E(pr.n)}</span><input type=range data-k="${pr.k}" min="${pr.min}" max="${pr.max}" step="${pr.step}" value="${p[pr.k]}"><em>${fmtV(pr,p[pr.k])}</em></div>`).join('')}</div>`:''}</div>`}).join(''):`<div class=zemp>«${E(tg.name)}» uchun effekt yo‘q.<br>«Effektlar» bo‘limidan ＋ bosing.</div>`}</div>
+  <div class=pnb>${tg.list.length?tg.list.map((f,i)=>{const d=DAWFX.REG[f.id];if(!d)return'';const p=DAWFX.merged(f),op=ST.open[f.uid]!==false;return`<div class="fxi ${f.on===0?'off':''}" data-u="${f.uid}"><div class=zh><button class="zbyp ${f.on===0?'on':''}" title="Bypass (o‘chirib-yoqish)">⏻</button><b title="Grafik oynani ochish">${E(d.name)}</b><button class=zcol title="Parametrlarni ochish/yopish">▾</button><button data-a=up title="Yuqoriga">↑</button><button data-a=dn title="Pastga">↓</button><button data-a=rm title="O‘chirish">✕</button></div>${op?`<div class=zbd><div class=zpp><span>Preset</span><select data-a=pre><option value="">— tanlang —</option>${Object.keys(d.presets).map(n=>`<option>${E(n)}</option>`).join('')}</select><em></em></div>${d.params.map(pr=>pr.opts?`<div class=zpp><span>${E(pr.n)}</span><select data-k="${pr.k}">${pr.opts.map(o=>`<option ${p[pr.k]==o?'selected':''}>${E(o)}</option>`).join('')}</select><em></em></div>`:`<div class=zpp><span title="${E(pr.n)}">${E(pr.n)}</span><input type=range data-k="${pr.k}" min="${pr.min}" max="${pr.max}" step="${pr.step}" value="${p[pr.k]}"><em>${fmtV(pr,p[pr.k])}</em></div>`).join('')}</div>`:''}</div>`}).join(''):`<div class=zemp>«${E(tg.name)}» uchun effekt yo‘q.<br>«Effektlar» bo‘limidan ＋ bosing.</div>`}</div>
   <div class=pnf>Zanjir yuqoridan pastga ishlaydi. Parametrlar eshitib turib o‘zgaradi; eksport (WAV) ham effektlar bilan chiqadi.</div>`;
   b.querySelector('#fxt').onchange=e=>{ST.tgt=e.target.value;render()};
   b.querySelectorAll('.fxi').forEach(el=>{const u=el.dataset.u,f=tg.list.find(x=>x.uid==u),d=DAWFX.REG[f.id],idx=tg.list.indexOf(f);
    el.querySelector('.zbyp').onclick=()=>{W().hist();f.on=f.on===0?1:0;rewire();render()};
-   el.querySelector('.zh b').onclick=()=>{ST.open[u]=ST.open[u]===false;render()};
+   el.querySelector('.zh b').onclick=()=>{window.__dawui.edit&&window.__dawui.edit(f,tg)};const zc=el.querySelector('.zcol');if(zc)zc.onclick=()=>{ST.open[u]=ST.open[u]===false;render()};
    el.querySelectorAll('.zh [data-a]').forEach(x=>x.onclick=()=>{const a=x.dataset.a;W().hist();if(a=='rm')tg.list.splice(idx,1);else if(a=='up'&&idx>0){tg.list.splice(idx,1);tg.list.splice(idx-1,0,f)}else if(a=='dn'&&idx<tg.list.length-1){tg.list.splice(idx,1);tg.list.splice(idx+1,0,f)}rewire();render()});
    const pre=el.querySelector('[data-a=pre]');if(pre)pre.onchange=()=>{if(!pre.value)return;W().hist();f.p=Object.assign({},d.presets[pre.value]);rewire();render()};
    el.querySelectorAll('input[data-k]').forEach(inp=>{const pr=d.params.find(x=>x.k==inp.dataset.k);inp.onpointerdown=()=>W().hist();inp.oninput=()=>{const v=+inp.value;(f.p=f.p||{})[pr.k]=v;inp.parentElement.querySelector('em').textContent=fmtV(pr,v);liveSet(f);W().persist()};inp.ondblclick=()=>{inp.value=pr.def;inp.oninput()}});
@@ -12006,7 +12006,129 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   p.querySelector('#pnx').onclick=close;p.querySelectorAll('.pnt button').forEach(x=>x.onclick=()=>{if(m=='snd')ST.sTab=x.dataset.t;else ST.fTab=x.dataset.t;render()});
   const b=p.querySelector('#pnbody');if(m=='snd'){stopPrev();({sounds:viewSounds,packs:viewPacks,online:viewOnline,local:viewLocal})[ST.sTab](b)}else{({fx:viewFx,chain:viewChain})[ST.fTab](b)}
   setTimeout(()=>window.dispatchEvent(new Event('resize')),30)}
- window.__dawui={toggle,open,close,render,ST,onSel(){if(ST.mode=='fx'&&ST.tgt=='sel'&&ST.fTab=='chain'&&panel()&&!panel().hidden)render()}};
+ window.__dawui={toggle,open,close,render,ST,ctl:{W,tgtList,rewire,liveSet,DD,live(tg,f){const V=W().V;let ch=null;if(tg.master)ch=V.mfx;else if(tg.owner){const n=V.tn&&V.tn.get(tg.owner.id);ch=n&&n.fx}return ch&&ch.inst.find(i=>i.uid==f.uid)||null}},onSel(){if(ST.mode=='fx'&&ST.tgt=='sel'&&ST.fTab=='chain'&&panel()&&!panel().hidden)render()}};
+})();
+
+/* ===== f6zpl: Fx plagin oynasi — asl plagindagidek grafik ko'rinish (jonli to'lqin/spektr, egri chiziqlar, knoblar) ===== */
+(()=>{
+ if(!window.__dawui||!window.DAWFX)return;
+ const F=window.DAWFX,U=()=>window.__dawui.ctl,cl=(v,a,b)=>Math.max(a,Math.min(b,v)),dBv=x=>20*Math.log10(Math.max(x,1e-6)),lin=x=>Math.pow(10,x/20);
+ const E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const COL={AZ:['#a855f7','#22d3ee'],Distortion:['#fb923c','#fbbf24'],Reverb:['#a855f7','#60a5fa'],Delay:['#60a5fa','#22d3ee'],EQ:['#34d399','#a3e635'],Dynamics:['#f87171','#fbbf24'],Modulation:['#22d3ee','#818cf8'],Stereo:['#f472b6','#a78bfa'],Creative:['#fbbf24','#fb7185']};
+ const LAT={azvr:12};
+ const GROUPS={azvr:[{t:'Xona va reverb',s:'Yozuvdagi xona aks-sadosini kamaytiradi',ks:['room']},{t:'Nafaslarni yumshatish',s:'Nafaslar tabiiy darajaga tushiriladi',ks:['breath']},{t:'Undoshlar va kliklar',s:'CH/K polosasi va S/SH — alohida nazorat',ks:['ch','s','sf']},{t:'«Tunel» tovushi',s:'Ichi bo‘sh, quti ichidan kelganday ovoz chastotalari',ks:['tunnel','hp']}],
+  azclean:[{t:'Tozalash',s:'Past shovqin, loy va qattiqlik',ks:['amt','hp','mud','harsh']},{t:'Rang va balans',s:'Havo, avto-level va shift',ks:['air','glue','ceil']}]};
+ let W=null,raf=0,cur=null;
+ function css(){if(document.getElementById('azplgcss'))return;const s=document.createElement('style');s.id='azplgcss';s.textContent=`
+#azplg{position:fixed;z-index:99999;left:50%;top:56px;transform:translateX(-50%);width:min(1000px,96vw);max-height:calc(100vh - 70px);overflow:auto;background:linear-gradient(180deg,#0d1424,#080d18);color:#d8e2f2;border:1px solid #2b3a57;border-radius:14px;box-shadow:0 20px 70px #000c;font:12px/1.35 system-ui,Segoe UI,Roboto,sans-serif;padding:14px}
+#azplg *{box-sizing:border-box}
+#azplg .zhd{display:flex;align-items:center;gap:12px;cursor:move;flex-wrap:wrap}
+#azplg .zlg{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;border:2px solid #3b4d73;background:radial-gradient(circle at 30% 25%,var(--c2),var(--c1));flex:none}
+#azplg .zbr b{display:block;font-size:19px;letter-spacing:.5px;background:linear-gradient(90deg,var(--c2),var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent}
+#azplg .zbr span{display:block;font-size:13px;font-weight:700;color:#e8eefb}#azplg .zbr i{font-style:normal;color:#7d8cab;font-size:11px}
+#azplg .zmt{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;align-items:center}
+#azplg .zbx{background:#101a30;border:1px solid #2b3a57;border-radius:8px;padding:5px 14px;text-align:center;min-width:92px}#azplg .zbx small{display:block;color:#7d8cab;font-size:9px;letter-spacing:1px}#azplg .zbx b{font-size:17px;color:#e8eefb}
+#azplg select,#azplg button{background:#14203a;color:#d8e2f2;border:1px solid #33466b;border-radius:7px;padding:6px 10px;font:inherit;cursor:pointer}
+#azplg button:hover{background:#1c2c4d}#azplg button.on{background:var(--c1);border-color:var(--c2);color:#fff}
+#azplg .zsw{width:40px;height:22px;border-radius:12px;background:#2a3550;border:0;padding:0;position:relative}#azplg .zsw:after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#9fb0d0;transition:.15s}#azplg .zsw.on{background:var(--c1)}#azplg .zsw.on:after{left:21px;background:#fff}
+#azplg canvas{display:block;width:100%;height:210px;margin-top:12px;border:1px solid #22304d;border-radius:10px;background:#070b15}
+#azplg .zlg2{display:flex;gap:14px;flex-wrap:wrap;margin:7px 2px;color:#8696b6;font-size:11px}#azplg .zlg2 i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+#azplg .zcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:6px}
+#azplg .zcd{background:#0c1426;border:1px solid #22304d;border-radius:10px;padding:10px 12px}
+#azplg .zcd .zct{display:flex;align-items:center;gap:9px;margin-bottom:6px}#azplg .zcd .zct div{flex:1;min-width:0}#azplg .zcd .zct b{display:block;font-size:14px;color:#eaf0fc}#azplg .zcd .zct span{color:#7d8cab;font-size:10.5px}
+#azplg .zks{display:flex;flex-wrap:wrap;gap:6px 4px;justify-content:space-around}
+#azplg .zkn{width:84px;text-align:center;user-select:none;touch-action:none}#azplg .zkn svg{display:block;margin:0 auto;cursor:ns-resize}#azplg .zkn small{display:block;color:#8ea0c2;font-size:10px;letter-spacing:.4px;text-transform:uppercase;min-height:24px}#azplg .zkn em{font-style:normal;color:var(--c1);font-weight:700;font-size:12px}
+#azplg .zsl{display:flex;flex-direction:column;gap:3px;width:128px}#azplg .zsl small{color:#8ea0c2;font-size:10px;text-transform:uppercase}
+#azplg .zft{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}#azplg .zft p{margin:0 0 0 auto;color:#7d8cab;font-size:11px;max-width:320px;text-align:right}
+`;document.head.appendChild(s)}
+ const fmt=(p,v)=>(p.step>=1?Math.round(v):(+v).toFixed(p.step<.05?2:1))+(p.u?' '+p.u:'');
+ const merged=f=>F.merged(f);
+ /* ---------- knob ---------- */
+ const pol=(cx,cy,r,a)=>{const t=a*Math.PI/180;return[cx+r*Math.sin(t),cy-r*Math.cos(t)]};
+ function knobSvg(pr,v){const t=cl((v-pr.min)/((pr.max-pr.min)||1),0,1),a=-135+270*t,[x0,y0]=pol(32,34,23,-135),[x1,y1]=pol(32,34,23,135),[xv,yv]=pol(32,34,23,a),[px,py]=pol(32,34,16,a),[qx,qy]=pol(32,34,7,a);
+  return`<svg width=64 height=64 viewBox="0 0 64 64"><path d="M${x0} ${y0}A23 23 0 1 1 ${x1} ${y1}" fill=none stroke="#26334f" stroke-width=5 stroke-linecap=round /><path class=zv d="M${x0} ${y0}A23 23 0 ${a+135>180?1:0} 1 ${xv} ${yv}" fill=none stroke="var(--c1)" stroke-width=5 stroke-linecap=round /><circle cx=32 cy=34 r=15 fill="#151f36" stroke="#2f3f63"/><line class=zp x1="${qx}" y1="${qy}" x2="${px}" y2="${py}" stroke="#e8eefb" stroke-width=2.5 stroke-linecap=round /></svg>`}
+ function knobHtml(pr,v){return`<div class=zkn data-k="${pr.k}">${knobSvg(pr,v)}<small>${E(pr.n)}</small><em>${fmt(pr,v)}</em></div>`}
+ /* ---------- oyna ---------- */
+ function close(){cancelAnimationFrame(raf);raf=0;const e=document.getElementById('azplg');if(e)e.remove();cur=null}
+ function open(f,tg){const d=F.REG[f.id];if(!d)return;css();close();cur={f,tg,d,hist:{i:[],o:[]},t0:performance.now(),mem:{}};
+  const c=COL[d.cat]||COL.AZ,az=d.cat=='AZ';
+  const w=document.createElement('div');w.id='azplg';w.style.setProperty('--c1',c[0]);w.style.setProperty('--c2',c[1]);document.body.appendChild(w);W=w;build();
+  loop()}
+ function build(){const {f,d,tg}=cur,w=W,p=merged(f),g=GROUPS[f.id]||[{t:'Parametrlar',s:d.desc,ks:d.params.map(x=>x.k)}];
+  const ini=d.cat=='AZ'?'AZ':d.name.replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase()||'FX';
+  const nm=d.name.replace(/\s*\(.*$/,'');
+  w.innerHTML=`<div class=zhd id=azhd><div class=zlg>${ini}</div><div class=zbr><b>AZIMXODJAYEV MUSIC</b><span>${E(nm)}</span><i>${E(d.desc)}</i></div>
+  <div class=zmt><div class=zbx><small>KIRISH dBFS</small><b id=mi>—</b></div><div class=zbx><small>CHIQISH dBFS</small><b id=mo>—</b></div><div class=zbx><small>KECHIKISH</small><b>${LAT[f.id]||0} ms</b></div>
+  <select id=azpre><option value="">Preset…</option>${Object.keys(d.presets).map(n=>`<option>${E(n)}</option>`).join('')}</select><span style="display:flex;align-items:center;gap:6px">Bypass <button class="zsw ${f.on===0?'on':''}" id=azby title="Bypass"></button></span><button id=azx title="Yopish">✕</button></div></div>
+  <canvas id=azcv></canvas><div class=zlg2 id=azlg></div>
+  <div class=zcs>${g.map((gr,gi)=>{const prs=gr.ks.map(k=>d.params.find(x=>x.k==k)).filter(Boolean);const tog=GROUPS[f.id]&&prs.some(x=>x.min==0&&!x.opts&&x.k!='hp'&&x.k!='sf'&&x.k!='ceil');return`<div class=zcd data-g=${gi}><div class=zct>${tog?`<button class="zsw on" data-tg=${gi} title="Modulni yoqish/o‘chirish"></button>`:''}<div><b>${E(gr.t)}</b><span>${E(gr.s)}</span></div></div><div class=zks>${prs.map(pr=>pr.opts?`<div class=zsl><small>${E(pr.n)}</small><select data-k="${pr.k}">${pr.opts.map(o=>`<option ${p[pr.k]==o?'selected':''}>${E(o)}</option>`).join('')}</select></div>`:knobHtml(pr,+p[pr.k])).join('')}</div></div>`}).join('')}</div>
+  <div class=zft><button id=azA class="${f.on===0?'on':''}">A · ASL</button><button id=azB class="${f.on===0?'':'on'}">B · ISHLOV</button><button id=azrs>↺ Boshlang‘ich holat</button><p id=azst></p></div>`;
+  wire()}
+ const sync=()=>{try{U().W().persist()}catch(_){}};
+ function setP(k,v,live){const {f,d,tg}=cur;(f.p=f.p||{})[k]=v;if(live)try{U().liveSet(f)}catch(_){};sync()}
+ function wire(){const {f,d,tg}=cur,w=W;
+  w.querySelector('#azx').onclick=close;
+  const hd=w.querySelector('#azhd');hd.onpointerdown=e=>{if(e.target.closest('button,select'))return;const r=w.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;w.style.transform='none';w.style.left=r.left+'px';w.style.top=r.top+'px';const mv=ev=>{w.style.left=cl(ev.clientX-dx,-r.width+80,innerWidth-80)+'px';w.style.top=cl(ev.clientY-dy,0,innerHeight-40)+'px'},up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up)};addEventListener('pointermove',mv);addEventListener('pointerup',up)};
+  const setOn=on=>{U().W().hist();f.on=on?1:0;U().rewire();w.querySelector('#azby').classList.toggle('on',!on);w.querySelector('#azA').classList.toggle('on',!on);w.querySelector('#azB').classList.toggle('on',!!on);if(U().render)window.__dawui.render()};
+  w.querySelector('#azby').onclick=()=>setOn(f.on===0);w.querySelector('#azA').onclick=()=>setOn(false);w.querySelector('#azB').onclick=()=>setOn(true);
+  w.querySelector('#azpre').onchange=e=>{const n=e.target.value;if(!n)return;U().W().hist();f.p=Object.assign({},d.presets[n]);U().rewire();window.__dawui.render();build()};
+  w.querySelector('#azrs').onclick=()=>{U().W().hist();f.p={};U().rewire();window.__dawui.render();build()};
+  w.querySelectorAll('select[data-k]').forEach(s=>s.onchange=()=>{U().W().hist();setP(s.dataset.k,s.value,false);U().rewire();window.__dawui.render();build()});
+  w.querySelectorAll('.zkn').forEach(el=>{const pr=d.params.find(x=>x.k==el.dataset.k);let drag=null;
+   const apply=v=>{v=cl(v,pr.min,pr.max);if(pr.step)v=Math.round(v/pr.step)*pr.step;v=+v.toFixed(4);setP(pr.k,v,true);const t=cl((v-pr.min)/((pr.max-pr.min)||1),0,1);el.innerHTML=knobSvg(pr,v)+`<small>${E(pr.n)}</small><em>${fmt(pr,v)}</em>`};
+   el.onpointerdown=e=>{e.preventDefault();U().W().hist();drag={y:e.clientY,v:+merged(f)[pr.k]};el.setPointerCapture(e.pointerId)};
+   el.onpointermove=e=>{if(!drag)return;const sens=e.shiftKey?600:200;apply(drag.v+(drag.y-e.clientY)/sens*(pr.max-pr.min))};
+   el.onpointerup=el.onpointercancel=()=>{drag=null};
+   el.onwheel=e=>{e.preventDefault();apply(+merged(f)[pr.k]-Math.sign(e.deltaY)*(pr.max-pr.min)/(e.shiftKey?400:50))};
+   el.ondblclick=()=>{U().W().hist();apply(pr.def)}});
+  w.querySelectorAll('[data-tg]').forEach(b=>b.onclick=()=>{const gr=(GROUPS[f.id]||[])[+b.dataset.tg],on=b.classList.contains('on');U().W().hist();gr.ks.forEach(k=>{const pr=d.params.find(x=>x.k==k);if(!pr||pr.opts||!(pr.min==0)||k=='sf'||k=='ceil')return;if(on){cur.mem[k]=+merged(f)[k];setP(k,0,true)}else setP(k,cur.mem[k]!=null?cur.mem[k]:pr.def,true)});b.classList.toggle('on');build();const nb=W.querySelector('[data-tg="'+b.dataset.tg+'"]');if(nb)nb.classList.toggle('on',!on)})}
+ /* ---------- jonli chizma ---------- */
+ const live=()=>{try{return U().live(cur.tg,cur.f)}catch(_){return null}};
+ let tmpCtx=null;const tc=()=>tmpCtx||(tmpCtx=new OfflineAudioContext(1,1,44100));
+ function peak(an){if(!an)return -120;const b=new Float32Array(an.fftSize);an.getFloatTimeDomainData(b);let m=0;for(let i=0;i<b.length;i++){const a=Math.abs(b[i]);if(a>m)m=a}return dBv(m)}
+ const fx=(f,fs)=>{const l=Math.log10(20),h=Math.log10(20000);return(Math.log10(f)-l)/(h-l)};
+ function spec(an,w,h,ctx,col,fill){if(!an)return;const b=new Float32Array(an.frequencyBinCount);an.getFloatFrequencyData(b);const sr=an.context.sampleRate;ctx.beginPath();let first=1;for(let x=0;x<w;x+=2){const f=20*Math.pow(1000,x/w),k=Math.min(b.length-1,Math.round(f/sr*an.fftSize)),v=cl((b[k]+110)/100,0,1),y=h-v*h*.92;if(first){ctx.moveTo(x,y);first=0}else ctx.lineTo(x,y)}
+  if(fill){ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fillStyle=fill;ctx.fill()}else{ctx.strokeStyle=col;ctx.lineWidth=1.6;ctx.stroke()}}
+ function grid(ctx,w,h,db){ctx.strokeStyle='#17223a';ctx.lineWidth=1;ctx.fillStyle='#53648a';ctx.font='10px system-ui';[50,100,200,500,1e3,2e3,5e3,1e4].forEach(f=>{const x=fx(f)*w;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();ctx.fillText(f>=1e3?f/1e3+'k':f,x+3,h-4)});if(db)db.forEach(([v,y])=>{ctx.beginPath();ctx.moveTo(0,y*h);ctx.lineTo(w,y*h);ctx.stroke();ctx.fillText(v,4,y*h-3)})}
+ function eqResp(p,f){const c=tc(),mk=(t,fr,q,g)=>{const b=c.createBiquadFilter();b.type=t;b.frequency.value=fr;if(q!=null)b.Q.value=q;if(g!=null)b.gain.value=g;return b};const fl=f=='eq4'?[mk('highpass',p.hp,.7),mk('lowshelf',p.lf,.7,p.lg),mk('peaking',p.m1f,p.m1q,p.m1g),mk('peaking',p.m2f,p.m2q,p.m2g),mk('highshelf',p.hf,.7,p.hg),mk('lowpass',p.lp,.7)]:[mk(p.type,p.freq,p.q)];
+  const N=300,fr=new Float32Array(N),out=new Float32Array(N).fill(1),m=new Float32Array(N),ph=new Float32Array(N);for(let i=0;i<N;i++)fr[i]=20*Math.pow(1000,i/(N-1));fl.forEach(b=>{b.getFrequencyResponse(fr,m,ph);for(let i=0;i<N;i++)out[i]*=m[i]});return out}
+ function shapeFn(id,p){const g=lin(p.drive||0);if(id=='dist1')return x=>Math.tanh(x*g*2.2)*lin(p.level);if(id=='dist2')return x=>{const y=x*g;return(y>=0?Math.tanh(y*1.6):Math.tanh(y*.9)*1.1-.02)*lin(p.level)};if(id=='tape')return x=>{const y=cl(x*g,-1.5,1.5);return(y-y*y*y/6.75)*lin(-p.drive*.35)};if(id=='crush'){const lv=Math.pow(2,p.bits-1);return x=>Math.round(x*lv)/lv}return x=>x}
+ function draw(){const cv=W&&W.querySelector('#azcv');if(!cv)return;const dpr=Math.min(2,devicePixelRatio||1),cw=cv.clientWidth,ch=cv.clientHeight;if(cv.width!==cw*dpr){cv.width=cw*dpr;cv.height=ch*dpr}const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,cw,ch);
+  const {f,d}=cur,p=merged(f),L=live(),an=L&&L.an,id=f.id,c1=getComputedStyle(W).getPropertyValue('--c1').trim()||'#60a5fa',c2=getComputedStyle(W).getPropertyValue('--c2').trim()||'#22d3ee';
+  const pi=an?peak(an.i):-120,po=an?peak(an.o):-120;const mi=W.querySelector('#mi'),mo=W.querySelector('#mo');if(mi){mi.textContent=pi>-100?pi.toFixed(1):'—';mo.textContent=po>-100?po.toFixed(1):'—'}
+  const st=W.querySelector('#azst');if(st)st.textContent=an?'Real vaqtda ishlamoqda. Knoblar: sudrash · g‘ildirak · ikki marta bosish = boshlang‘ich.':'Jonli ko‘rsatkich uchun ijroni boshlang (Space). Knoblar hozir ham ishlaydi.';
+  let lg=[];
+  const note=t=>{c.fillStyle='#6b7ca0';c.font='12px system-ui';c.fillText(t,12,20)};
+  if(id=='azvr'){ // aylanuvchi to'lqin
+   const H=cur.hist,n=Math.floor(cw/2);H.i.push(an?lin(pi):0);H.o.push(an?lin(po):0);while(H.i.length>n){H.i.shift();H.o.shift()}
+   const mid=ch/2;c.fillStyle='#0a1020';c.fillRect(0,0,cw,ch);c.strokeStyle='#17223a';c.beginPath();c.moveTo(0,mid);c.lineTo(cw,mid);c.stroke();
+   for(let x=0;x<H.i.length;x++){const a=Math.sqrt(H.i[x])*mid*.95,b=Math.sqrt(H.o[x])*mid*.95,X=x*2;c.fillStyle='#3b82f6';c.fillRect(X,mid-a,2,a*2);if(a-b>mid*.06){c.fillStyle='rgba(168,85,247,.45)';c.fillRect(X,mid-a,2,a-b);c.fillRect(X,mid+b,2,a-b)}c.fillStyle='#fff';c.fillRect(X,mid-b,2,1.5);c.fillRect(X,mid+b,2,1.5)}
+   if(!an)note('Ijroni boshlang — kirish (ko‘k), ishlovdan keyin (oq) va olib tashlangan qism (binafsha) shu yerda chiziladi');
+   lg=[['#3b82f6','Vokal (kirish)'],['#fff','Ishlovdan keyin'],['#a855f7','Tozalangan qism (xona/nafas/S/CH)']]}
+  else if(id=='eq4'||id=='filter'){grid(c,cw,ch,[['+18',.05],['0',.5],['-18',.95]]);if(an){spec(an.i,cw,ch,c,0,'rgba(120,140,180,.18)');spec(an.o,cw,ch,c,c2)}const r=eqResp(p,id);c.beginPath();for(let i=0;i<r.length;i++){const x=i/(r.length-1)*cw,y=ch*(.5-dBv(r[i])/36);i?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle=c1;c.lineWidth=2.4;c.stroke();c.lineTo(cw,ch/2);c.lineTo(0,ch/2);c.fillStyle=c1+'33';c.fill();lg=[[c1,'Chastota javobi (±18 dB)'],['#7889ad','Kirish spektri'],[c2,'Chiqish spektri']]}
+  else if(id=='comp'||id=='limiter'){const th=id=='comp'?p.th:p.ceil,rt=id=='comp'?p.ratio:20,kn=id=='comp'?p.knee:0,mk=id=='comp'?p.mk:0,pre=id=='limiter'?p.gain:0,S=Math.min(cw,ch)*.86,ox=(cw-S)/2-cw*.12,oy=ch-14;
+   const X=v=>ox+(v+60)/60*S,Y=v=>oy-(v+60)/60*(S-20),tf=x=>{x+=pre;let y;if(2*(x-th)<-kn)y=x;else if(2*Math.abs(x-th)<=kn){const t=x-th+kn/2;y=x+(1/rt-1)*t*t/(2*kn)}else y=th+(x-th)/rt;return y+mk};
+   c.strokeStyle='#17223a';for(let v=-60;v<=0;v+=10){c.beginPath();c.moveTo(X(v),Y(-60));c.lineTo(X(v),Y(0));c.moveTo(X(-60),Y(v));c.lineTo(X(0),Y(v));c.stroke()}c.setLineDash([4,4]);c.strokeStyle='#42527a';c.beginPath();c.moveTo(X(-60),Y(-60));c.lineTo(X(0),Y(0));c.stroke();c.setLineDash([]);
+   c.strokeStyle='#f87171';c.globalAlpha=.55;c.beginPath();c.moveTo(X(th-pre),Y(-60));c.lineTo(X(th-pre),Y(0));c.stroke();c.globalAlpha=1;
+   c.beginPath();for(let v=-60;v<=0;v+=1){const y=cl(tf(v),-60,6);v==-60?c.moveTo(X(v),Y(y)):c.lineTo(X(v),Y(y))}c.strokeStyle=c1;c.lineWidth=2.6;c.stroke();
+   if(an&&pi>-80){c.fillStyle='#fff';c.beginPath();c.arc(X(pi),Y(cl(tf(pi),-60,6)),5,0,7);c.fill()}
+   const gr=an?cl(pi-po,0,24):0,bx=cw-60;c.fillStyle='#111a2e';c.fillRect(bx,12,24,ch-30);c.fillStyle=c1;c.fillRect(bx,12,24,(ch-30)*gr/24);c.fillStyle='#8ea0c2';c.font='10px system-ui';c.fillText('GR',bx+3,ch-3);c.fillText(gr.toFixed(1)+' dB',bx-8,8);
+   c.fillStyle='#6b7ca0';c.fillText('kirish dB →',ox+S-70,oy+11);lg=[[c1,'Kirish/chiqish egri chizig‘i'],['#fff','Joriy daraja'],['#f87171','Threshold']]}
+  else if(/^(dist1|dist2|tape|crush)$/.test(id)){const fn=shapeFn(id,p),mid=ch/2,cx=cw/2,S=ch*.44;c.strokeStyle='#17223a';c.beginPath();c.moveTo(0,mid);c.lineTo(cw,mid);c.moveTo(cx,0);c.lineTo(cx,ch);c.stroke();c.beginPath();for(let i=0;i<=400;i++){const x=-1+i/200,y=cl(fn(x),-1.4,1.4),X=cx+x*S*1.6,Y=mid-y*S;i?c.lineTo(X,Y):c.moveTo(X,Y)}c.strokeStyle=c1;c.lineWidth=2.6;c.stroke();c.setLineDash([4,4]);c.strokeStyle='#42527a';c.beginPath();c.moveTo(cx-S*1.6,mid+S);c.lineTo(cx+S*1.6,mid-S);c.stroke();c.setLineDash([]);
+   if(an){c.fillStyle=c2;c.globalAlpha=.8;const x=lin(pi),y=fn(x);c.beginPath();c.arc(cx+cl(x,0,1)*S*1.6,mid-cl(y,-1.4,1.4)*S,5,0,7);c.fill();c.globalAlpha=1;spec(an.o,cw,ch*.5,c,c2)}
+   lg=[[c1,'To‘lqin shakli (kirish → chiqish)'],['#42527a','Chiziqli (o‘zgarishsiz)']]}
+  else if(id=='dverb'){const A={Hall:1,Church:1.6,Plate:.8,Room:.35,Ambient:.5,Nonlin:.5}[p.alg]||1,dec=cl(p.decay*A*(.75+.5*p.size),.12,14),pre=p.pre/1000,T=Math.max(dec+pre+.2,.8);c.strokeStyle='#17223a';for(let s=0;s<=T;s+=.5){c.beginPath();c.moveTo(s/T*cw,0);c.lineTo(s/T*cw,ch);c.stroke()}
+   c.beginPath();c.moveTo(0,ch);let rs=7;const rnd=()=>(rs=(rs*16807)%2147483647)/2147483647;for(let x=0;x<cw;x+=2){const t=x/cw*T-pre;const e=t<0?0:(p.alg=='Nonlin'?(t<dec?1-.25*t/dec:0):Math.exp(-6.9*t/dec));const j=t<0?0:(.55+.45*rnd())*(.4+.6*p.diff);c.lineTo(x,ch-8-e*j*(ch-30))}c.lineTo(cw,ch);c.closePath();c.fillStyle=c1+'55';c.fill();c.strokeStyle=c1;c.stroke();
+   c.fillStyle='#fff';for(let k=0;k<7;k++){const t=pre+.004+k*.011*(.4+p.size);const x=t/T*cw;c.fillRect(x,ch-8-(1-k/9)*(ch-40),2,(1-k/9)*(ch-40))}
+   c.fillStyle='#8ea0c2';c.font='11px system-ui';c.fillText('RT60 ≈ '+dec.toFixed(1)+' s · pre '+p.pre+' ms · '+p.alg,12,18);if(an)spec(an.o,cw,ch*.45,c,c2);lg=[[c1,'Qaytish dumi (taxminiy)'],['#fff','Erta qaytishlar (early reflections)']]}
+  else if(/delay|pingpong|tapeecho/.test(id)){const t=F.syncT(p)||.35,fb=p.fb||.4,T=Math.min(8,Math.max(1.2,t*7));c.strokeStyle='#17223a';c.beginPath();c.moveTo(0,ch/2);c.lineTo(cw,ch/2);c.stroke();let a=1,i=0;const pp=id=='pingpong';c.fillStyle=c1;c.fillRect(8,ch/2-ch*.38,6,ch*.38);for(let tt=t;tt<T&&a>.02;tt+=t,i++){a*=fb;const x=8+tt/T*(cw-20),hh=a*ch*.38;const up=pp?(i%2==0):true;c.fillStyle=pp&&i%2?c2:c1;c.globalAlpha=.4+.6*a;c.fillRect(x,up?ch/2-hh:ch/2,6,hh);c.globalAlpha=1}
+   c.fillStyle='#8ea0c2';c.font='11px system-ui';c.fillText('Vaqt '+Math.round(t*1000)+' ms · feedback '+Math.round(fb*100)+'%',12,16);if(an){spec(an.o,cw,ch,c,c2+'99')}lg=[[c1,'Exolar (balandligi = feedback)']]}
+  else if(/chorus|flanger|phaser|tremolo|autopan|ringmod/.test(id)){const t=(performance.now()-cur.t0)/1000,rate=id=='ringmod'?2:p.rate,dep=id=='ringmod'?.6:(id=='chorus'?cl(p.depth/12,.05,1):id=='flanger'?cl(p.depth/5,.05,1):p.depth),shape=p.wave||'sine',mid=ch/2;c.strokeStyle='#17223a';c.beginPath();c.moveTo(0,mid);c.lineTo(cw,mid);c.stroke();c.beginPath();for(let x=0;x<=cw;x+=2){const ph=(x/cw*2+t*Math.min(rate,3))*rate/Math.min(rate,3)*1;const q=ph%1;let y=shape=='square'?(q<.5?1:-1):shape=='triangle'?(q<.5?q*4-1:3-q*4):Math.sin(q*2*Math.PI);const Y=mid-y*dep*(ch*.4);x?c.lineTo(x,Y):c.moveTo(x,Y)}c.strokeStyle=c1;c.lineWidth=2.6;c.stroke();c.fillStyle='#8ea0c2';c.font='11px system-ui';c.fillText('LFO · '+(+rate).toFixed(2)+' Hz · chuqurlik '+Math.round(dep*100)+'%',12,16);if(an)spec(an.o,cw,ch*.4,c,c2);lg=[[c1,'LFO shakli (2 soniya oynasi)']]}
+  else {grid(c,cw,ch);if(an){spec(an.i,cw,ch,c,0,'rgba(120,140,180,.22)');spec(an.o,cw,ch,c,c2);c.strokeStyle=c1;}else note('Ijroni boshlang — kirish va chiqish spektri shu yerda ko‘rinadi');lg=[['#7889ad','Kirish spektri'],[c2,'Chiqish spektri']]}
+  if(id=='azclean'&&an===null){}
+  const le=W.querySelector('#azlg');const key=lg.map(x=>x[1]).join('|');if(le&&le.dataset.k!==key){le.dataset.k=key;le.innerHTML=lg.map(x=>`<span><i style="background:${x[0]}"></i>${E(x[1])}</span>`).join('')}}
+ function loop(){raf=requestAnimationFrame(loop);if(!W||!document.body.contains(W)){cancelAnimationFrame(raf);return}try{draw()}catch(e){if(!loop.w){loop.w=1;console.warn('azplg',e)}}}
+ window.__dawui.edit=open;window.__dawui.editClose=close;
 })();
 
 /* ===== f6zq: ilova o'rnatilganda qurilmada «Ma'lumot papkasi» — yaratish, yozuv, har ochilishda tiklash ===== */
