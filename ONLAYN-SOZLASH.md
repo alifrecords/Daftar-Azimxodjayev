@@ -63,3 +63,8 @@ Daftar ma'lumotlari qurilmaning **o'zida** (brauzer/ilova xotirasi, IndexedDB + 
 - Ilova har ochilganda papkadan tiklaydi; ruxsat so'ralsa, pastdagi ko'k panelda «Ulanish».
 - Faqat kompyuterdagi Chrome/Edge. Telefonda brauzer papka bermaydi — «Zaxira faylini saqlash / tiklash» ishlatiladi.
 - Chrome Documents papkasining o'zini tanlatmaydi: uning ichida yangi papka yarating.
+
+## 🎵 Sounds va Fx (DAW)
+- **🎵 Sounds**: 61 ta ichki (sintez qilingan, oflayn) ovoz — Cinematic, Kino FX, Teatr/Foley, Rizer, Drums, Bass, Pads, Stabs, Arranger (tempoga mos fill/loop). Qidiruv, kategoriya, paketlar, sevimli. **Online** tabi: Freesound.org (o'z API kalitingiz kerak). **Mening fayllarim**: kompyuterdagi sample papkasini oflayn qidirish (Chrome/Edge).
+- **Fx**: trek yoki Master uchun insert zanjiri — D-Verb uslubidagi reverb (Hall/Church/Plate/Room/Ambient/Nonlin), delay, distortion, EQ, compressor, limiter, chorus, flanger, phaser va boshqalar. Eksport (WAV) effektlar bilan chiqadi.
+- Brauzerda VST/AU plaginlar ishlamaydi; AutoTune kiritilmagan.

@@ -10960,6 +10960,166 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  window.__ui={set,get:()=>L,pass,D,tr};
 })();
 
+/* ===== f6zfx: DAW effekt dvigateli (Web Audio, o'z implementatsiya) — insert zanjiri, D-Verb uslubidagi reverb va boshqalar ===== */
+(()=>{
+ const dB=x=>Math.pow(10,x/20),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+ const REG={},ORDER=[];
+ let bpmFn=()=>120;
+ const G=(c,v)=>{const g=c.createGain();g.gain.value=v==null?1:v;return g};
+ const eqp=m=>[Math.cos(m*Math.PI/2),Math.sin(m*Math.PI/2)];
+ /* quruq/ho'l aralashtirgich */
+ function dw(ctx){const inp=G(ctx),out=G(ctx),d=G(ctx),w=G(ctx,0);inp.connect(d);d.connect(out);w.connect(out);return{inp,out,d,w,mix(m){const[a,b]=eqp(cl(m,0,1));d.gain.value=a;w.gain.value=b}}}
+ function curve(fn,n){n=n||2048;const c=new Float32Array(n*2+1);for(let i=-n;i<=n;i++)c[i+n]=fn(i/n);return c}
+ const shaper=(ctx,fn)=>{const s=ctx.createWaveShaper();s.curve=curve(fn);s.oversample='4x';return s};
+ const lfo=(ctx,type,hz)=>{const o=ctx.createOscillator();o.type=type||'sine';o.frequency.value=hz;o.start(0);return o};
+ const bi=(ctx,type,f,q,g)=>{const b=ctx.createBiquadFilter();b.type=type;b.frequency.value=f;if(q!=null)b.Q.value=q;if(g!=null)b.gain.value=g;return b};
+ /* ---- D-Verb uslubidagi impuls javob generatori ---- */
+ const ALG={Hall:{dm:1,er:1,dens:1,pre:0,col:1},Church:{dm:1.6,er:.5,dens:.9,pre:.02,col:.8},Plate:{dm:.8,er:0,dens:1,pre:0,col:1.3},Room:{dm:.35,er:1.6,dens:.9,pre:0,col:1},Ambient:{dm:.5,er:1,dens:.5,pre:0,col:1},Nonlin:{dm:.5,er:.3,dens:1,pre:0,col:1.1}};
+ function makeIR(ctx,o){
+  const sr=ctx.sampleRate,A=ALG[o.alg]||ALG.Hall,dec=cl(o.decay*A.dm*(.75+.5*o.size),.12,14),pre=cl(o.pre/1000+A.pre,0,.4),len=Math.min(14,dec+pre+.2),N=Math.max(64,Math.floor(sr*len)),buf=ctx.createBuffer(2,N,sr);
+  const dens=.04+.96*Math.pow(cl(o.diff,0,1),1.4)*A.dens,amp=1/Math.sqrt(dens),erSpan=.012+.09*o.size;
+  for(let c=0;c<2;c++){const d=buf.getChannelData(c);let y=0,hp=0;
+   for(let i=0;i<N;i++){const t=i/sr-pre;if(t<0)continue;
+    let e;if(o.alg=='Nonlin'){e=t<dec?1-.25*t/dec:0;if(t>dec-.02)e*=Math.max(0,(dec-t)/.02)}else e=Math.exp(-6.9*t/dec);
+    const x=Math.random()<dens?(Math.random()*2-1)*amp:0;
+    const fc=cl(o.hf*(1-.65*Math.min(1,t/dec)),500,18000),a=Math.exp(-2*Math.PI*fc/sr);y=a*y+(1-a)*x;
+    let v=y*e;if(o.lf>25){const al=Math.exp(-2*Math.PI*o.lf/sr);hp=al*hp+(1-al)*v;v-=hp}
+    d[i]=v*(t<.004?t/.004:1)}
+   const taps=Math.round(10*A.er);for(let k=0;k<taps;k++){const tt=pre+.002+Math.random()*erSpan,i=Math.floor(tt*sr);if(i<N)d[i]+=(Math.random()<.5?-1:1)*(.9-.7*k/taps)*(A.col)*.6}}
+  return buf}
+ /* ---- tavsif ro'yxati ---- */
+ const P=(k,n,min,max,def,step,u,opts)=>({k,n,min,max,def,step:step||.01,u:u||'',opts});
+ function reg(id,name,cat,desc,params,presets,make){REG[id]={id,name,cat,desc,params,presets:presets||{},make};ORDER.push(id)}
+ /* ======== DISTORTION ======== */
+ reg('dist1','Classic Dist','Distortion','Iliq, tiniq distortion — issiq gritdan fuzz-gacha',
+  [P('drive','Drive',0,40,16,.5,'dB'),P('tone','Ton',500,12000,5200,10,'Hz'),P('level','Daraja',-24,6,-6,.5,'dB'),P('mix','Aralashma',0,1,1,.01)],
+  {'Warm Grit':{drive:9,tone:4200,level:-3,mix:.8},'Crunch':{drive:20,tone:5600,level:-8},'Fuzz Wall':{drive:36,tone:3600,level:-12}},
+  (ctx)=>{const m=dw(ctx),hp=bi(ctx,'highpass',80,.7),pre=G(ctx),sh=shaper(ctx,x=>Math.tanh(x*2.2)),lp=bi(ctx,'lowpass',5000,.7),lv=G(ctx);m.inp.connect(hp);hp.connect(pre);pre.connect(sh);sh.connect(lp);lp.connect(lv);lv.connect(m.w);
+   return{in:m.inp,out:m.out,set(p){pre.gain.value=dB(p.drive);lp.frequency.value=p.tone;lv.gain.value=dB(p.level);m.mix(p.mix)},dispose(){}}});
+ reg('dist2','Juicy Distortion','Distortion','Qalin, to\'yingan va o\'tkir — assimetrik soft-clip',
+  [P('drive','Drive',0,36,14,.5,'dB'),P('warm','Iliqlik',-6,12,4,.5,'dB'),P('bite','O\'tkirlik',-6,12,3,.5,'dB'),P('level','Daraja',-24,6,-5,.5,'dB'),P('mix','Aralashma',0,1,1,.01)],
+  {'Juicy Vocal':{drive:8,warm:3,bite:4,mix:.6},'Dirty Bass':{drive:22,warm:8,bite:0,level:-8},'Bright Edge':{drive:16,warm:0,bite:9,level:-7}},
+  (ctx)=>{const m=dw(ctx),pre=G(ctx),sh=shaper(ctx,x=>x>=0?Math.tanh(x*1.6):Math.tanh(x*.9)*1.1-.02),ls=bi(ctx,'lowshelf',180,.7,0),pk=bi(ctx,'peaking',3200,1,0),lp=bi(ctx,'lowpass',9500,.6),lv=G(ctx);
+   m.inp.connect(pre);pre.connect(sh);sh.connect(ls);ls.connect(pk);pk.connect(lp);lp.connect(lv);lv.connect(m.w);
+   return{in:m.inp,out:m.out,set(p){pre.gain.value=dB(p.drive);ls.gain.value=p.warm;pk.gain.value=p.bite;lv.gain.value=dB(p.level);m.mix(p.mix)},dispose(){}}});
+ reg('tape','Tape Saturation','Distortion','Lenta to\'yinishi — yumshoq siqish va iliq yuqori chastota',
+  [P('drive','Drive',0,18,6,.5,'dB'),P('top','Yuqori kesim',2500,16000,9000,50,'Hz'),P('warm','Past iliqlik',0,9,3,.5,'dB'),P('mix','Aralashma',0,1,1,.01)],
+  {'Subtle Glue':{drive:3,top:12000,warm:2},'Hot Tape':{drive:12,top:7000,warm:5},'Lo-Fi Cassette':{drive:9,top:4200,warm:6}},
+  (ctx)=>{const m=dw(ctx),pre=G(ctx),sh=shaper(ctx,x=>{const y=cl(x,-1.5,1.5);return y-(y*y*y)/6.75}),lp=bi(ctx,'lowpass',9000,.5),ls=bi(ctx,'lowshelf',150,.7,3),mk=G(ctx,.8);
+   m.inp.connect(pre);pre.connect(sh);sh.connect(lp);lp.connect(ls);ls.connect(mk);mk.connect(m.w);
+   return{in:m.inp,out:m.out,set(p){pre.gain.value=dB(p.drive);lp.frequency.value=p.top;ls.gain.value=p.warm;mk.gain.value=dB(-p.drive*.35);m.mix(p.mix)},dispose(){}}});
+ reg('crush','Bitcrusher','Distortion','Raqamli buzilish — bit chuqurligini kamaytirish',
+  [P('bits','Bit',2,16,8,1),P('tone','Ton',800,16000,9000,50,'Hz'),P('mix','Aralashma',0,1,.8,.01)],
+  {'8-bit':{bits:8,tone:9000},'Crunchy 5-bit':{bits:5,tone:6000},'Broken 3-bit':{bits:3,tone:4000,mix:.7}},
+  (ctx)=>{const m=dw(ctx);let sh=shaper(ctx,x=>x),lp=bi(ctx,'lowpass',9000,.6);m.inp.connect(sh);sh.connect(lp);lp.connect(m.w);let lastB=-1;
+   return{in:m.inp,out:m.out,set(p){if(p.bits!==lastB){lastB=p.bits;const lv=Math.pow(2,p.bits-1);sh.curve=curve(x=>Math.round(x*lv)/lv,2048)}lp.frequency.value=p.tone;m.mix(p.mix)},dispose(){}}});
+ /* ======== REVERB ======== */
+ reg('dverb','D-Verb (Hall · Church · Plate · Room · Ambient · Nonlin)','Reverb','Pro Tools D-Verb uslubidagi 6 algoritmli reverb — o\'z implementatsiya',
+  [P('alg','Algoritm',0,0,'Hall',1,'',['Hall','Church','Plate','Room','Ambient','Nonlin']),P('mix','Aralashma',0,1,.28,.01),P('size','Hajm',0,1,.6,.01),P('decay','Davomiylik',.2,14,2.2,.1,'s'),P('pre','Pre-delay',0,250,20,1,'ms'),P('diff','Diffuziya',0,1,.85,.01),P('hf','HF kesim',1000,16000,7500,50,'Hz'),P('lf','LF kesim',20,800,80,5,'Hz'),P('inl','Kirish',-24,6,0,.5,'dB')],
+  {'Hall 2.2s':{},'Plate Vocal':{alg:'Plate',decay:1.6,pre:10,hf:9500,mix:.22},'Small Room':{alg:'Room',decay:.6,size:.3,mix:.18},'Church Cathedral':{alg:'Church',decay:5.5,pre:35,hf:5200,mix:.35},'Ambient Wash':{alg:'Ambient',decay:3.2,diff:.5,mix:.4},'Gated Snare':{alg:'Nonlin',decay:.5,mix:.4,hf:11000},'Cinematic Hall':{alg:'Hall',decay:7,pre:40,hf:5000,mix:.4,size:.9},'Dark Tunnel':{alg:'Church',decay:9,pre:25,hf:2200,lf:60,mix:.45}},
+  (ctx)=>{const m=dw(ctx),ing=G(ctx);let conv=null,key='',tm=null,last=null;m.inp.connect(ing);
+   const build=p=>{const k=[p.alg,p.size,p.decay,p.pre,p.diff,p.hf,p.lf].join('|');if(k===key)return;key=k;const nc=ctx.createConvolver();nc.normalize=true;nc.buffer=makeIR(ctx,p);ing.connect(nc);nc.connect(m.w);if(conv){try{ing.disconnect(conv);conv.disconnect()}catch(_){}}conv=nc};
+   return{in:m.inp,out:m.out,set(p,first){ing.gain.value=dB(p.inl);m.mix(p.mix);last=p;if(first||!conv)build(p);else{clearTimeout(tm);tm=setTimeout(()=>build(last),110)}},dispose(){clearTimeout(tm)}}});
+ /* ======== DELAY ======== */
+ const SYNC={'1/2':2,'1/4':1,'1/4d':1.5,'1/8':.5,'1/8d':.75,'1/16':.25,'1/16d':.375};
+ const syncT=(p)=>p.sync&&p.sync!=='off'?60/bpmFn()*SYNC[p.sync]:p.time/1000;
+ const SYNCO=['off','1/2','1/4','1/4d','1/8','1/8d','1/16'];
+ reg('delay','Echo Delay','Delay','Klassik exo — vaqt yoki tempoga sinxron',
+  [P('sync','Tempoga sinxron',0,0,'off',1,'',SYNCO),P('time','Vaqt',10,1500,350,1,'ms'),P('fb','Feedback',0,.95,.4,.01),P('tone','Ton',800,14000,5500,50,'Hz'),P('mix','Aralashma',0,1,.3,.01)],
+  {'Slapback':{time:90,fb:.12,mix:.28},'Quarter Echo':{sync:'1/4',fb:.4},'Dotted Eighth':{sync:'1/8d',fb:.45,mix:.35},'Long Dub':{time:620,fb:.7,tone:2800,mix:.4}},
+  (ctx)=>{const m=dw(ctx),d=ctx.createDelay(4),fb=G(ctx),lp=bi(ctx,'lowpass',5500,.5);m.inp.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(m.w);
+   return{in:m.inp,out:m.out,set(p){d.delayTime.value=cl(syncT(p),.005,3.9);fb.gain.value=cl(p.fb,0,.95);lp.frequency.value=p.tone;m.mix(p.mix)},dispose(){}}});
+ reg('pingpong','Ping-Pong Delay','Delay','Chap va o\'ng orasida sakraydigan exo',
+  [P('sync','Tempoga sinxron',0,0,'1/8d',1,'',SYNCO),P('time','Vaqt',20,1200,300,1,'ms'),P('fb','Feedback',0,.9,.5,.01),P('tone','Ton',800,14000,6000,50,'Hz'),P('mix','Aralashma',0,1,.32,.01)],
+  {'Wide Bounce':{},'Fast Ping':{sync:'1/16',fb:.45},'Slow Space':{sync:'1/4',fb:.6,tone:3800,mix:.4}},
+  (ctx)=>{const m=dw(ctx),mono=G(ctx,.5),dL=ctx.createDelay(4),dR=ctx.createDelay(4),fb=G(ctx),lpA=bi(ctx,'lowpass',6000,.5),lpB=bi(ctx,'lowpass',6000,.5),mg=ctx.createChannelMerger(2),sp=ctx.createChannelSplitter(2);
+   m.inp.connect(sp);sp.connect(mono,0);sp.connect(mono,1);mono.connect(dL);dL.connect(lpA);lpA.connect(dR);dR.connect(lpB);lpB.connect(fb);fb.connect(dL);dL.connect(mg,0,0);dR.connect(mg,0,1);mg.connect(m.w);
+   return{in:m.inp,out:m.out,set(p){const t=cl(syncT(p),.01,3.9);dL.delayTime.value=t;dR.delayTime.value=t;fb.gain.value=cl(p.fb,0,.9);lpA.frequency.value=lpB.frequency.value=p.tone;m.mix(p.mix)},dispose(){}}});
+ reg('tapeecho','Tape Echo','Delay','Lenta exosi — to\'lqinlanish (wow) va to\'yinish bilan',
+  [P('sync','Tempoga sinxron',0,0,'off',1,'',SYNCO),P('time','Vaqt',60,1200,380,1,'ms'),P('fb','Feedback',0,.92,.5,.01),P('wow','Wow',0,8,2.2,.1,'ms'),P('sat','To\'yinish',0,1,.4,.01),P('mix','Aralashma',0,1,.32,.01)],
+  {'Vintage Tape':{},'Worn Out':{wow:6,sat:.7,fb:.6},'Clean Tape':{wow:.8,sat:.15,fb:.35}},
+  (ctx)=>{const m=dw(ctx),d=ctx.createDelay(4),fb=G(ctx),lp=bi(ctx,'lowpass',4800,.5),hp=bi(ctx,'highpass',160,.5),pre=G(ctx),sh=shaper(ctx,x=>Math.tanh(x*1.4)),o=lfo(ctx,'sine',.7),og=G(ctx,0);
+   o.connect(og);og.connect(d.delayTime);m.inp.connect(d);d.connect(hp);hp.connect(lp);lp.connect(pre);pre.connect(sh);sh.connect(fb);fb.connect(d);sh.connect(m.w);
+   return{in:m.inp,out:m.out,set(p){d.delayTime.value=cl(syncT(p),.02,3.8);fb.gain.value=cl(p.fb,0,.92);og.gain.value=p.wow/1000;pre.gain.value=1+p.sat*3;m.mix(p.mix)},dispose(){try{o.stop()}catch(_){}}}});
+ /* ======== EQ / FILTER ======== */
+ reg('eq4','Parametric EQ (4 band + HP/LP)','EQ','4 polosali parametrik ekvalayzer, yuqori va past chastota filtrlari bilan',
+  [P('hp','HP filtr',20,600,20,1,'Hz'),P('lf','Past chastota',30,500,110,1,'Hz'),P('lg','Past kuchaytirish',-18,18,0,.5,'dB'),P('m1f','O\'rta 1',100,3000,420,1,'Hz'),P('m1g','O\'rta 1 kuchaytirish',-18,18,0,.5,'dB'),P('m1q','O\'rta 1 Q',.3,8,1,.05),P('m2f','O\'rta 2',1000,10000,3200,10,'Hz'),P('m2g','O\'rta 2 kuchaytirish',-18,18,0,.5,'dB'),P('m2q','O\'rta 2 Q',.3,8,1,.05),P('hf','Yuqori chastota',3000,16000,9000,10,'Hz'),P('hg','Yuqori kuchaytirish',-18,18,0,.5,'dB'),P('lp','LP filtr',2000,20000,20000,10,'Hz'),P('out','Chiqish',-18,12,0,.5,'dB')],
+  {'Vocal Presence':{hp:90,m1f:300,m1g:-2.5,m2f:3500,m2g:3.5,hf:11000,hg:2.5},'Telephone':{hp:420,lp:3400,m2f:1800,m2g:5,m2q:1.4},'Bass Boost':{lf:70,lg:7,m1f:250,m1g:-2},'Air Boost':{hf:11000,hg:6,hp:60},'Mud Cut':{m1f:280,m1g:-5,m1q:1.4,hp:40},'Radio':{hp:300,lp:5200,m2f:2500,m2g:4},'Cinematic Low-Cut Warm':{hp:30,lf:90,lg:3,hf:7000,hg:-2}},
+  (ctx)=>{const hp=bi(ctx,'highpass',20,.7),ls=bi(ctx,'lowshelf',110,.7,0),a=bi(ctx,'peaking',420,1,0),b=bi(ctx,'peaking',3200,1,0),hs=bi(ctx,'highshelf',9000,.7,0),lp=bi(ctx,'lowpass',20000,.7),o=G(ctx);hp.connect(ls);ls.connect(a);a.connect(b);b.connect(hs);hs.connect(lp);lp.connect(o);
+   return{in:hp,out:o,set(p){hp.frequency.value=p.hp;ls.frequency.value=p.lf;ls.gain.value=p.lg;a.frequency.value=p.m1f;a.gain.value=p.m1g;a.Q.value=p.m1q;b.frequency.value=p.m2f;b.gain.value=p.m2g;b.Q.value=p.m2q;hs.frequency.value=p.hf;hs.gain.value=p.hg;lp.frequency.value=p.lp;o.gain.value=dB(p.out)},dispose(){}}});
+ reg('filter','Filter / Auto-Sweep','EQ','Past/yuqori/polosali filtr, LFO bilan avtomatik supurish',
+  [P('type','Tur',0,0,'lowpass',1,'',['lowpass','highpass','bandpass','notch']),P('freq','Chastota',40,18000,1800,10,'Hz'),P('q','Rezonans',.2,18,1.2,.1),P('rate','LFO tezligi',0,8,0,.05,'Hz'),P('depth','LFO chuqurligi',0,4,1.2,.05,'oktava'),P('mix','Aralashma',0,1,1,.01)],
+  {'Lowpass Sweep':{rate:.25,depth:2.2,q:3},'Auto-Wah':{type:'bandpass',freq:900,q:6,rate:2,depth:1.4},'Dark Rumble':{freq:420,q:.8},'Radio Hipass':{type:'highpass',freq:900,q:.9}},
+  (ctx)=>{const m=dw(ctx),f=bi(ctx,'lowpass',1800,1),o=lfo(ctx,'sine',.25),og=G(ctx,0);m.inp.connect(f);f.connect(m.w);o.connect(og);og.connect(f.detune);
+   return{in:m.inp,out:m.out,set(p){f.type=p.type;f.frequency.value=p.freq;f.Q.value=p.q;o.frequency.value=Math.max(.01,p.rate);og.gain.value=p.rate>0?p.depth*1200:0;m.mix(p.mix)},dispose(){try{o.stop()}catch(_){}}}});
+ /* ======== DYNAMICS ======== */
+ reg('comp','Compressor','Dynamics','Dinamikani siqish, parallel aralashma bilan',
+  [P('th','Threshold',-60,0,-20,.5,'dB'),P('ratio','Ratio',1,20,4,.1),P('att','Attack',0,200,10,1,'ms'),P('rel','Release',10,1000,160,5,'ms'),P('knee','Knee',0,40,12,1,'dB'),P('mk','Makeup',0,24,4,.5,'dB'),P('mix','Aralashma',0,1,1,.01)],
+  {'Vocal Control':{th:-24,ratio:3.5,att:8,rel:140,mk:5},'Drum Smash':{th:-30,ratio:10,att:2,rel:90,mk:8,mix:.6},'Bass Glue':{th:-18,ratio:3,att:25,rel:220,mk:3},'Gentle Glue':{th:-14,ratio:2,att:30,rel:200,knee:20,mk:2}},
+  (ctx)=>{const m=dw(ctx),c=ctx.createDynamicsCompressor(),mk=G(ctx);m.inp.connect(c);c.connect(mk);mk.connect(m.w);
+   return{in:m.inp,out:m.out,set(p){c.threshold.value=p.th;c.ratio.value=p.ratio;c.attack.value=p.att/1000;c.release.value=p.rel/1000;c.knee.value=p.knee;mk.gain.value=dB(p.mk);m.mix(p.mix)},dispose(){}}});
+ reg('limiter','Limiter','Dynamics','Cho\'qqi cheklagich — kuchaytirish va shift',
+  [P('gain','Kirish kuchaytirish',0,24,6,.5,'dB'),P('ceil','Shift (ceiling)',-20,0,-1,.5,'dB'),P('rel','Release',10,500,80,5,'ms')],
+  {'Master Safe':{gain:3,ceil:-1},'Loud':{gain:9,ceil:-.5,rel:50},'Transparent':{gain:2,ceil:-2,rel:150}},
+  (ctx)=>{const g=G(ctx),c=ctx.createDynamicsCompressor(),o=G(ctx);c.knee.value=0;c.ratio.value=20;c.attack.value=.001;g.connect(c);c.connect(o);
+   return{in:g,out:o,set(p){g.gain.value=dB(p.gain);c.threshold.value=p.ceil;c.release.value=p.rel/1000;o.gain.value=dB(Math.min(0,p.ceil)*.0)},dispose(){}}});
+ /* ======== MODULATION ======== */
+ reg('chorus','Chorus','Modulation','Kengaytiruvchi va qalinlashtiruvchi xor',
+  [P('rate','Tezlik',.05,6,.7,.05,'Hz'),P('depth','Chuqurlik',0,12,4,.1,'ms'),P('base','Kechikish',8,40,20,.5,'ms'),P('mix','Aralashma',0,1,.5,.01)],
+  {'Classic':{},'Wide Lush':{rate:.35,depth:7,base:26,mix:.55},'Fast Shimmer':{rate:3,depth:2,base:12}},
+  (ctx)=>{const m=dw(ctx),sp=ctx.createChannelSplitter(2),mono=G(ctx,.5),d1=ctx.createDelay(.1),d2=ctx.createDelay(.1),mg=ctx.createChannelMerger(2),o1=lfo(ctx,'sine',.7),o2=lfo(ctx,'sine',.9),g1=G(ctx,0),g2=G(ctx,0);
+   m.inp.connect(sp);sp.connect(mono,0);sp.connect(mono,1);mono.connect(d1);mono.connect(d2);d1.connect(mg,0,0);d2.connect(mg,0,1);mg.connect(m.w);o1.connect(g1);g1.connect(d1.delayTime);o2.connect(g2);g2.connect(d2.delayTime);
+   return{in:m.inp,out:m.out,set(p){o1.frequency.value=p.rate;o2.frequency.value=p.rate*1.31;g1.gain.value=g2.gain.value=p.depth/1000;d1.delayTime.value=p.base/1000;d2.delayTime.value=p.base/1000*1.18;m.mix(p.mix)},dispose(){try{o1.stop();o2.stop()}catch(_){}}}});
+ reg('flanger','Flanger','Modulation','Qisqa kechikish va feedback bilan «reaktiv» ovoz',
+  [P('rate','Tezlik',.05,5,.3,.05,'Hz'),P('depth','Chuqurlik',0,5,2.2,.1,'ms'),P('base','Kechikish',.5,8,2,.1,'ms'),P('fb','Feedback',-.9,.9,.5,.01),P('mix','Aralashma',0,1,.5,.01)],
+  {'Jet':{rate:.18,depth:3,fb:.75},'Soft Flange':{fb:.3,depth:1.4},'Metallic':{rate:.6,fb:-.7,base:1}},
+  (ctx)=>{const m=dw(ctx),d=ctx.createDelay(.05),fb=G(ctx),o=lfo(ctx,'sine',.3),og=G(ctx,0);m.inp.connect(d);d.connect(fb);fb.connect(d);d.connect(m.w);o.connect(og);og.connect(d.delayTime);
+   return{in:m.inp,out:m.out,set(p){o.frequency.value=p.rate;og.gain.value=p.depth/1000;d.delayTime.value=p.base/1000+p.depth/1000;fb.gain.value=cl(p.fb,-.9,.9);m.mix(p.mix)},dispose(){try{o.stop()}catch(_){}}}});
+ reg('phaser','Phaser','Modulation','6 pog\'onali fazer',
+  [P('rate','Tezlik',.05,6,.4,.05,'Hz'),P('depth','Chuqurlik',0,1,.7,.01),P('freq','Markaz chastota',200,3000,800,10,'Hz'),P('fb','Feedback',0,.8,.35,.01),P('mix','Aralashma',0,1,.5,.01)],
+  {'Classic':{},'Slow Sweep':{rate:.12,depth:.9,fb:.5},'Fast Swirl':{rate:2.4,depth:.6}},
+  (ctx)=>{const m=dw(ctx),st=[];for(let i=0;i<6;i++)st.push(bi(ctx,'allpass',800,.8));const fb=G(ctx),o=lfo(ctx,'sine',.4),og=G(ctx,0);m.inp.connect(st[0]);for(let i=0;i<5;i++)st[i].connect(st[i+1]);st[5].connect(m.w);st[5].connect(fb);fb.connect(st[0]);o.connect(og);st.forEach(s=>og.connect(s.detune));
+   return{in:m.inp,out:m.out,set(p){o.frequency.value=p.rate;og.gain.value=p.depth*1500;st.forEach((s,i)=>s.frequency.value=p.freq*(1+i*.35));fb.gain.value=cl(p.fb,0,.8);m.mix(p.mix)},dispose(){try{o.stop()}catch(_){}}}});
+ reg('tremolo','Tremolo','Modulation','Ovoz balandligini ritmik tebratish',
+  [P('rate','Tezlik',.2,20,5,.1,'Hz'),P('depth','Chuqurlik',0,1,.6,.01),P('wave','Shakl',0,0,'sine',1,'',['sine','triangle','square'])],
+  {'Classic':{},'Pulse Gate':{rate:8,depth:1,wave:'square'},'Slow Swell':{rate:.8,depth:.8,wave:'triangle'}},
+  (ctx)=>{const g=G(ctx,1),o=lfo(ctx,'sine',5),og=G(ctx,0),out=G(ctx);g.connect(out);o.connect(og);og.connect(g.gain);
+   return{in:g,out,set(p){o.type=p.wave;o.frequency.value=p.rate;g.gain.value=1-p.depth/2;og.gain.value=p.depth/2},dispose(){try{o.stop()}catch(_){}}}});
+ reg('autopan','Auto-Pan','Stereo','Ovozni chapdan o\'ngga avtomatik siljitish',
+  [P('rate','Tezlik',.05,10,.6,.05,'Hz'),P('depth','Chuqurlik',0,1,.8,.01)],
+  {'Slow Drift':{rate:.2},'Fast Pan':{rate:3,depth:.9}},
+  (ctx)=>{const pn=ctx.createStereoPanner?ctx.createStereoPanner():G(ctx),o=lfo(ctx,'sine',.6),og=G(ctx,0);if(pn.pan){o.connect(og);og.connect(pn.pan)}
+   return{in:pn,out:pn,set(p){o.frequency.value=p.rate;og.gain.value=p.depth},dispose(){try{o.stop()}catch(_){}}}});
+ reg('widener','Stereo Widener','Stereo','Stereo kengligini o\'zgartirish (Mid/Side)',
+  [P('width','Kenglik',0,2,1.4,.01),P('out','Chiqish',-12,6,0,.5,'dB')],
+  {'Wide':{width:1.6},'Extra Wide':{width:1.95,out:-2},'Mono':{width:0}},
+  (ctx)=>{const sp=ctx.createChannelSplitter(2),mg=ctx.createChannelMerger(2),inp=G(ctx),out=G(ctx),Lm=G(ctx,.5),Rm=G(ctx,.5),Ls=G(ctx,.5),Rs=G(ctx,-.5),mid=G(ctx),side=G(ctx),sw=G(ctx),sn=G(ctx,-1),oL=G(ctx),oR=G(ctx);
+   inp.connect(sp);sp.connect(Lm,0);sp.connect(Rm,1);sp.connect(Ls,0);sp.connect(Rs,1);Lm.connect(mid);Rm.connect(mid);Ls.connect(side);Rs.connect(side);side.connect(sw);sw.connect(sn);mid.connect(oL);sw.connect(oL);mid.connect(oR);sn.connect(oR);oL.connect(mg,0,0);oR.connect(mg,0,1);mg.connect(out);
+   return{in:inp,out,set(p){sw.gain.value=p.width;out.gain.value=dB(p.out)},dispose(){}}});
+ reg('ringmod','Ring Modulator','Creative','Robot/metall ovoz — halqa modulyatsiya',
+  [P('freq','Chastota',20,2500,180,1,'Hz'),P('mix','Aralashma',0,1,.6,.01)],
+  {'Robot':{},'Dalek':{freq:30,mix:.8},'Bell Metal':{freq:900,mix:.5}},
+  (ctx)=>{const m=dw(ctx),g=G(ctx,0),o=lfo(ctx,'sine',180);m.inp.connect(g);g.connect(m.w);o.connect(g.gain);
+   return{in:m.inp,out:m.out,set(p){o.frequency.value=p.freq;m.mix(p.mix)},dispose(){try{o.stop()}catch(_){}}}});
+ reg('util','Utility (gain · phase · mono)','Creative','Daraja, faza almashtirish va mono',
+  [P('gain','Daraja',-24,24,0,.5,'dB'),P('inv','Faza almashtirish',0,0,'off',1,'',['off','on']),P('mono','Mono',0,0,'off',1,'',['off','on'])],
+  {'Mono Check':{mono:'on'},'Boost +6':{gain:6}},
+  (ctx)=>{const g=G(ctx),o=G(ctx),sp=ctx.createChannelSplitter(2),mg=ctx.createChannelMerger(2),a=G(ctx,.5),b=G(ctx,.5);g.connect(o);
+   return{in:g,out:o,set(p){g.gain.value=dB(p.gain)*(p.inv=='on'?-1:1);try{g.disconnect(sp);g.disconnect(o)}catch(_){}if(p.mono=='on'){g.connect(sp);sp.connect(a,0);sp.connect(b,1);a.connect(mg,0,0);a.connect(mg,0,1);b.connect(mg,0,0);b.connect(mg,0,1);mg.connect(o)}else g.connect(o)},dispose(){}}});
+ /* ---- umumiy API ---- */
+ const defs=d=>{const o={};d.params.forEach(p=>o[p.k]=p.def);return o};
+ const merged=f=>{const d=REG[f.id];return Object.assign(defs(d),f.p||{})};
+ let uidN=0;const uid=()=>'fx'+Date.now().toString(36)+(uidN++).toString(36);
+ function chain(ctx,list,input,output){
+  const inst=[];let prev=input;
+  (list||[]).forEach(f=>{const d=REG[f.id];if(!d||f.on===0)return;let n;try{n=d.make(ctx,merged(f));n.set(merged(f),true)}catch(e){console.warn('fx',f.id,e);return}prev.connect(n.in);prev=n.out;inst.push({uid:f.uid,id:f.id,n})});
+  prev.connect(output);
+  return{inst,set(u,p){const x=inst.find(i=>i.uid===u);if(x)try{x.n.set(p)}catch(e){console.warn(e)}},dispose(){inst.forEach(i=>{try{i.n.dispose()}catch(_){}try{i.n.out.disconnect()}catch(_){}});try{prev.disconnect(output)}catch(_){}}}}
+ function tail(D){let t=.3;const look=l=>(l||[]).forEach(f=>{if(f.on===0)return;if(f.id=='dverb'){const p=merged(f);t=Math.max(t,Math.min(12,p.decay*((ALG[p.alg]||ALG.Hall).dm)*1.2)+.3)}else if(/delay|pingpong|tapeecho/.test(f.id)){const p=merged(f);t=Math.max(t,Math.min(8,syncT(p)*(1+4*p.fb)+.3))}});D.tracks.forEach(x=>look(x.fx));look(D.mfx);return t}
+ window.DAWFX={REG,ORDER,chain,tail,uid,merged,defs,makeIR,setBpm:f=>{bpmFn=f},cats:['Distortion','Reverb','Delay','EQ','Dynamics','Modulation','Stereo','Creative'],
+  add(list,id,preset){const d=REG[id];const f={id,uid:uid(),on:1,p:Object.assign({},preset&&d.presets[preset]||{})};list.push(f);return f}};
+})();
+
 /* ===== f6zd: DAW — audio sekvenser (Cubase tuzilishida): treklar, timeline, import, to'lqin, transport, miks, WAV eksport ===== */
 (()=>{
  const byId=i=>document.getElementById(i);
@@ -10992,7 +11152,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  /* ---------- saqlash va tarix ---------- */
  function persist(){clearTimeout(V.saveT);V.saveT=setTimeout(()=>{try{save()}catch(_){}},300)}
  function hist(){V.hist.push(JSON.stringify(D));if(V.hist.length>80)V.hist.shift();V.redo=[]}
- function restore(j){const o=JSON.parse(j);const keep={sel:null};Object.keys(D).forEach(k=>delete D[k]);Object.assign(D,o);s.daw=D;V.drT=null;buildHeads();draw();persist()}
+ function restore(j){const o=JSON.parse(j);const keep={sel:null};Object.keys(D).forEach(k=>delete D[k]);Object.assign(D,o);s.daw=D;V.drT=null;buildHeads();draw();persist();try{window.__dawui&&__dawui.render()}catch(_){}}
  function undo(){if(!V.hist.length)return;V.redo.push(JSON.stringify(D));restore(V.hist.pop())}
  function redo(){if(!V.redo.length)return;V.hist.push(JSON.stringify(D));restore(V.redo.pop())}
  /* ---------- audio dvigatel ---------- */
@@ -11016,14 +11176,14 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
   if(count){msg2('🎛 '+count+' ta audio qo‘shildi');buildHeads();draw();persist()}}
  /* ---------- pleyer ---------- */
  function mixGain(t){const solo=D.tracks.some(x=>x.s);return(t.m||(solo&&!t.s))?0:t.vol}
- function buildGraph(ctx,dest,t0,p0,limit){const out=[];const tn=new Map();
-  D.tracks.forEach(t=>{const g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;g.gain.value=mixGain(t);if(p){p.pan.value=t.pan;g.connect(p);p.connect(dest)}else g.connect(dest);tn.set(t.id,{g,p});if(t.dm){try{schedDrum(ctx,t,g,t0,p0,limit)}catch(e){console.warn('drum',e)}return}
+ function buildGraph(ctx,dest,t0,p0,limit){const out=[];const tn=new Map();let mfx=null;if(window.DAWFX&&D.mfx&&D.mfx.some(f=>f.on!==0)){try{const mi=ctx.createGain();mfx=DAWFX.chain(ctx,D.mfx,mi,dest);dest=mi}catch(e){console.warn('mfx',e);mfx=null}}
+  D.tracks.forEach(t=>{const g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;g.gain.value=mixGain(t);let fxi=null;if(p){p.pan.value=t.pan;p.connect(dest)}const snk=p||dest;if(window.DAWFX&&t.fx&&t.fx.some(f=>f.on!==0)){try{fxi=DAWFX.chain(ctx,t.fx,g,snk)}catch(e){console.warn('fx',e);fxi=null;g.connect(snk)}}else g.connect(snk);tn.set(t.id,{g,p,fx:fxi});if(t.dm){try{schedDrum(ctx,t,g,t0,p0,limit)}catch(e){console.warn('drum',e)}return}
    t.clips.forEach(c=>{if(c.m)return;const a=A.get(c.asset);if(!a||!a.buf)return;const end=c.start+c.dur;if(end<=p0)return;if(limit!=null&&c.start>=limit)return;
     const skip=Math.max(0,p0-c.start),when=t0+Math.max(0,c.start-p0),off=c.off+skip;let dur=c.dur-skip;if(limit!=null)dur=Math.min(dur,limit-Math.max(c.start,p0));if(dur<=0)return;
     const src=ctx.createBufferSource();src.buffer=a.buf;const cg=ctx.createGain();cg.gain.value=c.g;src.connect(cg);cg.connect(g);try{src.start(when,off,dur)}catch(_){}out.push(src)})});
-  return{srcs:out,tn}}
- function startAt(p){stopSrcs();ctxOn();V.p0=p;V.t0=AC.currentTime+0.05;const gph=buildGraph(AC,MG,V.t0,p);V.srcs=gph.srcs;V.tn=gph.tn;V.nb=Math.ceil(p/beat()-1e-6)}
- function stopSrcs(){V.srcs.forEach(x=>{try{x.stop()}catch(_){}try{x.disconnect()}catch(_){}});V.srcs=[];V.tn.forEach(n=>{try{n.g.disconnect()}catch(_){}});V.tn=new Map()}
+  return{srcs:out,tn,mfx}}
+ function startAt(p){stopSrcs();ctxOn();V.p0=p;V.t0=AC.currentTime+0.05;const gph=buildGraph(AC,MG,V.t0,p);V.srcs=gph.srcs;V.tn=gph.tn;V.mfx=gph.mfx;V.nb=Math.ceil(p/beat()-1e-6)}
+ function stopSrcs(){V.srcs.forEach(x=>{try{x.stop()}catch(_){}try{x.disconnect()}catch(_){}});V.srcs=[];V.tn.forEach(n=>{try{n.g.disconnect()}catch(_){}try{n.fx&&n.fx.dispose()}catch(_){}});V.tn=new Map();try{V.mfx&&V.mfx.dispose()}catch(_){}V.mfx=null}
  function play(){if(V.playing)return;if(!D.tracks.some(t=>t.clips.length)){msg2('Avval audio qo‘shing (Import yoki faylni shu yerga tashlang).');return}
   let p=D.ph;if(D.loop.on&&(p<D.loop.a||p>=D.loop.b))p=D.loop.a;startAt(p);V.playing=true;tick();ui()}
  function stop(back){const was=V.playing;if(V.playing){D.ph=curP()}V.playing=false;stopSrcs();cancelAnimationFrame(V.raf);if(V.rec)stopRec();if(back&&!was)D.ph=D.loop.on?D.loop.a:0;ui();draw()}
@@ -11049,7 +11209,7 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  /* ---------- eksport ---------- */
  async function mixdown(){
   const end=projEnd();if(end<=0){msg2('Eksport qilish uchun audio yo‘q.');return}msg2('⏳ Miks tayyorlanmoqda…');
-  const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+.3)*sr),sr);const dest=oc.createGain();dest.connect(oc.destination);buildGraph(oc,dest,0,0);
+  const sr=44100,oc=new OfflineAudioContext(2,Math.ceil((end+(window.DAWFX?DAWFX.tail(D):.3))*sr),sr);const dest=oc.createGain();dest.connect(oc.destination);buildGraph(oc,dest,0,0);
   const r=await oc.startRendering(),n=r.length,L=r.getChannelData(0),R=r.getChannelData(1),buf=new ArrayBuffer(44+n*4),v=new DataView(buf);
   const w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};w(0,'RIFF');v.setUint32(4,36+n*4,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,2,true);v.setUint32(24,sr,true);v.setUint32(28,sr*4,true);v.setUint16(32,4,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*4,true);
   let o=44;const cl=x=>Math.max(-1,Math.min(1,x));for(let i=0;i<n;i++){v.setInt16(o,cl(L[i])*32767,true);v.setInt16(o+2,cl(R[i])*32767,true);o+=4}
@@ -11104,11 +11264,11 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  function buildHeads(){
   if(!heads)return;heads.innerHTML='';
   D.tracks.forEach((t,i)=>{const r=mk('div','dtr'+(t.id==D.selT?' on':''));r.style.height=D.zy+'px';r.style.top=(i*D.zy)+'px';
-   r.innerHTML=`<i class=dcol style="background:${t.col}"></i><div class=dnm contenteditable=false title="Ikki marta bosing — nomini o‘zgartirish"></div><div class=dbt><button data-a=m class="${t.m?'on m':''}">M</button><button data-a=s class="${t.s?'on s':''}">S</button><button data-a=r class="${t.r?'on r':''}" title="Yozishga tayyor">●</button><button data-a=x title="Trekni o‘chirish">✕</button></div><div class=dsl><span title="Balandlik">🔊</span><input type=range min=0 max=1.5 step=.01 value="${t.vol}" data-a=v><span title="Pan">⇆</span><input type=range min=-1 max=1 step=.02 value="${t.pan}" data-a=p></div>`;
+   r.innerHTML=`<i class=dcol style="background:${t.col}"></i><div class=dnm contenteditable=false title="Ikki marta bosing — nomini o‘zgartirish"></div><div class=dbt><button data-a=m class="${t.m?'on m':''}">M</button><button data-a=s class="${t.s?'on s':''}">S</button><button data-a=r class="${t.r?'on r':''}" title="Yozishga tayyor">●</button><button data-a=fx title="Effektlar (insert zanjiri)" class="${t.fx&&t.fx.length?'on fxon':''}">Fx</button><button data-a=x title="Trekni o‘chirish">✕</button></div><div class=dsl><span title="Balandlik">🔊</span><input type=range min=0 max=1.5 step=.01 value="${t.vol}" data-a=v><span title="Pan">⇆</span><input type=range min=-1 max=1 step=.02 value="${t.pan}" data-a=p></div>`;
    const nm=r.querySelector('.dnm');nm.textContent=t.n;
    nm.ondblclick=()=>{nm.contentEditable='true';nm.focus();document.getSelection().selectAllChildren(nm)};nm.onblur=()=>{nm.contentEditable='false';const v=nm.textContent.trim()||t.n;if(v!=t.n){hist();t.n=v;persist()}};nm.onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();nm.blur()}e.stopPropagation()};
-   r.onmousedown=e=>{if(e.target.closest('button,input,.dnm[contenteditable=true]'))return;D.selT=t.id;heads.querySelectorAll('.dtr').forEach(x=>x.classList.remove('on'));r.classList.add('on');draw()};
-   r.querySelectorAll('button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;hist();if(a=='m'){t.m=t.m?0:1;b.classList.toggle('on',!!t.m);b.classList.toggle('m',!!t.m)}else if(a=='s'){t.s=t.s?0:1;b.classList.toggle('on',!!t.s);b.classList.toggle('s',!!t.s)}else if(a=='r'){D.tracks.forEach(x=>x.r=0);t.r=1;D.selT=t.id;buildHeads()}else if(a=='x'){if(t.clips.length&&!confirm('«'+t.n+'» treki va undagi audiolar o‘chirilsin?'))return;D.tracks.splice(D.tracks.indexOf(t),1);buildHeads()}applyMix();draw();persist()});
+   r.onmousedown=e=>{if(e.target.closest('button,input,.dnm[contenteditable=true]'))return;D.selT=t.id;heads.querySelectorAll('.dtr').forEach(x=>x.classList.remove('on'));r.classList.add('on');draw();try{window.__dawui&&__dawui.onSel()}catch(_){}};
+   r.querySelectorAll('button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a=='fx'){D.selT=t.id;heads.querySelectorAll('.dtr').forEach(x=>x.classList.remove('on'));r.classList.add('on');window.__dawui&&__dawui.open('fx',t.id);return}hist();if(a=='m'){t.m=t.m?0:1;b.classList.toggle('on',!!t.m);b.classList.toggle('m',!!t.m)}else if(a=='s'){t.s=t.s?0:1;b.classList.toggle('on',!!t.s);b.classList.toggle('s',!!t.s)}else if(a=='r'){D.tracks.forEach(x=>x.r=0);t.r=1;D.selT=t.id;buildHeads()}else if(a=='x'){if(t.clips.length&&!confirm('«'+t.n+'» treki va undagi audiolar o‘chirilsin?'))return;D.tracks.splice(D.tracks.indexOf(t),1);buildHeads()}applyMix();draw();persist()});
    r.querySelectorAll('input').forEach(inp=>{inp.onpointerdown=()=>hist();inp.oninput=()=>{const v=+inp.value;if(inp.dataset.a=='v')t.vol=v;else t.pan=v;applyMix();persist()};inp.ondblclick=()=>{inp.value=inp.dataset.a=='v'?1:0;inp.oninput()}});
    heads.append(r)});
   heads.dataset.sz=szOf();heads.style.height=(D.tracks.length*D.zy)+'px';scrollSync()}
@@ -11138,7 +11298,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
 #dawv .dnm{font-weight:600;color:#e6edf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;outline:0;margin-bottom:3px;cursor:default}#dawv .dnm[contenteditable=true]{background:#0f141b;padding:0 3px;cursor:text;user-select:text}
 #dawv .dbt{display:flex;gap:3px}#dawv .dbt button{height:20px;min-width:24px;padding:0 5px;font-size:11px;font-weight:700}
 #dawv .dbt button.m.on{background:#e5484d;border-color:#ff8a8f}#dawv .dbt button.s.on{background:#f2c25b;color:#222;border-color:#ffe08c}#dawv .dbt button.r.on{background:#e5484d;color:#fff}
-#dawv #dawheads[data-sz=s] .dtr,#dawv #dawheads[data-sz=xs] .dtr{display:flex;align-items:center;gap:6px;padding:2px 6px 2px 12px}#dawv #dawheads[data-sz=s] .dsl,#dawv #dawheads[data-sz=xs] .dsl{display:none}#dawv #dawheads[data-sz=s] .dnm,#dawv #dawheads[data-sz=xs] .dnm{margin:0;flex:1;min-width:0;font-size:12px}#dawv #dawheads[data-sz=s] .dbt button{height:18px}#dawv #dawheads[data-sz=xs] .dbt button{height:15px;min-width:20px;font-size:10px;padding:0 3px}#dawv #dawheads[data-sz=xs] .dbt button[data-a=r],#dawv #dawheads[data-sz=xs] .dbt button[data-a=x]{display:none}
+#dawv #dawheads[data-sz=s] .dtr,#dawv #dawheads[data-sz=xs] .dtr{display:flex;align-items:center;gap:6px;padding:2px 6px 2px 12px}#dawv #dawheads[data-sz=s] .dsl,#dawv #dawheads[data-sz=xs] .dsl{display:none}#dawv #dawheads[data-sz=s] .dnm,#dawv #dawheads[data-sz=xs] .dnm{margin:0;flex:1;min-width:0;font-size:12px}#dawv #dawheads[data-sz=s] .dbt button{height:18px}#dawv #dawheads[data-sz=xs] .dbt button{height:15px;min-width:20px;font-size:10px;padding:0 3px}#dawv .dbt button.fxon{background:#2d6cdf;border-color:#6aa0ff;color:#fff}#dawv #dawheads[data-sz=xs] .dbt button[data-a=r],#dawv #dawheads[data-sz=xs] .dbt button[data-a=fx],#dawv #dawheads[data-sz=xs] .dbt button[data-a=x]{display:none}
 #dawv .dsl{display:flex;align-items:center;gap:3px;margin-top:3px;font-size:10px;color:#8ea0c0}#dawv .dsl input{flex:1;min-width:0;accent-color:#7c5cff;height:14px;padding:0;background:none;border:0}
 #dawv .dright{flex:1;position:relative;min-width:0;background:#1c2430}#dawv canvas#dawcv{position:absolute;left:0;top:0;display:block}
 #dawv .dbot{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#202837;border-top:1px solid #2b3445;flex-wrap:wrap}
@@ -11176,10 +11336,10 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  <button data-tool=sel title="Tanlash (1)">⬉ Tanlash</button><button data-tool=split title="Kesish (2) — bosilgan joydan bo‘ladi">✂ Kesish</button><button data-tool=erase title="O‘chirish (3)">⌫ O‘chirgich</button><button data-tool=mute title="Ovozsiz (4)">🔇 Mute</button><span class=dsep></span>
  <button id=dawsn title="Tarmoqqa yopishish">🧲 Snap</button><select id=dawg title="Tarmoq turi"><option value=bar>Bar<option value=half>1/2<option value=beat>1/4<option value=eighth>1/8<option value=sixteenth>1/16<option value=off>Off</select><span class=dsep></span>
  <button id=dawzi title="Kattalashtirish (H yoki +)">🔍＋</button><button id=dawzo title="Kichraytirish (G yoki −)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><button id=dawty1 title="Treklarni balandroq qilish (Ctrl+↓ yoki Alt+g‘ildirak)">↕＋</button><button id=dawty2 title="Treklarni pastroq qilish (Ctrl+↑ yoki Alt+g‘ildirak)">↕−</button><button id=dawtyf title="Hamma treklarni bir ko‘rinishga sig‘dirish">⇕ Treklar</button><button id=dawfa title="Hamma narsani ekranga sig‘dirish — vaqt va treklar (Ctrl+Shift+A)">⛶ Hammasi</button><span class=dsep></span>
- <button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
+ <button id=dawsnd title="Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv">🎵 Sounds</button><button id=dawfx title="Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)">Fx</button><button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
 </div>
 <div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · Ctrl+Shift+A — hammasini ekranga sig‘dirish · Ctrl+↑/↓ yoki Alt+g‘ildirak — trek balandligi · S — kesish · Alt (bosib tur) — vaqtincha ✂ qaychi · Ctrl+Alt+sudrash — nusxa · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
-<div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div></div>
+<div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div><div class=dfxp id=dawpan hidden></div></div>
 <div class=dbot>
  <div class=dtp style="display:flex;gap:4px"><button id=dawl title="Cycle / Loop (L)">🔁</button><button id=dawhm title="Boshiga (Home)">⏮</button><button id=daws title="To‘xtatish">⏹</button><button id=dawp title="O‘ynash / Pauza (Space)">▶</button><button id=dawr title="Yozish — mikrofon (R)">●</button></div>
  <div class=dtime id=dawt>0:00:000</div><div class=dbars id=dawb>001.1.000</div><canvas id=dawm width=90 height=10 title="Master daraja"></canvas>
@@ -11189,13 +11349,14 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  <button id=dawc title="Metronom (C)">🎼 Click</button>
  <button id=dawback style="margin-left:auto" title="Varaqlar ro‘yxatiga qaytish: pastdagi varaq tablaridan boshqasini tanlang">ℹ Varaqlarga o‘tish: pastdagi tab</button>
 </div>`;
+  try{window.DAWFX&&DAWFX.setBpm(()=>D?D.bpm:120)}catch(_){}
   const gw=byId('gw');gw.after(root);cv=root.querySelector('#dawcv');cx=cv.getContext('2d');heads=root.querySelector('#dawheads');
   byId('dawback').remove();
   const q=i=>byId(i);
   q('dawun').onclick=undo;q('dawre').onclick=redo;
   root.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{V.tool=b.dataset.tool;ui()});
   q('dawsn').onclick=()=>{D.snap=!D.snap;ui();persist()};q('dawg').onchange=e=>{D.grid=e.target.value;persist()};
-  q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
+  q('dawsnd').onclick=()=>{window.__dawui&&__dawui.toggle('snd')};q('dawfx').onclick=()=>{window.__dawui&&__dawui.toggle('fx')};q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
   const addT=()=>{hist();const t=addTrack();D.selT=t.id;buildHeads();draw();persist()};q('dawat').onclick=addT;q('dawat2').onclick=addT;q('dawdm').onclick=()=>menu(q('dawdm'),[{t:'🥁 Trap beat',fn:()=>addDrum('trap')},{t:'🥁 Boom Bap',fn:()=>addDrum('boombap')},{t:'🥁 House',fn:()=>addDrum('house')},{t:'🥁 Drill',fn:()=>addDrum('drill')},{t:'🥁 Bo‘sh pattern',fn:()=>addDrum('empty')}]);
   q('dawim').onclick=()=>q('dawfile').click();q('dawfile').onchange=e=>{const f=[...e.target.files];e.target.value='';const tr=selTrack();importFiles(f,tr?D.tracks.indexOf(tr):null,tr?D.ph:null)};
   q('dawex').onclick=()=>mixdown().catch(e=>{console.warn(e);msg2('❌ Miks tayyorlanmadi: '+(e&&e.message||'xato'))});
@@ -11273,7 +11434,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  function dup(){const L=selAll();if(!L.length)return;hist();const a=Math.min(...L.map(o=>o.c.start)),b=Math.max(...L.map(o=>o.c.start+o.c.dur)),sp=L.length>1?b-a:L[0].c.dur;const ids=[];L.forEach(x=>{const n=Object.assign({},x.c,{id:rid(),start:x.c.start+sp});x.t.clips.push(n);ids.push(n.id)});D.sel=ids[0];D.ms=ids.length>1?ids:[];draw();persist()}
  function delSel(){const L=selAll();if(!L.length)return;hist();L.forEach(x=>x.t.clips.splice(x.t.clips.indexOf(x.c),1));D.sel=null;D.ms=[];if(V.playing)startAt(curP());draw();persist()}
  function key(e){
-  if(!document.body.classList.contains('dawon')||!D)return;const tg=e.target;if(tg&&tg.closest&&tg.closest('input,select,textarea,[contenteditable=true]')&&e.key!=' ')return;
+  if(!document.body.classList.contains('dawon')||!D)return;const tg=e.target;if(tg&&tg.closest&&tg.closest('#dawpan')&&tg.closest('input,select,textarea,button'))return;if(tg&&tg.closest&&tg.closest('input,select,textarea,[contenteditable=true]')&&e.key!=' ')return;
   if(tg&&tg.closest&&tg.closest('#dlg,#pm,.mdl')&&!tg.closest('#dawv'))return;
   const k=e.key,ct=e.ctrlKey||e.metaKey;if(tg&&tg.closest&&tg.closest('#dawdr')&&!ct&&!e.altKey&&PADKEYS.includes(k.toLowerCase()))return;let h=true;
   if(k==' '){V.playing?stop():play()}
@@ -11510,7 +11671,302 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  const add=byId('add'),oh=add&&add.onclick;
  if(add&&oh){add.title='Yangi varaq yoki DAW (audio sekvenser)';add.onclick=function(ev){if(ev&&ev.isTrusted===false)return oh.call(add);menu(add,[{t:'📄 Varaq (jadval)',fn:()=>oh.call(add)},{t:'🎛 DAW — audio sekvenser',fn:()=>{try{create()}catch(e){console.warn(e);msg2('❌ DAW ochilmadi: '+e.message)}}}])}}
  const oRender=render;render=function(){const r=oRender.apply(this,arguments);try{sync()}catch(e){console.warn('daw',e)}return r};
- window.__daw={create,get:()=>D,A,play,stop,importFiles,mixdown,V,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
+ window.__daw={create,get:()=>D,A,play,stop,importFiles,mixdown,V,hist,persist,selTrack,startAt,curP,buildHeads,draw,addTrack,beat,ctxOn,msg2,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
+})();
+
+/* ===== f6zsn: DAW ichki sound kutubxonasi — kino, teatr FX, aranjirovka (sintez qilingan, oflayn, litsenziyasiz) ===== */
+(()=>{
+ const SR=44100,cl=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a);
+ const NF=n=>440*Math.pow(2,(n-69)/12); // MIDI -> Hz
+ function mkh(oc,out){
+  const nb=oc.createBuffer(1,SR*2,SR),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const H={
+   oc,out,
+   g(v){const g=oc.createGain();g.gain.value=v==null?1:v;return g},
+   f(type,fq,q){const f=oc.createBiquadFilter();f.type=type;f.frequency.value=fq;if(q!=null)f.Q.value=q;return f},
+   pan(p){const x=oc.createStereoPanner();x.pan.value=p;return x},
+   noise(t0,t1,dest){const s=oc.createBufferSource();s.buffer=nb;s.loop=true;s.start(t0,rnd(0,1.5));s.stop(t1);if(dest)s.connect(dest);return s},
+   osc(type,f,t0,t1,dest){const o=oc.createOscillator();o.type=type;o.frequency.value=f;o.start(t0);o.stop(t1);if(dest)o.connect(dest);return o},
+   /* ovoz burtish: exp atak -> pasayish */
+   env(g,t0,pk,a,d,s,end,rel){const p=g.gain;p.cancelScheduledValues(t0);p.setValueAtTime(.0001,t0);p.exponentialRampToValueAtTime(Math.max(.0002,pk),t0+Math.max(.002,a));p.exponentialRampToValueAtTime(Math.max(.0002,pk*s),t0+a+Math.max(.002,d));p.setValueAtTime(Math.max(.0002,pk*s),Math.max(t0+a+d,end));p.exponentialRampToValueAtTime(.0001,Math.max(t0+a+d,end)+Math.max(.01,rel))},
+   sh(amt){const s=oc.createWaveShaper(),n=1024,c=new Float32Array(n*2+1);for(let i=-n;i<=n;i++)c[i+n]=Math.tanh(i/n*amt);s.curve=c;return s},
+   verb(src,dec,mix,dest){const cv=oc.createConvolver();cv.buffer=DAWFX.makeIR(oc,{alg:'Hall',size:.8,decay:dec,pre:18,diff:.9,hf:5500,lf:50});const w=oc.createGain();w.gain.value=mix;src.connect(cv);cv.connect(w);w.connect(dest||out)},
+   /* nota: n ta detune qilingan ovoz */
+   tone(type,f,t0,len,o){o=o||{};const g=oc.createGain(),dst=o.dest||out,v=o.voices||1;for(let i=0;i<v;i++){const os=oc.createOscillator();os.type=type;os.frequency.value=f;os.detune.value=v>1?(i-(v-1)/2)*(o.det||10):0;os.start(t0);os.stop(t0+len+(o.r||.3)+.05);const pn=v>1?H.pan((i/(v-1))*2-1):null;if(pn){os.connect(pn);pn.connect(g)}else os.connect(g)}
+    H.env(g,t0,o.pk||.3,o.a||.01,o.d||.2,o.s==null?.6:o.s,t0+len,o.r||.3);let last=g;if(o.lp){const lp=H.f('lowpass',o.lp,o.q||.7);g.connect(lp);last=lp}last.connect(dst);return g},
+   kick(t0,o){o=o||{};const os=oc.createOscillator(),g=oc.createGain();os.type='sine';os.frequency.setValueAtTime(o.f0||150,t0);os.frequency.exponentialRampToValueAtTime(o.f1||44,t0+(o.sw||.1));g.gain.setValueAtTime(o.pk||.9,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+(o.len||.45));os.connect(g);let l=g;if(o.drive){const s=H.sh(o.drive);g.connect(s);l=s}l.connect(o.dest||out);os.start(t0);os.stop(t0+(o.len||.45)+.05)},
+   snare(t0,v,o){o=o||{};v=v==null?1:v;const n=H.noise(t0,t0+.3),bp=H.f('bandpass',o.nf||1900,.8),g=H.g(0);n.connect(bp);bp.connect(g);H.env(g,t0,.5*v,.002,.13,.05,t0+.01,.1);g.connect(o.dest||out);
+    const os=H.osc('triangle',o.tf||190,t0,t0+.25),g2=H.g(0);os.frequency.setValueAtTime(o.tf||190,t0);os.frequency.exponentialRampToValueAtTime(120,t0+.08);os.connect(g2);H.env(g2,t0,.45*v,.002,.09,.05,t0+.01,.08);g2.connect(o.dest||out)},
+   hat(t0,open,v){v=v==null?1:v;const n=H.noise(t0,t0+(open?.5:.12)),hp=H.f('highpass',8000,.8),g=H.g(0);n.connect(hp);hp.connect(g);H.env(g,t0,.28*v,.001,open?.28:.04,.02,t0+.002,open?.2:.04);g.connect(out)},
+   tom(t0,f,v){const os=H.osc('sine',f,t0,t0+.5),g=H.g(0);os.frequency.setValueAtTime(f*1.6,t0);os.frequency.exponentialRampToValueAtTime(f,t0+.09);os.connect(g);H.env(g,t0,.7*(v||1),.002,.28,.05,t0+.01,.15);g.connect(out);const n=H.noise(t0,t0+.05),lp=H.f('lowpass',1200),g2=H.g(.15);n.connect(lp);lp.connect(g2);g2.connect(out)},
+   metal(base,ratios,t0,len,pk,dest){ratios.forEach((r,i)=>{const os=H.osc(i%2?'sine':'square',base*r,t0,t0+len+.1),g=H.g(0);os.connect(g);H.env(g,t0,pk/(1+i*.4),.002,len/(1+i*.3),.01,t0+.01,len*.5);g.connect(dest||out)})}
+  };
+  return H}
+ /* offline render va yakuniy ishlov (normalizatsiya + qisqa fade) */
+ function fin(b,peak){let m=0;for(let c=0;c<b.numberOfChannels;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>m)m=a}}const k=m>0?(peak||.89)/m:1,fo=Math.floor(SR*.03);for(let c=0;c<b.numberOfChannels;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i++){let v=d[i]*k;if(i<48)v*=i/48;const r=d.length-i;if(r<fo)v*=r/fo;d[i]=v}}return b}
+ function rev(b){for(let c=0;c<b.numberOfChannels;c++)b.getChannelData(c).reverse();return b}
+ async function R(dur,fn,post){const oc=new OfflineAudioContext(2,Math.ceil(SR*dur),SR),out=oc.createGain();out.gain.value=1;out.connect(oc.destination);const H=mkh(oc,out);fn(H,out,oc);let b=await oc.startRendering();if(post)b=post(b);return fin(b)}
+ const bar=(bpm,n)=>60/bpm*4*(n||1),bt=bpm=>60/bpm;
+ /* ============ GENERATORLAR ============ */
+ const braam=(root,hy)=>()=>R(5.5,(H,out)=>{const dst=H.g(.9),lp=H.f('lowpass',200,.9);const dr=H.sh(hy?3:1.6);dst.connect(lp);lp.connect(dr);const o=H.g(0);dr.connect(o);H.env(o,0,.9,.35,3,.35,3.6,1.7);o.connect(out);lp.frequency.setValueAtTime(180,0);lp.frequency.exponentialRampToValueAtTime(2600,1.6);lp.frequency.exponentialRampToValueAtTime(380,5);
+  [1,1.5,2,3].forEach((m,i)=>{[-9,0,9].forEach(dt=>{const os=H.osc(hy&&i==1?'square':'sawtooth',root*m,0,5.5,H.g(i==0?.32:.18));os.detune.value=dt;os.connect(dst)})});H.verb(o,3.2,.25)});
+ const subdrop=()=>R(3.2,(H,out)=>{const os=H.osc('sine',95,0,3.1),g=H.g(0);os.frequency.setValueAtTime(95,0);os.frequency.exponentialRampToValueAtTime(26,2.1);os.connect(g);H.env(g,0,.95,.01,2.6,.05,.02,.4);g.connect(out);const n=H.noise(0,.12),lp=H.f('lowpass',220),g2=H.g(.4);n.connect(lp);lp.connect(g2);g2.connect(out)});
+ const boom=()=>R(5.5,(H,out)=>{const n=H.noise(0,4),lp=H.f('lowpass',900),g=H.g(0);n.connect(lp);lp.connect(g);lp.frequency.setValueAtTime(900,0);lp.frequency.exponentialRampToValueAtTime(90,2.2);H.env(g,0,.8,.004,2.6,.04,.01,1);g.connect(out);const os=H.osc('sine',70,0,3),g2=H.g(0);os.frequency.setValueAtTime(70,0);os.frequency.exponentialRampToValueAtTime(30,1.2);os.connect(g2);H.env(g2,0,.9,.003,1.6,.05,.01,.6);g2.connect(out);H.verb(g,3.4,.45)});
+ const trailer=()=>R(6,(H,out)=>{const bm=H.g(1);bm.connect(out);const n=H.noise(0,4),lp=H.f('lowpass',1400),g=H.g(0);n.connect(lp);lp.connect(g);H.env(g,0,.8,.003,2.4,.04,.01,1);g.connect(bm);const os=H.osc('sine',62,0,3),g2=H.g(0);os.frequency.setValueAtTime(75,0);os.frequency.exponentialRampToValueAtTime(32,1.3);os.connect(g2);H.env(g2,0,1,.003,2,.05,.01,.6);g2.connect(bm);H.metal(180,[1,1.47,2.09,2.57,3.4,4.9],0,3.2,.14,bm);const n2=H.noise(0,.5),hp=H.f('highpass',3500),g3=H.g(0);n2.connect(hp);hp.connect(g3);H.env(g3,0,.5,.002,.3,.02,.01,.2);g3.connect(bm);H.verb(bm,4.2,.5)});
+ const riser=(dur,tonal,root)=>()=>R(dur+.4,(H,out)=>{const g=H.g(0);g.connect(out);g.gain.setValueAtTime(.0001,0);g.gain.exponentialRampToValueAtTime(.9,dur);g.gain.setValueAtTime(.0001,dur+.02);
+  const n=H.noise(0,dur+.3),bp=H.f('bandpass',300,1.2);n.connect(bp);bp.connect(g);bp.frequency.setValueAtTime(250,0);bp.frequency.exponentialRampToValueAtTime(9000,dur);
+  if(tonal){const lp=H.f('lowpass',400,1);lp.connect(g);lp.frequency.setValueAtTime(300,0);lp.frequency.exponentialRampToValueAtTime(7000,dur);[-12,0,12].forEach(dt=>{const os=H.osc('sawtooth',root||110,0,dur+.3,lp);os.detune.value=dt;os.frequency.setValueAtTime(root||110,0);os.frequency.exponentialRampToValueAtTime((root||110)*8,dur)})}
+  H.verb(g,1.4,.2)});
+ const downlift=()=>R(3.4,(H,out)=>{const g=H.g(0);g.connect(out);H.env(g,0,.8,.01,3,.03,.02,.3);const n=H.noise(0,3.3),bp=H.f('bandpass',7000,1.4);n.connect(bp);bp.connect(g);bp.frequency.setValueAtTime(7000,0);bp.frequency.exponentialRampToValueAtTime(260,3);const os=H.osc('sawtooth',440,0,3.3),lp=H.f('lowpass',3000,1);os.frequency.setValueAtTime(440,0);os.frequency.exponentialRampToValueAtTime(55,3);os.connect(lp);lp.connect(g)});
+ const whoosh=(dur)=>()=>R(dur+.3,(H,out)=>{const g=H.g(0);g.connect(out);const n=H.noise(0,dur+.2),bp=H.f('bandpass',400,1.4);n.connect(bp);bp.connect(g);bp.frequency.setValueAtTime(400,0);bp.frequency.exponentialRampToValueAtTime(5200,dur*.5);bp.frequency.exponentialRampToValueAtTime(600,dur);const p=g.gain;p.setValueAtTime(.0001,0);p.exponentialRampToValueAtTime(.9,dur*.5);p.exponentialRampToValueAtTime(.0001,dur)});
+ const revhit=async()=>{const b=await boom();return fin(rev(b))};
+ const drone=()=>R(11,(H,out)=>{const g=H.g(0);const lp=H.f('lowpass',260,2);lp.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,0);g.gain.exponentialRampToValueAtTime(.8,2.5);g.gain.setValueAtTime(.8,8);g.gain.exponentialRampToValueAtTime(.0001,10.8);[36.7,55,73.4].forEach(f=>[-11,0,11].forEach(dt=>{const os=H.osc('sawtooth',f,0,11,lp);os.detune.value=dt}));const lf=H.osc('sine',.18,0,11),lg=H.g(180);lf.connect(lg);lg.connect(lp.frequency);H.verb(g,5,.3)});
+ const tension=()=>R(9,(H,out)=>{const g=H.g(0);g.connect(out);const os=H.osc('sine',55,0,9,g),lf=H.osc('sine',1.1,0,9),lg=H.g(.45);lf.connect(lg);lg.connect(g.gain);g.gain.setValueAtTime(.5,0);const o2=H.osc('sawtooth',55.5,0,9),lp=H.f('lowpass',140,1),g2=H.g(.12);o2.connect(lp);lp.connect(g2);g2.connect(out);const n=H.noise(0,9),lp2=H.f('lowpass',120),g3=H.g(.18);n.connect(lp2);lp2.connect(g3);g3.connect(out)});
+ const heartbeat=()=>R(8.5,(H,out)=>{for(let i=0;i<8;i++){const t=i*1.0+.1;[[0,1],[.22,.65]].forEach(([dt,v])=>{const os=H.osc('sine',70,t+dt,t+dt+.3),g=H.g(0);os.frequency.setValueAtTime(75,t+dt);os.frequency.exponentialRampToValueAtTime(38,t+dt+.14);os.connect(g);H.env(g,t+dt,.9*v,.006,.16,.04,t+dt+.01,.12);g.connect(out)})}H.verb(out,1.2,.08)});
+ const padGlass=(notes,dur)=>()=>R(dur||9,(H,out)=>{const g=H.g(1);const lp=H.f('lowpass',3800,.6);g.connect(lp);const o=H.g(0);lp.connect(o);o.connect(out);o.gain.setValueAtTime(.0001,0);o.gain.exponentialRampToValueAtTime(.7,2.2);o.gain.setValueAtTime(.7,(dur||9)-3);o.gain.exponentialRampToValueAtTime(.0001,(dur||9)-.1);notes.forEach((n,i)=>{[-8,8].forEach((dt,k)=>{const os=H.osc(i%2?'triangle':'sawtooth',NF(n),0,dur||9),pg=H.g(.11),pn=H.pan(k?.5:-.5);os.detune.value=dt;os.connect(pg);pg.connect(pn);pn.connect(g)})});const lf=H.osc('sine',.22,0,dur||9),lg=H.g(900);lf.connect(lg);lg.connect(lp.frequency);H.verb(o,4,.4)});
+ const stab=(notes)=>()=>R(2.4,(H,out)=>{const g=H.g(0);const lp=H.f('lowpass',3600,.8);lp.connect(g);g.connect(out);H.env(g,0,.8,.012,.55,.2,.35,.9);lp.frequency.setValueAtTime(5200,0);lp.frequency.exponentialRampToValueAtTime(1200,1.2);notes.forEach(n=>[-12,0,12].forEach(dt=>{const os=H.osc('sawtooth',NF(n),0,2.3,lp);os.detune.value=dt}));H.verb(g,1.8,.25)});
+ const choir=(notes)=>()=>R(9,(H,out)=>{const g=H.g(0);g.connect(out);g.gain.setValueAtTime(.0001,0);g.gain.exponentialRampToValueAtTime(.7,2.4);g.gain.setValueAtTime(.7,6);g.gain.exponentialRampToValueAtTime(.0001,8.8);const b1=H.f('bandpass',700,6),b2=H.f('bandpass',1150,8),b3=H.f('bandpass',2700,9),mx=H.g(1);[b1,b2,b3].forEach((b,i)=>{const gg=H.g([1,.7,.25][i]);b.connect(gg);gg.connect(mx)});mx.connect(g);const vb=H.osc('sine',5.4,0,9),vg=H.g(7);vb.connect(vg);notes.forEach(n=>[-6,6].forEach(dt=>{const os=H.osc('sawtooth',NF(n),0,9),sg=H.g(.18);os.detune.value=dt;vg.connect(os.detune);os.connect(sg);sg.connect(b1);sg.connect(b2);sg.connect(b3)}));H.verb(g,4.5,.45)});
+ const rumble=()=>R(8,(H,out)=>{const n=H.noise(0,8),lp=H.f('lowpass',110,1.5),g=H.g(0);n.connect(lp);lp.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,0);g.gain.exponentialRampToValueAtTime(.9,2.5);g.gain.setValueAtTime(.9,5);g.gain.exponentialRampToValueAtTime(.0001,7.8);const lf=H.osc('sine',.7,0,8),lg=H.g(.2);lf.connect(lg);lg.connect(g.gain)});
+ const gong=()=>R(7,(H,out)=>{const g=H.g(1);g.connect(out);H.metal(110,[1,1.5,2.01,2.5,3.2,4.1,5.4,6.8],0,6,.45,g);const n=H.noise(0,.4),bp=H.f('bandpass',900,.7),ng=H.g(0);n.connect(bp);bp.connect(ng);H.env(ng,0,.4,.003,.3,.05,.01,.2);ng.connect(g);H.verb(g,3.5,.3)});
+ const bell=()=>R(5.5,(H,out)=>{const g=H.g(1);g.connect(out);[.5,1,1.19,1.5,2,2.4,3,4.2].forEach((r,i)=>{const os=H.osc('sine',330*r,0,5),pg=H.g(0);os.connect(pg);H.env(pg,0,.5/(1+i*.5),.002,4/(1+i*.35),.01,.01,1);pg.connect(g)});H.verb(g,2.6,.28)});
+ const stinger=()=>R(3,(H,out)=>{const g=H.g(0);g.connect(out);H.env(g,0,.8,.02,1.6,.2,.8,1);const lp=H.f('lowpass',5000,1);lp.connect(g);const vb=H.osc('sine',7,0,3),vg=H.g(35);vb.connect(vg);[600,636,1480,1560].forEach((f,i)=>{const os=H.osc('sawtooth',f,0,3,lp);os.frequency.setValueAtTime(f,0);os.frequency.exponentialRampToValueAtTime(f*1.9,1.8);vg.connect(os.detune)});const n=H.noise(0,.25),hp=H.f('highpass',2500),ng=H.g(.4);n.connect(hp);hp.connect(ng);ng.connect(out);H.verb(g,2.4,.35)});
+ const applause=()=>R(8,(H,out)=>{const bed=H.noise(0,8),bp=H.f('bandpass',2600,.7),bg=H.g(0);bed.connect(bp);bp.connect(bg);bg.connect(out);bg.gain.setValueAtTime(.0001,0);bg.gain.exponentialRampToValueAtTime(.22,.9);bg.gain.setValueAtTime(.22,5.5);bg.gain.exponentialRampToValueAtTime(.0001,7.8);
+  for(let i=0;i<520;i++){const t=rnd(.05,7.6),env=Math.sin(Math.PI*cl(t/7.8,0,1)),p=Math.pow(env,.8);if(Math.random()>p+.05)continue;const n=H.noise(t,t+.03),f=H.f('bandpass',rnd(1400,4200),1.2),g=H.g(0),pn=H.pan(rnd(-.8,.8));n.connect(f);f.connect(g);g.connect(pn);pn.connect(out);H.env(g,t,rnd(.25,.7)*(.4+p),.001,rnd(.005,.015),.05,t+.002,.012)}
+  H.verb(out,1.4,.12)});
+ const thunder=()=>R(8,(H,out)=>{const crack=H.noise(0,.6),hp=H.f('highpass',1800),cg=H.g(0);crack.connect(hp);hp.connect(cg);H.env(cg,0,.7,.002,.35,.02,.02,.2);cg.connect(out);const n=H.noise(0,8),lp=H.f('lowpass',420,.8),g=H.g(0);n.connect(lp);lp.connect(g);g.connect(out);const p=g.gain;p.setValueAtTime(.0001,0);p.exponentialRampToValueAtTime(.9,.5);[1.4,2.6,3.9,5.3].forEach((t,i)=>{p.exponentialRampToValueAtTime(.35,t-.25);p.exponentialRampToValueAtTime(.8-i*.1,t)});p.exponentialRampToValueAtTime(.0001,7.8);lp.frequency.setValueAtTime(700,0);lp.frequency.exponentialRampToValueAtTime(140,7);H.verb(g,3,.3)});
+ const wind=()=>R(10,(H,out)=>{const n=H.noise(0,10),bp=H.f('bandpass',700,3),g=H.g(0);n.connect(bp);bp.connect(g);g.connect(out);g.gain.setValueAtTime(.0001,0);g.gain.exponentialRampToValueAtTime(.7,2);g.gain.setValueAtTime(.7,8);g.gain.exponentialRampToValueAtTime(.0001,9.8);const lf=H.osc('sine',.23,0,10),lg=H.g(420),lf2=H.osc('sine',.61,0,10),lg2=H.g(.25);lf.connect(lg);lg.connect(bp.frequency);lf2.connect(lg2);lg2.connect(g.gain)});
+ const rain=()=>R(10,(H,out)=>{const n=H.noise(0,10),hp=H.f('highpass',2600),lp=H.f('lowpass',11000),g=H.g(.5);n.connect(hp);hp.connect(lp);lp.connect(g);g.connect(out);for(let i=0;i<260;i++){const t=rnd(0,9.8),nn=H.noise(t,t+.02),bp=H.f('bandpass',rnd(3500,7500),2),gg=H.g(0),pn=H.pan(rnd(-.9,.9));nn.connect(bp);bp.connect(gg);gg.connect(pn);pn.connect(out);H.env(gg,t,rnd(.1,.35),.001,.012,.05,t+.002,.01)}});
+ const knock=()=>R(2.4,(H,out)=>{[.1,.5,.9].forEach((t,i)=>{const os=H.osc('sine',160,t,t+.25),g=H.g(0);os.frequency.setValueAtTime(190,t);os.frequency.exponentialRampToValueAtTime(95,t+.06);os.connect(g);H.env(g,t,.8,.002,.09,.04,t+.01,.07);g.connect(out);const n=H.noise(t,t+.06),lp=H.f('lowpass',700),g2=H.g(.4);n.connect(lp);lp.connect(g2);g2.connect(out)});H.verb(out,.5,.1)});
+ const steps=()=>R(6,(H,out)=>{for(let i=0;i<8;i++){const t=.2+i*.62+rnd(-.02,.02),f=i%2?95:110,os=H.osc('sine',f,t,t+.2),g=H.g(0);os.frequency.setValueAtTime(f*1.4,t);os.frequency.exponentialRampToValueAtTime(f*.6,t+.07);os.connect(g);H.env(g,t,.5,.003,.08,.04,t+.01,.06);g.connect(out);const n=H.noise(t,t+.08),lp=H.f('lowpass',1000),g2=H.g(0);n.connect(lp);lp.connect(g2);H.env(g2,t,.4,.002,.05,.05,t+.01,.05);g2.connect(out)}H.verb(out,.7,.1)});
+ const clock=()=>R(7,(H,out)=>{for(let i=0;i<14;i++){const t=.1+i*.5,f=i%2?2400:3200,n=H.noise(t,t+.04),bp=H.f('bandpass',f,6),g=H.g(0);n.connect(bp);bp.connect(g);H.env(g,t,.7,.001,.018,.02,t+.002,.02);g.connect(out)}H.verb(out,.6,.1)});
+ const curtain=()=>R(1.8,(H,out)=>{const n=H.noise(0,1.7),bp=H.f('bandpass',700,.8),g=H.g(0);n.connect(bp);bp.connect(g);g.connect(out);bp.frequency.setValueAtTime(600,0);bp.frequency.exponentialRampToValueAtTime(2600,1.2);const p=g.gain;p.setValueAtTime(.0001,0);p.exponentialRampToValueAtTime(.7,.5);p.exponentialRampToValueAtTime(.0001,1.6)});
+ const explosion=()=>R(5,(H,out)=>{const n=H.noise(0,4),lp=H.f('lowpass',5000,.7),g=H.g(0);n.connect(lp);lp.connect(g);g.connect(out);lp.frequency.setValueAtTime(5000,0);lp.frequency.exponentialRampToValueAtTime(150,2.8);H.env(g,0,.9,.003,2.8,.03,.01,1);const os=H.osc('sine',80,0,2.5),g2=H.g(0);os.frequency.setValueAtTime(80,0);os.frequency.exponentialRampToValueAtTime(28,1.4);os.connect(g2);H.env(g2,0,1,.003,1.8,.05,.01,.5);g2.connect(out);for(let i=0;i<40;i++){const t=rnd(.2,2.8),nn=H.noise(t,t+.03),hp=H.f('highpass',rnd(1500,5000)),gg=H.g(0);nn.connect(hp);hp.connect(gg);H.env(gg,t,rnd(.1,.35),.001,.02,.05,t+.002,.02);gg.connect(out)}H.verb(out,2.6,.3)});
+ const zap=(up)=>()=>R(.7,(H,out)=>{const os=H.osc('sawtooth',up?200:2400,0,.6),lp=H.f('lowpass',6000,2),g=H.g(0);os.frequency.setValueAtTime(up?200:2400,0);os.frequency.exponentialRampToValueAtTime(up?2600:180,.35);os.connect(lp);lp.connect(g);H.env(g,0,.6,.003,.3,.1,.1,.2);g.connect(out)});
+ const phone=()=>R(3.6,(H,out)=>{[0,1.8].forEach(t0=>{for(let i=0;i<2;i++){const t=t0+i*.35;[440,480].forEach(f=>{const os=H.osc('sine',f,t,t+.3),g=H.g(0);os.connect(g);H.env(g,t,.35,.004,.05,.9,t+.26,.03);g.connect(out)})}})});
+ const metalclash=()=>R(2.2,(H,out)=>{const g=H.g(1);g.connect(out);H.metal(600,[1,2.76,5.4,8.93,13.3],0,1.6,.4,g);const n=H.noise(0,.2),hp=H.f('highpass',2500),ng=H.g(0);n.connect(hp);hp.connect(ng);H.env(ng,0,.6,.001,.12,.02,.01,.1);ng.connect(g);H.verb(g,1.2,.2)});
+ const fire=()=>R(8,(H,out)=>{const n=H.noise(0,8),lp=H.f('lowpass',380),g=H.g(.35);n.connect(lp);lp.connect(g);g.connect(out);for(let i=0;i<150;i++){const t=rnd(0,7.8),nn=H.noise(t,t+.02),bp=H.f('bandpass',rnd(1200,6000),1.5),gg=H.g(0),pn=H.pan(rnd(-.8,.8));nn.connect(bp);bp.connect(gg);gg.connect(pn);pn.connect(out);H.env(gg,t,rnd(.15,.7),.001,rnd(.005,.02),.05,t+.002,.01)}});
+ const sparkle=()=>R(4,(H,out)=>{const g=H.g(1),bus=H.g(1);bus.connect(out);for(let i=0;i<26;i++){const t=i*.07+rnd(0,.04),f=NF(cl(96-i*.9+rnd(-3,3),70,100)),os=H.osc('sine',f,t,t+.5),gg=H.g(0),pn=H.pan(rnd(-.9,.9));os.connect(gg);gg.connect(pn);pn.connect(bus);H.env(gg,t,.25*(1-i/34),.002,.35,.01,t+.01,.2)}H.verb(bus,2.4,.4)});
+ const murmur=()=>R(10,(H,out)=>{const n=H.noise(0,10),f1=H.f('bandpass',520,3),f2=H.f('bandpass',1500,4),f3=H.f('bandpass',2600,5),g=H.g(.5);[f1,f2,f3].forEach((f,i)=>{n.connect(f);const gg=H.g([1,.6,.3][i]);f.connect(gg);gg.connect(g);const lf=H.osc('sine',rnd(.6,2.2),0,10),lg=H.g(.4);lf.connect(lg);lg.connect(gg.gain)});g.connect(out);H.verb(g,1.5,.2)});
+ /* --- aranjirovka (tempoga sinxron) --- */
+ const snareRoll=(bpm)=>R(bar(bpm,2)+.5,(H,out)=>{const T=bar(bpm,2);let t=0,i=0;while(t<T-.01){const v=.35+.65*(t/T),sp=bt(bpm)/2*Math.pow(.25,t/T);H.snare(t,v);t+=Math.max(.03,sp);i++}H.verb(out,.8,.1)});
+ const tomFill=(bpm)=>R(bar(bpm,1)+1,(H,out)=>{const T=bt(bpm)/2;[210,210,170,170,130,100,80,62].forEach((f,i)=>H.tom(i*T/1.3*1.0,f,.7+i*.04));H.kick(7*T/1.3,{});H.verb(out,1.2,.14)});
+ const crash=()=>R(4,(H,out)=>{const g=H.g(1);g.connect(out);const n=H.noise(0,3.6),hp=H.f('highpass',4800,.7),ng=H.g(0);n.connect(hp);hp.connect(ng);H.env(ng,0,.6,.002,2.8,.02,.02,.8);ng.connect(g);H.metal(420,[1,1.43,2.09,2.77,3.31,4.15],0,2.4,.12,g);H.verb(g,1.8,.18)});
+ const revcrash=async()=>fin(rev(await crash()));
+ const sweep=(bpm,up)=>R(bar(bpm,2)+.4,(H,out)=>{const T=bar(bpm,2),g=H.g(0);g.connect(out);const n=H.noise(0,T+.2),bp=H.f('bandpass',up?300:9000,1.8);n.connect(bp);bp.connect(g);bp.frequency.setValueAtTime(up?300:9000,0);bp.frequency.exponentialRampToValueAtTime(up?9000:300,T);const p=g.gain;if(up){p.setValueAtTime(.0001,0);p.exponentialRampToValueAtTime(.9,T);p.setValueAtTime(.0001,T+.02)}else{p.setValueAtTime(.9,0);p.exponentialRampToValueAtTime(.0001,T)}});
+ const k808=()=>R(1.4,(H,out)=>{H.kick(0,{f0:170,f1:42,sw:.12,len:1.1,drive:1.6,pk:.9})});
+ const sub808=(midi)=>()=>R(2.4,(H,out)=>{const f=NF(midi),os=H.osc('sine',f,0,2.2),g=H.g(0),dr=H.sh(2.2);os.frequency.setValueAtTime(f*2.2,0);os.frequency.exponentialRampToValueAtTime(f,.06);os.connect(dr);dr.connect(g);H.env(g,0,.8,.004,.5,.55,1.3,.6);g.connect(out)});
+ const clapS=()=>R(.7,(H,out)=>{[0,.012,.026,.041].forEach((t,i)=>{const n=H.noise(t,t+.2),bp=H.f('bandpass',1300,1),g=H.g(0);n.connect(bp);bp.connect(g);H.env(g,t,.55,.001,i==3?.12:.012,.02,t+.003,.04);g.connect(out)});H.verb(out,.5,.12)});
+ const snareS=()=>R(.6,(H,out)=>{H.snare(0,1);H.verb(out,.5,.1)});
+ const hatC=()=>R(.3,(H)=>{H.hat(0,false)});const hatO=()=>R(.8,(H)=>{H.hat(0,true)});
+ const rim=()=>R(.3,(H,out)=>{const os=H.osc('square',1700,0,.1),g=H.g(0),bp=H.f('bandpass',1700,3);os.connect(bp);bp.connect(g);H.env(g,0,.6,.001,.02,.05,.005,.03);g.connect(out)});
+ const tomS=(f)=>()=>R(1,(H)=>{H.tom(0,f,1)});
+ const hatLoop=(bpm)=>R(bar(bpm,2),(H)=>{const s=bt(bpm)/2;for(let i=0;i<16;i++)H.hat(i*s,i%4==3,i%2?.55:1)});
+ const kickLoop=(bpm)=>R(bar(bpm,2),(H)=>{for(let i=0;i<8;i++)H.kick(i*bt(bpm),{f0:150,f1:46,len:.4,drive:1.4})});
+ const arp=(bpm)=>R(bar(bpm,2)+.8,(H,out)=>{const s=bt(bpm)/2,seq=[62,65,69,74,69,65,62,57,60,64,69,72,69,64,60,57];seq.forEach((n,i)=>{const t=i*s;H.tone('sawtooth',NF(n),t,s*.7,{pk:.22,a:.003,d:.18,s:.15,r:.12,lp:3200,q:2,voices:2,det:8})});H.verb(out,1.6,.2)});
+ /* ============ RO'YXAT ============ */
+ const S=(id,name,cat,pk,dur,gen,o)=>Object.assign({id,name,cat,pk,dur,gen},o||{});
+ const Dm=[50,53,57,62],Am=[45,48,52,57],Dm9=[62,65,69,76];
+ const LIST=[
+  S('braam-d','Braam Low — D','Cinematic','cin',5.5,braam(36.7),{kw:'braam brass kino trailer past nafas',key:'D'}),
+  S('braam-f','Braam Low — F','Cinematic','cin',5.5,braam(43.65),{kw:'braam brass trailer',key:'F'}),
+  S('braam-hy','Braam Hybrid (distortion)','Cinematic','cin',5.5,braam(36.7,1),{kw:'braam hybrid dark trailer',key:'D'}),
+  S('subdrop','Sub Drop','Impact','cin',3.2,subdrop,{kw:'sub drop 808 pasayish bass drop'}),
+  S('boom','Cinematic Boom','Impact','cin',5.5,boom,{kw:'boom impact zarba portlash trailer'}),
+  S('trailer','Trailer Hit (layered)','Impact','cin',6,trailer,{kw:'trailer hit impact metal zarba'}),
+  S('reverse-hit','Reverse Hit','Rizer & Sweep','cin',5.5,revhit,{kw:'reverse teskari hit ko\'tarilish'}),
+  S('riser-epic','Epic Riser 8s','Rizer & Sweep','cin',8.4,riser(8,true,110),{kw:'riser build ko\'tarilish epic kino'}),
+  S('riser-noise','Noise Riser 4s','Rizer & Sweep','cin',4.4,riser(4,false),{kw:'riser noise shovqin ko\'tarilish'}),
+  S('riser-tonal','Tonal Riser Dm 6s','Rizer & Sweep','cin',6.4,riser(6,true,73.4),{kw:'riser tonal dm',key:'Dm'}),
+  S('downlifter','Downlifter 3s','Rizer & Sweep','cin',3.4,downlift,{kw:'downlifter tushish pasayish'}),
+  S('whoosh-f','Whoosh Fast','Rizer & Sweep','cin',1.5,whoosh(1.2),{kw:'whoosh swish tez o\'tish'}),
+  S('whoosh-s','Whoosh Slow','Rizer & Sweep','cin',2.8,whoosh(2.5),{kw:'whoosh swish sekin o\'tish'}),
+  S('drone-dark','Dark Drone — Dm','Ambient','cin',11,drone,{kw:'drone dark qorong\'u fon ambient',key:'Dm'}),
+  S('tension','Tension Pulse','Ambient','cin',9,tension,{kw:'tension pulse tarang suspense'}),
+  S('heartbeat','Heartbeat','Teatr / Foley','kino',8.5,heartbeat,{kw:'heartbeat yurak urishi drama'}),
+  S('rumble','Ominous Rumble','Ambient','cin',8,rumble,{kw:'rumble gumburlash past'}),
+  S('pad-glass','Glass Pad — Dm add9','Pads','cin',9,padGlass(Dm9),{kw:'pad glass shisha ambient',key:'Dm'}),
+  S('pad-warm-dm','Warm Pad — Dm','Pads','arr',9,padGlass(Dm),{kw:'pad warm iliq',key:'Dm'}),
+  S('pad-warm-am','Warm Pad — Am','Pads','arr',9,padGlass(Am),{kw:'pad warm iliq',key:'Am'}),
+  S('choir-dm','Choir Aah — Dm','Pads','cin',9,choir([50,57,62,65]),{kw:'choir xor aah ovoz',key:'Dm'}),
+  S('stab-dm','Orchestral Stab — Dm','Stabs','cin',2.4,stab([50,57,62,65,69]),{kw:'stab orkestr zarba',key:'Dm'}),
+  S('stab-am','Orchestral Stab — Am','Stabs','cin',2.4,stab([45,52,57,60,64]),{kw:'stab orkestr zarba',key:'Am'}),
+  S('gong','Gong','Teatr / Foley','kino',7,gong,{kw:'gong qo\'ng\'iroq metall teatr'}),
+  S('bell','Bell Toll','Teatr / Foley','kino',5.5,bell,{kw:'bell qo\'ng\'iroq zang cherkov'}),
+  S('stinger','Horror Stinger','Kino FX','cin',3,stinger,{kw:'stinger horror qo\'rqinchli jinoyat'}),
+  S('applause','Applause (olqish)','Teatr / Foley','kino',8,applause,{kw:'applause olqish qarsak teatr tomosha'}),
+  S('thunder','Thunder (momaqaldiroq)','Kino FX','kino',8,thunder,{kw:'thunder momaqaldiroq bo\'ron'}),
+  S('wind','Wind Howl (shamol)','Kino FX','kino',10,wind,{kw:'wind shamol ambient'}),
+  S('rain','Rain (yomg\'ir)','Kino FX','kino',10,rain,{kw:'rain yomg\'ir ambient'}),
+  S('knock','Door Knock (eshik taqillashi)','Teatr / Foley','kino',2.4,knock,{kw:'knock eshik taqillatish'}),
+  S('steps','Footsteps (qadam tovushi)','Teatr / Foley','kino',6,steps,{kw:'footsteps qadam yurish'}),
+  S('clock','Clock Tick-Tock (soat)','Teatr / Foley','kino',7,clock,{kw:'clock soat tick tok'}),
+  S('curtain','Curtain Swish (parda)','Teatr / Foley','kino',1.8,curtain,{kw:'curtain parda teatr'}),
+  S('explosion','Explosion (portlash)','Kino FX','kino',5,explosion,{kw:'explosion portlash'}),
+  S('zap-down','Laser Zap ↓','Kino FX','kino',.7,zap(false),{kw:'laser zap fantastika'}),
+  S('zap-up','Laser Zap ↑','Kino FX','kino',.7,zap(true),{kw:'laser zap power up fantastika'}),
+  S('phone','Phone Ring (telefon)','Teatr / Foley','kino',3.6,phone,{kw:'phone telefon qo\'ng\'iroq'}),
+  S('clash','Metal Clash','Kino FX','kino',2.2,metalclash,{kw:'metal clash urilish qilich'}),
+  S('fire','Fire Crackle (olov)','Kino FX','kino',8,fire,{kw:'fire olov chirsillash'}),
+  S('sparkle','Magic Sparkle','Kino FX','kino',4,sparkle,{kw:'magic sparkle sehr yulduz'}),
+  S('murmur','Crowd Murmur (olomon shovqini)','Teatr / Foley','kino',10,murmur,{kw:'crowd murmur olomon'}),
+  S('snare-roll','Snare Roll Build (2 bar)','Arranger','arr',0,snareRoll,{bpm:1,kw:'snare roll fill build o\'tish aranjirovka'}),
+  S('tom-fill','Tom Fill (1 bar)','Arranger','arr',0,tomFill,{bpm:1,kw:'tom fill o\'tish aranjirovka'}),
+  S('crash','Crash Cymbal','Arranger','arr',4,crash,{kw:'crash cymbal tarelka'}),
+  S('rev-crash','Reverse Crash','Arranger','arr',4,revcrash,{kw:'reverse crash teskari tarelka o\'tish'}),
+  S('sweep-up','Filter Sweep Up (2 bar)','Rizer & Sweep','arr',0,(b)=>sweep(b,true),{bpm:1,kw:'sweep up ko\'tarilish o\'tish'}),
+  S('sweep-dn','Filter Sweep Down (2 bar)','Rizer & Sweep','arr',0,(b)=>sweep(b,false),{bpm:1,kw:'sweep down tushish o\'tish'}),
+  S('k808','808 Kick','Drums','arr',1.4,k808,{kw:'808 kick baraban'}),
+  S('snare','Snare Tight','Drums','arr',.6,snareS,{kw:'snare baraban'}),
+  S('clap','Clap','Drums','arr',.7,clapS,{kw:'clap qarsak'}),
+  S('hat-c','Hi-Hat Closed','Drums','arr',.3,hatC,{kw:'hat hihat yopiq'}),
+  S('hat-o','Hi-Hat Open','Drums','arr',.8,hatO,{kw:'hat hihat ochiq'}),
+  S('rim','Rim Shot','Drums','arr',.3,rim,{kw:'rim rimshot'}),
+  S('tom-l','Tom Low','Drums','arr',1,tomS(95),{kw:'tom past'}),
+  S('hat-loop','Hi-Hat Loop 1/8 (2 bar)','Drums','arr',0,hatLoop,{bpm:1,kw:'hat loop hihat ritm'}),
+  S('kick-loop','Kick Loop 4/4 (2 bar)','Drums','arr',0,kickLoop,{bpm:1,kw:'kick loop four on the floor ritm'}),
+  S('sub-d','808 Sub Bass — D1','Bass','arr',2.4,sub808(26),{kw:'808 bass sub bas',key:'D'}),
+  S('sub-f','808 Sub Bass — F1','Bass','arr',2.4,sub808(29),{kw:'808 bass sub bas',key:'F'}),
+  S('sub-a','808 Sub Bass — A1','Bass','arr',2.4,sub808(33),{kw:'808 bass sub bas',key:'A'}),
+  S('arp-dm','Pluck Arp — Dm (2 bar)','Arranger','arr',0,arp,{bpm:1,kw:'arp pluck arpedjio melodiya',key:'Dm'})
+ ];
+ const PACKS=[
+  {id:'cin',name:'Cinematic Essentials',desc:'Braam, impact, riser, drone, pad va xor — trailer va kino uchun'},
+  {id:'kino',name:'Kino & Teatr FX',desc:'Foley va atmosfera: olqish, shamol, yomg\'ir, qadam, eshik, soat, parda, portlash'},
+  {id:'arr',name:'Aranjirovshi Toolkit',desc:'Tempoga mos fill va loop, sweep, 808, drum one-shot, pad va arp'}
+ ];
+ /* WAV (16-bit stereo) */
+ function wav(b){const ch=b.numberOfChannels,n=b.length,out=new ArrayBuffer(44+n*2*ch),v=new DataView(out),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};w(0,'RIFF');v.setUint32(4,36+n*2*ch,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);v.setUint32(24,b.sampleRate,true);v.setUint32(28,b.sampleRate*2*ch,true);v.setUint16(32,2*ch,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2*ch,true);let o=44;const d=[];for(let c=0;c<ch;c++)d.push(b.getChannelData(c));for(let i=0;i<n;i++)for(let c=0;c<ch;c++){v.setInt16(o,cl(d[c][i],-1,1)*32767,true);o+=2}return out}
+ const cache=new Map();
+ async function render(s,bpm){const k=s.id+(s.bpm?'@'+bpm:'');if(cache.has(k))return cache.get(k);const b=await (s.bpm?s.gen(bpm):s.gen());cache.set(k,b);return b}
+ window.DAWSND={LIST,PACKS,cats:['Cinematic','Kino FX','Teatr / Foley','Rizer & Sweep','Impact','Ambient','Pads','Stabs','Drums','Bass','Arranger'],render,wav};
+})();
+
+/* ===== f6zu: DAW yon paneli — 🎵 Sounds kutubxonasi (oflayn + onlayn) va Fx effektlar kutubxonasi ===== */
+(()=>{
+ const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const lsg=k=>{try{return localStorage.getItem(k)}catch(_){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
+ const W=()=>window.__daw,DD=()=>W().get();
+ const ST={mode:null,sTab:'sounds',fTab:'fx',cat:'Hammasi',fcat:'Hammasi',q:'',fq:'',pack:'',fav:false,tgt:'sel',open:{},ol:[],olq:'',olBusy:false,loc:[],prev:null};
+ let FAV=new Set();try{FAV=new Set(JSON.parse(lsg('daftar-daw-fav')||'[]'))}catch(_){}
+ const saveFav=()=>lss('daftar-daw-fav',JSON.stringify([...FAV]));
+ const CSS=`
+#dawv .dfxp{width:350px;flex:none;background:#1b212c;border-left:1px solid #2b3445;display:flex;flex-direction:column;min-height:0;color:#cfd8e6;font:12px system-ui,Segoe UI,sans-serif}
+#dawv .dfxp[hidden]{display:none}
+#dawv .pnh{display:flex;align-items:center;gap:8px;padding:10px 12px 4px}#dawv .pnh b{font-size:16px;color:#f0f4fb;flex:1}#dawv .pnh button{width:28px;height:28px;padding:0}
+#dawv .pnt{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid #2b3445;overflow-x:auto}#dawv .pnt button{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;color:#9fb0c9;padding:6px 8px;font-size:12.5px;white-space:nowrap}#dawv .pnt button.on{color:#fff;border-bottom-color:#8b6cff}
+#dawv .pns{padding:8px 10px 4px}#dawv .pns input[type=text],#dawv .pns input[type=search],#dawv .pns input[type=password]{width:100%;box-sizing:border-box;height:30px;background:#10151d;border:1px solid #2f3a4c;border-radius:8px;color:#e6edf8;padding:0 10px}
+#dawv .pnc{display:flex;flex-wrap:wrap;gap:5px;padding:4px 10px 6px}#dawv .pnc button{height:24px;padding:0 9px;border-radius:12px;font-size:11.5px;background:#242c3a;border:1px solid #2f3a4c;color:#c3cfe2}#dawv .pnc button.on{background:#8b6cff;border-color:#a891ff;color:#fff}
+#dawv .pnb{flex:1;overflow:auto;padding:4px 10px 12px;min-height:0}
+#dawv .pnf{padding:7px 10px;border-top:1px solid #2b3445;font-size:11px;color:#8ea0c0}
+#dawv .snr{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#222a38;border:1px solid #2b3445;border-radius:9px;margin-bottom:6px}
+#dawv .snr .zpl{width:30px;height:30px;border-radius:50%;padding:0;flex:none}#dawv .snr .zpl.on{background:#e5484d;border-color:#ff8a8f}
+#dawv .snr .znm{flex:1;min-width:0}#dawv .snr .znm b{display:block;font-weight:600;color:#e6edf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dawv .snr .znm i{font-style:normal;color:#8ea0c0;font-size:11px}
+#dawv .snr button.zad{width:28px;height:28px;padding:0;font-size:16px}#dawv .snr button.zhf{width:24px;height:28px;padding:0;background:none;border:0;color:#6d7a91;font-size:15px}#dawv .snr button.zhf.on{color:#ff5d73}
+#dawv .pkc{background:#222a38;border:1px solid #2b3445;border-radius:10px;padding:10px;margin-bottom:8px}#dawv .pkc b{display:block;color:#f0f4fb;font-size:13.5px;margin-bottom:3px}#dawv .pkc p{margin:0 0 8px;color:#9fb0c9}
+#dawv .fxc{background:#222a38;border:1px solid #2b3445;border-radius:10px;padding:9px 10px;margin-bottom:8px}#dawv .fxc .zt{display:flex;align-items:center;gap:6px}#dawv .fxc .zt b{flex:1;color:#f0f4fb;font-size:13px}#dawv .fxc p{margin:2px 0 6px;color:#9fb0c9}
+#dawv .fxc .zpr{display:flex;flex-wrap:wrap;gap:4px}#dawv .fxc .zpr button{height:22px;padding:0 8px;font-size:11px;border-radius:11px;background:#2a3344}
+#dawv .fxc button.zad{width:28px;height:28px;padding:0;font-size:17px}
+#dawv .ztg{display:flex;gap:6px;align-items:center;padding:4px 10px}#dawv .ztg select{flex:1;height:28px}
+#dawv .fxi{background:#222a38;border:1px solid #2b3445;border-radius:10px;margin-bottom:8px;overflow:hidden}#dawv .fxi.off{opacity:.55}
+#dawv .fxi .zh{display:flex;align-items:center;gap:4px;padding:6px 8px;background:#262f3f}#dawv .fxi .zh b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f0f4fb;cursor:pointer}
+#dawv .fxi .zh button{width:24px;height:24px;padding:0;font-size:12px}#dawv .fxi .zh button.zbyp.on{background:#e5484d;border-color:#ff8a8f}
+#dawv .fxi .zbd{padding:6px 10px 8px}#dawv .fxi .zpp{display:grid;grid-template-columns:96px 1fr 58px;gap:6px;align-items:center;margin:3px 0}#dawv .fxi .zpp span{color:#9fb0c9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dawv .fxi .zpp em{font-style:normal;color:#d7dfec;text-align:right;font-variant-numeric:tabular-nums}
+#dawv .fxi input[type=range]{width:100%;accent-color:#8b6cff;height:14px;padding:0;background:none;border:0}#dawv .fxi select{height:24px;width:100%}
+#dawv .zemp{color:#8ea0c0;text-align:center;padding:22px 8px}
+#dawv #dawfx.on,#dawv #dawsnd.on{background:#8b6cff;border-color:#a891ff;color:#fff}
+@media(max-width:760px){#dawv .dfxp{width:100%;position:absolute;inset:0;z-index:20}}
+`;
+ let styled=false;
+ function ensureStyle(){if(styled)return;styled=true;const s=document.createElement('style');s.textContent=CSS;document.head.append(s)}
+ const panel=()=>document.getElementById('dawpan');
+ function toggle(m){const p=panel();if(!p)return;ensureStyle();if(ST.mode===m&&!p.hidden){close();return}open(m)}
+ function open(m,trackId){const p=panel();if(!p)return;ensureStyle();const prevM=ST.mode;ST.mode=m;if(m=='fx'){if(trackId){ST.fTab='chain';ST.tgt=trackId}else if(prevM!=='fx')ST.fTab='fx'}p.hidden=false;sync();render()}
+ function close(){const p=panel();if(p)p.hidden=true;ST.mode=null;stopPrev();sync();setTimeout(()=>window.dispatchEvent(new Event('resize')),30)}
+ function sync(){const a=document.getElementById('dawsnd'),b=document.getElementById('dawfx');if(a)a.classList.toggle('on',ST.mode=='snd');if(b)b.classList.toggle('on',ST.mode=='fx')}
+ /* ---------- ovoz oldindan eshitish ---------- */
+ function stopPrev(){if(ST.prev){try{ST.prev.src&&ST.prev.src.stop()}catch(_){}try{ST.prev.el&&ST.prev.el.pause()}catch(_){}ST.prev=null;const r=panel();r&&r.querySelectorAll('.zpl.on').forEach(x=>{x.classList.remove('on');x.textContent='▶'})}}
+ async function playBuf(b,btn){stopPrev();const ac=W().ctxOn(),src=ac.createBufferSource(),g=ac.createGain();g.gain.value=.9;src.buffer=b;src.connect(g);g.connect(ac.destination);src.onended=()=>{if(ST.prev&&ST.prev.src===src)stopPrev()};src.start();ST.prev={src};if(btn){btn.classList.add('on');btn.textContent='■'}}
+ const bpm=()=>{try{return DD().bpm||120}catch(_){return 120}};
+ async function prevSnd(s,btn){if(ST.prev&&btn.classList.contains('on')){stopPrev();return}btn.textContent='…';try{const b=await DAWSND.render(s,bpm());await playBuf(b,btn)}catch(e){console.warn(e);btn.textContent='▶';W().msg2('Ovoz tayyorlanmadi: '+(e.message||e))}}
+ async function addSnd(s,btn){const old=btn&&btn.textContent;if(btn)btn.textContent='…';try{const b=await DAWSND.render(s,bpm()),buf=DAWSND.wav(b),nm=s.name.replace(/[\\/:*?"<>|]/g,'')+(s.bpm?' ['+bpm()+'bpm]':'');const f=new File([buf],nm+'.wav',{type:'audio/wav'});await W().importFiles([f],null,DD().ph)}catch(e){console.warn(e);W().msg2('Qo‘shib bo‘lmadi: '+(e.message||e))}if(btn)btn.textContent=old}
+ /* ---------- Sounds paneli ---------- */
+ function sndRow(s){const fav=FAV.has(s.id);return`<div class=snr data-id="${E(s.id)}"><button class=zpl title="Oldindan eshitish">▶</button><div class=znm><b>${E(s.name)}</b><i>${E(s.cat)}${s.key?' · '+E(s.key):''}${s.bpm?' · tempoga mos ('+bpm()+' bpm)':s.dur?' · '+s.dur.toFixed(1)+' s':''}</i></div><button class=zhf title="Sevimli">${fav?'♥':'♡'}</button><button class=zad title="Loyihaga qo‘shish (yangi trek, pleyer boshiga)">＋</button></div>`}
+ function bindSnd(root){root.querySelectorAll('.snr').forEach(r=>{const s=DAWSND.LIST.find(x=>x.id==r.dataset.id);if(!s)return;r.querySelector('.zpl').onclick=e=>prevSnd(s,e.currentTarget);r.querySelector('.zad').onclick=e=>addSnd(s,e.currentTarget);r.querySelector('.zhf').onclick=e=>{if(FAV.has(s.id))FAV.delete(s.id);else FAV.add(s.id);saveFav();e.currentTarget.textContent=FAV.has(s.id)?'♥':'♡';e.currentTarget.classList.toggle('on',FAV.has(s.id));if(ST.fav)render()}})}
+ function filtered(){const q=ST.q.trim().toLowerCase();return DAWSND.LIST.filter(s=>(ST.cat=='Hammasi'||s.cat==ST.cat)&&(!ST.pack||s.pk==ST.pack)&&(!ST.fav||FAV.has(s.id))&&(!q||(s.name+' '+s.cat+' '+(s.kw||'')+' '+(s.key||'')).toLowerCase().includes(q)))}
+ function viewSounds(b){
+  const list=filtered(),cats=['Hammasi',...DAWSND.cats];
+  b.innerHTML=`<div class=pns><input type=search id=snq placeholder="Uslub yoki kayfiyatni yozing: braam, shamol, olqish, 808…" value="${E(ST.q)}"></div>
+  <div class=pnc><button id=snfav class="${ST.fav?'on':''}">♥ Sevimli</button>${cats.map(c=>`<button data-c="${E(c)}" class="${ST.cat==c?'on':''}">${E(c)}</button>`).join('')}</div>
+  ${ST.pack?`<div class=pnc><button id=snpk class=on>Paket: ${E(DAWSND.PACKS.find(p=>p.id==ST.pack).name)} ✕</button></div>`:''}
+  <div class=pnb id=snl>${list.length?list.map(sndRow).join(''):'<div class=zemp>Hech narsa topilmadi.</div>'}</div>
+  <div class=pnf>Ichki kutubxona: ${DAWSND.LIST.length} ta ovoz — kompyuter ichida sintez qilinadi, internet va litsenziya shart emas. Haqiqiy yozilgan sample emas, sintetik.</div>`;
+  const q=b.querySelector('#snq');q.oninput=()=>{ST.q=q.value;const l=filtered();b.querySelector('#snl').innerHTML=l.length?l.map(sndRow).join(''):'<div class=zemp>Hech narsa topilmadi.</div>';bindSnd(b)};
+  b.querySelectorAll('.pnc button[data-c]').forEach(x=>x.onclick=()=>{ST.cat=x.dataset.c;render()});b.querySelector('#snfav').onclick=()=>{ST.fav=!ST.fav;render()};const pk=b.querySelector('#snpk');if(pk)pk.onclick=()=>{ST.pack='';render()};bindSnd(b)}
+ function viewPacks(b){b.innerHTML=`<div class=pnb style="padding-top:10px">${DAWSND.PACKS.map(p=>{const n=DAWSND.LIST.filter(s=>s.pk==p.id).length;return`<div class=pkc><b>${E(p.name)}</b><p>${E(p.desc)}</p><button data-p="${p.id}">${n} ta ovozni ko‘rish</button></div>`}).join('')}</div>`;b.querySelectorAll('[data-p]').forEach(x=>x.onclick=()=>{ST.pack=x.dataset.p;ST.sTab='sounds';ST.cat='Hammasi';render()})}
+ /* ---------- Online: Freesound ---------- */
+ const fsKey=()=>lsg('daftar-fskey')||'';
+ async function fsSearch(q){const key=fsKey();if(!key){W().msg2('Avval Freesound API kalitini kiriting.');return}ST.olBusy=true;ST.olq=q;render();try{const u='https://freesound.org/apiv2/search/text/?query='+encodeURIComponent(q)+'&page_size=20&fields=id,name,duration,username,license,previews&filter=duration:[0.1 TO 60]&token='+encodeURIComponent(key);const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status+(r.status==401?' — kalit noto‘g‘ri':''));const j=await r.json();ST.ol=j.results||[];ST.olErr=''}catch(e){ST.ol=[];ST.olErr=(e.message||e)+'. Internet yoki Freesound CORS cheklovi bo‘lishi mumkin.'}ST.olBusy=false;render()}
+ async function fsFetch(it){const url=(it.previews&&(it.previews['preview-hq-mp3']||it.previews['preview-lq-mp3']))||'';if(!url)throw new Error('preview yo‘q');const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return await r.arrayBuffer()}
+ function viewOnline(b){
+  const key=fsKey();
+  b.innerHTML=`<div class=pns><input type=password id=olk placeholder="Freesound API kaliti (bir marta)" value="${E(key)}"></div>
+  <div class=pns><input type=search id=olq placeholder="Onlayn qidirish: cinematic whoosh, applause…" value="${E(ST.olq)}"></div>
+  <div class=pnb id=oll>${ST.olBusy?'<div class=zemp>⏳ Qidirilmoqda…</div>':ST.olErr?`<div class=zemp>❌ ${E(ST.olErr)}</div>`:ST.ol.length?ST.ol.map(it=>`<div class=snr data-fid="${it.id}"><button class=zpl>▶</button><div class=znm><b>${E(it.name)}</b><i>${(it.duration||0).toFixed(1)} s · ${E(it.username)} · ${E((it.license||'').replace(/.*licenses\//,'').replace(/\/$/,''))}</i></div><button class=zad title="Loyihaga qo‘shish">＋</button></div>`).join(''):'<div class=zemp>Qidiruv natijasi shu yerda ko‘rinadi.</div>'}</div>
+  <div class=pnf>Onlayn manba: freesound.org (bepul akkaunt → Apps → API key). Fayllarning litsenziyasi har xil (CC0 / CC-BY…), tijorat uchun har birini tekshiring. Ish internetsiz davom etadi — ichki kutubxona oflayn.</div>`;
+  b.querySelector('#olk').onchange=e=>{lss('daftar-fskey',e.target.value.trim())};
+  const q=b.querySelector('#olq');q.onkeydown=e=>{if(e.key=='Enter'&&q.value.trim()){lss('daftar-fskey',b.querySelector('#olk').value.trim());fsSearch(q.value.trim())}};
+  b.querySelectorAll('[data-fid]').forEach(r=>{const it=ST.ol.find(x=>String(x.id)==r.dataset.fid);r.querySelector('.zpl').onclick=async e=>{const btn=e.currentTarget;if(btn.classList.contains('on')){stopPrev();return}stopPrev();const url=it.previews&&(it.previews['preview-lq-mp3']||it.previews['preview-hq-mp3']);if(!url)return;const el=new Audio(url);el.onended=()=>stopPrev();try{await el.play();ST.prev={el};btn.classList.add('on');btn.textContent='■'}catch(err){W().msg2('Eshitib bo‘lmadi: '+(err.message||err))}};
+   r.querySelector('.zad').onclick=async e=>{const btn=e.currentTarget;btn.textContent='…';try{const ab=await fsFetch(it);const f=new File([ab],it.name.replace(/[\\/:*?"<>|]/g,'').replace(/\.[a-z0-9]+$/i,'')+'.mp3',{type:'audio/mpeg'});await W().importFiles([f],null,DD().ph)}catch(err){W().msg2('Yuklab bo‘lmadi: '+(err.message||err))}btn.textContent='＋'}})}
+ /* ---------- Mening fayllarim (kompyuterdagi papka, oflayn) ---------- */
+ async function scanDir(dh,out,depth){for await(const [n,h] of dh.entries()){if(h.kind=='directory'&&depth<3)await scanDir(h,out,depth+1);else if(h.kind=='file'&&/\.(wav|mp3|ogg|m4a|flac|aac|opus)$/i.test(n))out.push({n,h,p:dh.name});if(out.length>3000)return}}
+ function viewLocal(b){
+  const ok=!!window.showDirectoryPicker,q=(ST.lq||'').toLowerCase(),l=ST.loc.filter(x=>!q||x.n.toLowerCase().includes(q)).slice(0,200);
+  b.innerHTML=`<div class=pns style="display:flex;gap:6px"><button id=lcp style="flex:1;height:30px" ${ok?'':'disabled'}>📂 Papkani tanlash (oflayn)</button><button id=lcf style="height:30px">📥 Fayl</button></div>
+  <div class=pns><input type=search id=lcq placeholder="Fayl nomi bo‘yicha qidirish" value="${E(ST.lq||'')}"></div>
+  <div class=pnb id=lcl>${l.length?l.map((x,i)=>`<div class=snr data-i="${ST.loc.indexOf(x)}"><button class=zpl>▶</button><div class=znm><b>${E(x.n)}</b><i>${E(x.p)}</i></div><button class=zad>＋</button></div>`).join(''):'<div class=zemp>'+(ok?'Sample papkangizni tanlang — fayllar ro‘yxatga olinadi (internet kerak emas).':'Bu brauzer papka ochishni qo‘llamaydi. «📥 Fayl» tugmasi bilan qo‘shing.')+'</div>'}</div>
+  <div class=pnf>${ST.loc.length?ST.loc.length+' ta audio fayl topildi.':'Fayllar kompyuteringizdan olinadi, hech qayerga yuborilmaydi.'}</div>`;
+  b.querySelector('#lcf').onclick=()=>{const el=document.getElementById('dawim');if(el)el.click()};
+  const pk=b.querySelector('#lcp');if(pk)pk.onclick=async()=>{try{const dh=await showDirectoryPicker({id:'daftar-samples',mode:'read'});const out=[];W().msg2('⏳ Papka o‘qilmoqda…');await scanDir(dh,out,0);ST.loc=out;W().msg2('📂 '+out.length+' ta audio topildi');render()}catch(e){if(e.name!='AbortError')W().msg2('Papka ochilmadi: '+(e.name||e))}};
+  b.querySelector('#lcq').oninput=e=>{ST.lq=e.target.value;render();const i=document.getElementById('dawpan').querySelector('#lcq');if(i){i.focus();i.setSelectionRange(99,99)}};
+  b.querySelectorAll('[data-i]').forEach(r=>{const x=ST.loc[+r.dataset.i];r.querySelector('.zpl').onclick=async e=>{const btn=e.currentTarget;if(btn.classList.contains('on')){stopPrev();return}btn.textContent='…';try{const f=await x.h.getFile(),ab=await f.arrayBuffer(),ac=W().ctxOn(),buf=await new Promise((res,no)=>{const p=ac.decodeAudioData(ab,res,no);if(p&&p.catch)p.catch(no)});await playBuf(buf,btn)}catch(err){btn.textContent='▶';W().msg2('Eshitib bo‘lmadi: '+(err.message||err))}};
+   r.querySelector('.zad').onclick=async e=>{const btn=e.currentTarget;btn.textContent='…';try{const f=await x.h.getFile();await W().importFiles([f],null,DD().ph)}catch(err){W().msg2('Qo‘shib bo‘lmadi: '+(err.message||err))}btn.textContent='＋'}})}
+ /* ---------- Fx paneli ---------- */
+ const targets=()=>{const D=DD();return[{id:'sel',n:'▸ Tanlangan trek'},...D.tracks.map(t=>({id:t.id,n:t.n})),{id:'master',n:'🎚 Master (hamma ovoz)'}]};
+ function tgtList(create){const D=DD();if(ST.tgt=='master'){if(create&&!D.mfx)D.mfx=[];return{list:D.mfx||[],owner:null,master:true,name:'Master'}}let t=ST.tgt=='sel'?W().selTrack():D.tracks.find(x=>x.id==ST.tgt);if(!t)return{list:[],owner:null,name:'—'};if(create&&!t.fx)t.fx=[];return{list:t.fx||[],owner:t,name:t.n}}
+ function rewire(){const V=W().V;if(V.playing)W().startAt(W().curP());W().persist();try{W().buildHeads()}catch(_){}}
+ function liveSet(f){const V=W().V,tg=tgtList(),d=DAWFX.merged(f);if(tg.master){V.mfx&&V.mfx.set(f.uid,d)}else if(tg.owner){const n=V.tn.get(tg.owner.id);n&&n.fx&&n.fx.set(f.uid,d)}}
+ function addFx(id,preset){const D=DD(),tg=tgtList(true);if(!tg.owner&&!tg.master){W().msg2('Avval trek tanlang yoki «Master» ni belgilang.');return}W().hist();DAWFX.add(tg.list,id,preset);if(!tg.master&&!tg.owner.fx)tg.owner.fx=tg.list;ST.fTab='chain';rewire();render();W().msg2('➕ '+DAWFX.REG[id].name+(preset?' · '+preset:'')+' → '+tg.name)}
+ const fmtV=(p,v)=>(p.step>=1?Math.round(v):(+v).toFixed(p.step<.05?2:1))+(p.u?' '+p.u:'');
+ function viewFx(b){
+  const cats=['Hammasi',...DAWFX.cats],q=ST.fq.trim().toLowerCase(),L=DAWFX.ORDER.map(i=>DAWFX.REG[i]).filter(d=>(ST.fcat=='Hammasi'||d.cat==ST.fcat)&&(!q||(d.name+' '+d.cat+' '+d.desc+' '+Object.keys(d.presets).join(' ')).toLowerCase().includes(q)));
+  b.innerHTML=`<div class=ztg><span>Maqsad:</span><select id=fxt>${targets().map(t=>`<option value="${t.id}" ${ST.tgt==t.id?'selected':''}>${E(t.n)}</option>`).join('')}</select></div>
+  <div class=pns><input type=search id=fxq placeholder="Overdrive, Equalizer, Delay, Reverb…" value="${E(ST.fq)}"></div>
+  <div class=pnc>${cats.map(c=>`<button data-c="${E(c)}" class="${ST.fcat==c?'on':''}">${E(c)}</button>`).join('')}</div>
+  <div class=pnb>${L.length?L.map(d=>`<div class=fxc><div class=zt><b>${E(d.name)}</b><button class=zad data-add="${d.id}" title="Zanjirga qo‘shish">＋</button></div><p>${E(d.desc)}</p><div class=zpr>${Object.keys(d.presets).map(n=>`<button data-add="${d.id}" data-pr="${E(n)}">${E(n)}</button>`).join('')}</div></div>`).join(''):'<div class=zemp>Hech narsa topilmadi.</div>'}</div>
+  <div class=pnf>Effektlar shu brauzerning o‘zida ishlaydi (Web Audio) — VST/AU plaginlarni brauzerga ulab bo‘lmaydi. AutoTune (pitch-correction) kiritilmagan.</div>`;
+  b.querySelector('#fxt').onchange=e=>{ST.tgt=e.target.value;render()};const q2=b.querySelector('#fxq');q2.oninput=()=>{ST.fq=q2.value;render();const i=panel().querySelector('#fxq');if(i){i.focus();i.setSelectionRange(99,99)}};
+  b.querySelectorAll('.pnc button').forEach(x=>x.onclick=()=>{ST.fcat=x.dataset.c;render()});
+  b.querySelectorAll('[data-add]').forEach(x=>x.onclick=()=>addFx(x.dataset.add,x.dataset.pr))}
+ function viewChain(b){
+  const tg=tgtList(),D=DD();
+  b.innerHTML=`<div class=ztg><span>Maqsad:</span><select id=fxt>${targets().map(t=>`<option value="${t.id}" ${ST.tgt==t.id?'selected':''}>${E(t.n)}</option>`).join('')}</select></div>
+  <div class=pnb>${tg.list.length?tg.list.map((f,i)=>{const d=DAWFX.REG[f.id];if(!d)return'';const p=DAWFX.merged(f),op=ST.open[f.uid]!==false;return`<div class="fxi ${f.on===0?'off':''}" data-u="${f.uid}"><div class=zh><button class="zbyp ${f.on===0?'on':''}" title="Bypass (o‘chirib-yoqish)">⏻</button><b title="Parametrlarni ochish/yopish">${E(d.name)}</b><button data-a=up title="Yuqoriga">↑</button><button data-a=dn title="Pastga">↓</button><button data-a=rm title="O‘chirish">✕</button></div>${op?`<div class=zbd><div class=zpp><span>Preset</span><select data-a=pre><option value="">— tanlang —</option>${Object.keys(d.presets).map(n=>`<option>${E(n)}</option>`).join('')}</select><em></em></div>${d.params.map(pr=>pr.opts?`<div class=zpp><span>${E(pr.n)}</span><select data-k="${pr.k}">${pr.opts.map(o=>`<option ${p[pr.k]==o?'selected':''}>${E(o)}</option>`).join('')}</select><em></em></div>`:`<div class=zpp><span title="${E(pr.n)}">${E(pr.n)}</span><input type=range data-k="${pr.k}" min="${pr.min}" max="${pr.max}" step="${pr.step}" value="${p[pr.k]}"><em>${fmtV(pr,p[pr.k])}</em></div>`).join('')}</div>`:''}</div>`}).join(''):`<div class=zemp>«${E(tg.name)}» uchun effekt yo‘q.<br>«Effektlar» bo‘limidan ＋ bosing.</div>`}</div>
+  <div class=pnf>Zanjir yuqoridan pastga ishlaydi. Parametrlar eshitib turib o‘zgaradi; eksport (WAV) ham effektlar bilan chiqadi.</div>`;
+  b.querySelector('#fxt').onchange=e=>{ST.tgt=e.target.value;render()};
+  b.querySelectorAll('.fxi').forEach(el=>{const u=el.dataset.u,f=tg.list.find(x=>x.uid==u),d=DAWFX.REG[f.id],idx=tg.list.indexOf(f);
+   el.querySelector('.zbyp').onclick=()=>{W().hist();f.on=f.on===0?1:0;rewire();render()};
+   el.querySelector('.zh b').onclick=()=>{ST.open[u]=ST.open[u]===false;render()};
+   el.querySelectorAll('.zh [data-a]').forEach(x=>x.onclick=()=>{const a=x.dataset.a;W().hist();if(a=='rm')tg.list.splice(idx,1);else if(a=='up'&&idx>0){tg.list.splice(idx,1);tg.list.splice(idx-1,0,f)}else if(a=='dn'&&idx<tg.list.length-1){tg.list.splice(idx,1);tg.list.splice(idx+1,0,f)}rewire();render()});
+   const pre=el.querySelector('[data-a=pre]');if(pre)pre.onchange=()=>{if(!pre.value)return;W().hist();f.p=Object.assign({},d.presets[pre.value]);rewire();render()};
+   el.querySelectorAll('input[data-k]').forEach(inp=>{const pr=d.params.find(x=>x.k==inp.dataset.k);inp.onpointerdown=()=>W().hist();inp.oninput=()=>{const v=+inp.value;(f.p=f.p||{})[pr.k]=v;inp.parentElement.querySelector('em').textContent=fmtV(pr,v);liveSet(f);W().persist()};inp.ondblclick=()=>{inp.value=pr.def;inp.oninput()}});
+   el.querySelectorAll('select[data-k]').forEach(sel=>{sel.onchange=()=>{W().hist();(f.p=f.p||{})[sel.dataset.k]=sel.value;rewire();render()}})})}
+ /* ---------- umumiy chizish ---------- */
+ function render(){const p=panel();if(!p||p.hidden)return;const m=ST.mode;const tabs=m=='snd'?[['sounds','Sounds'],['packs','Packs'],['online','Online'],['local','Mening fayllarim']]:[['fx','Effektlar'],['chain','Zanjir']];const cur=m=='snd'?ST.sTab:ST.fTab;
+  p.innerHTML=`<div class=pnh><b>${m=='snd'?'Sound library':'Effects library'}</b><button id=pnx title="Yopish">✕</button></div><div class=pnt>${tabs.map(t=>`<button data-t="${t[0]}" class="${cur==t[0]?'on':''}">${t[1]}</button>`).join('')}</div><div style="display:flex;flex-direction:column;flex:1;min-height:0" id=pnbody></div>`;
+  p.querySelector('#pnx').onclick=close;p.querySelectorAll('.pnt button').forEach(x=>x.onclick=()=>{if(m=='snd')ST.sTab=x.dataset.t;else ST.fTab=x.dataset.t;render()});
+  const b=p.querySelector('#pnbody');if(m=='snd'){stopPrev();({sounds:viewSounds,packs:viewPacks,online:viewOnline,local:viewLocal})[ST.sTab](b)}else{({fx:viewFx,chain:viewChain})[ST.fTab](b)}
+  setTimeout(()=>window.dispatchEvent(new Event('resize')),30)}
+ window.__dawui={toggle,open,close,render,ST,onSel(){if(ST.mode=='fx'&&ST.tgt=='sel'&&ST.fTab=='chain'&&panel()&&!panel().hidden)render()}};
 })();
 
 /* ===== f6zq: ilova o'rnatilganda qurilmada «Ma'lumot papkasi» — yaratish, yozuv, har ochilishda tiklash ===== */
