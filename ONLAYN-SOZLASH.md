@@ -94,3 +94,8 @@ Yuqoridagi 🌐 tugmasi: O‘zbekcha / Русский / English. DAW (asboblar p
 
 ## Tempoga avtomatik moslash (v92)
 Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo‘shilganda va tinglanganda, u DAW loyiha tempoiga (BPM) moslanadi — tovush balandligi saqlanadi (WSOLA). Tempo fayl nomidan («96bpm») yoki audiodan aniqlanadi. Qisqa ovozlar (<1.6 s) o‘zgarmaydi. Yoqish/o‘chirish va qo‘lda moslash: 🔁 Konvert → «Tempoga moslash».
+
+## v93 — Avtomatik akkord va uslub aniqlash (🎼 Akkord)
+- DAW asboblar panelida «🎼 Akkord»: tanlangan klip yoki butun miksdan akkordlar, kalit, lad, tempo va uslub (top-3, foizda) aniqlanadi. Brauzerda, internetsiz.
+- Natija: akkordlar ketma-ketligi (takt jadvali), rim raqamlari, vaqt chizig‘i, «Akkordlar» treki (ovozsiz markerlar), MIDI akkordlar, .txt va nusxa.
+- Uslub — qoidalarga asoslangan taxmin (AI emas). Server/yangi sozlama kerak emas. UZ/RU/EN.
