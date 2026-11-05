@@ -105,3 +105,10 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 - Trek sarlavhasida «St/Mo» tugmasi: trekni mono (L+R birlashgan) yoki stereo tinglash.
 - Trek sarlavhasini sudrab tartibini almashtirish (Ctrl+Z bilan qaytariladi).
 - Yangi sozlama/server kerak emas.
+
+## v95 — DAW: 🎤 Vokal studiyasi
+- Zanjir: tanlangan trekka bir tugma bilan vokal zanjiri (Pop, Rap, Ballada, Sharqona, Podkast, Radio) — mavjud AZ Vocal Repair/EQ/Kompressor/AZ Cleanup/Delay/Reverb asosida.
+- Pitch: Auto-Tune uslubida kalit bo‘yicha to‘g‘rilash (avto kalit, lad, tezlik, kuch, formant saqlash).
+- Harmoniya: ikkilash (Double L/R) va kalitga mos harmoniya ovozlari (terts, kvinta, kvarta, oktava) — alohida treklarda.
+- Miks va master: vokal bilan masking tahlili (+EQ kesim), maqsad LUFS (−14/−16/−9) bo‘yicha master.
+- Hammasi brauzerda, internetsiz, klassik DSP (neyron model emas). Server/sozlama kerak emas. UZ/RU/EN.
