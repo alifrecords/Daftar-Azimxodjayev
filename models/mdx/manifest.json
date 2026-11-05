@@ -1,0 +1,18 @@
+{
+ "vocals": {
+  "file": "kuielab_b_vocals.onnx",
+  "parts": 3,
+  "size": 29703204
+ },
+ "drums": {
+  "file": "kuielab_b_drums.onnx",
+  "parts": 2,
+  "size": 21930313
+ },
+ "bass": {
+  "file": "kuielab_b_bass.onnx",
+  "parts": 3,
+  "size": 29703204
+ },
+ "_note": "MDX-Net (KUIELAB) ONNX modellari: TRvlvr/model_repo, UVR loyihasi. Bo‘laklarga bo‘lingan (Cloudflare Pages 25 MB limiti uchun)."
+}

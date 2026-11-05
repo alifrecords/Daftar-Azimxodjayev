@@ -112,3 +112,10 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 - Harmoniya: ikkilash (Double L/R) va kalitga mos harmoniya ovozlari (terts, kvinta, kvarta, oktava) — alohida treklarda.
 - Miks va master: vokal bilan masking tahlili (+EQ kesim), maqsad LUFS (−14/−16/−9) bo‘yicha master.
 - Hammasi brauzerda, internetsiz, klassik DSP (neyron model emas). Server/sozlama kerak emas. UZ/RU/EN.
+
+## v96 — Neyron stem ajratish (MDX-Net) + katta fayllar
+- Konvert → «Stem Separation»: endi neyron model (KUIELab-MDX-Net, onnxruntime-web) bilan Vokal / Baraban / Bas / Boshqa ajratiladi. «Vokal + Minus» rejimi tezroq. Eski HPSS usuli «Tezkor» sifatida saqlandi (model fayllari bo‘lmasa avtomatik zaxira).
+- Yangi papka: `models/` (~96 MB: `models/mdx` — 3 ta ONNX model 14 MB lik bo‘laklarda, `models/ort` — onnxruntime-web). **Saytga joylashda `models/` papkasi ham yuklanishi shart.** Har bir fayl 25 MB dan kichik (Cloudflare Pages limiti).
+- Model brauzerda bir marta yig‘ilib, brauzer keshida (Cache Storage) saqlanadi; ikkinchi marta internet kerak emas. Service worker `models/` ni keshlamaydi.
+- GPU (WebGPU) bo‘lsa tez, bo‘lmasa CPU da sekin. 6 daqiqagacha.
+- Litsenziya: `models/NOTICE.txt` ga qarang (model og‘irliklari litsenziyasi aniq e’lon qilinmagan — tijorat tarqatishdan oldin tekshiring).

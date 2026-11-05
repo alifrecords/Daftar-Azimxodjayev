@@ -11959,6 +11959,9 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  
  {const X9={"Zanjirni qo‘shish": ["Добавить цепочку", "Add chain"], "Ovozni to‘g‘rilash": ["Исправить голос", "Fix pitch"], "Yaratish": ["Создать", "Create"], "Masterni sozlash": ["Настроить мастер", "Set up master"], "Maskingni tahlil qilish": ["Анализ маскирования", "Analyze masking"], "Kesimlarni qo‘llash": ["Применить срезы", "Apply cuts"], "Manba": ["Источник", "Source"], "Trek": ["Трек", "Track"]};for(const k in X9)U.D[k]=X9[k];
  [[/^Tanlangan trekka professional vokal zanjirini bir tugma bilan qo‘shadi: tozalash\/de-ess → EQ → kompressor → yakuniy insert → delay\/reverb\. Parametrlarni keyin Fx oynasida o‘zgartirish mumkin\.$/,["Одной кнопкой добавляет на выбранный трек профессиональную вокальную цепочку: очистка/де-эссер → EQ → компрессор → финальный инсерт → delay/reverb. Параметры потом можно менять в окне Fx.", "Adds a professional vocal chain to the selected track in one click: cleanup/de-ess → EQ → compressor → final insert → delay/reverb. You can tweak the parameters later in the Fx window."]],[/^Zanjir tarkibi: (.+)\.$/,["Состав цепочки: $1.", "Chain contents: $1."]],[/^Qayta bosilsa, avval shu yerdan qo‘shilgan zanjir almashtiriladi, o‘zingiz qo‘shgan effektlar saqlanadi\.$/,["При повторном нажатии ранее добавленная отсюда цепочка заменяется, ваши собственные эффекты сохраняются.", "Pressing again replaces the chain previously added from here; your own effects are kept."]],[/^Vokal klipidagi notalarni kalit bo‘yicha to‘g‘rilaydi \(Auto-Tune uslubida\)\.$/,["Исправляет ноты вокального клипа по тональности (в стиле Auto-Tune).", "Corrects the notes of the vocal clip to the key (Auto-Tune style)."]],[/^Vokal klipidan avtomatik ikkilash va kalitga mos harmoniya ovozlari yaratadi \(har biri alohida trek\)\.$/,["Создаёт из вокального клипа автоматический дубль и гармонические голоса в тональности (каждый на отдельном треке).", "Creates automatic doubling and key-matched harmony voices from the vocal clip (each on its own track)."]],[/^Harmoniya faqat tanlangan kalit\/lad bo‘yicha quriladi \(akkord bo‘yicha emas\) — g‘alati eshitilgan joylarni trek ichida o‘chirib yoki o‘zgartirib qo‘ying\.$/,["Гармония строится только по выбранной тональности/ладу (а не по аккордам) — странно звучащие места удалите или измените внутри трека.", "Harmony is built only from the selected key/mode (not by chords) — delete or edit any odd-sounding parts inside the track."]],[/^Eng yaxshi natija: quruq \(reverbsiz\), bir ovozli vokal\. «Tezlik» kichik bo‘lsa — qat’iy, robotsimon; 30–60 ms — tabiiy\. Kuchli \(±3 yarim tondan ko‘p\) o‘zgarishda ovoz sun’iy chiqadi\.$/,["Лучший результат — сухой (без реверба) одноголосный вокал. Малая «Скорость» — жёстко, как робот; 30–60 мс — естественно. При сильных изменениях (более ±3 полутонов) голос звучит искусственно.", "Best on dry (no reverb), single-voice vocals. Low “Speed” sounds hard/robotic; 30–60 ms is natural. Large changes (over ±3 semitones) sound artificial."]]].forEach(r=>U.RX.push(r))}
+ 
+ {const X10={"Neyron model — 4 stem (sifatli)": ["Нейромодель — 4 стема (качественно)", "Neural model — 4 stems (high quality)"], "Neyron model — Vokal + Minus (tezroq)": ["Нейромодель — вокал + минус (быстрее)", "Neural model — vocal + instrumental (faster)"], "Tezkor HPSS (past sifat)": ["Быстрый HPSS (низкое качество)", "Fast HPSS (lower quality)"], "⏹ To‘xtatish": ["⏹ Остановить", "⏹ Stop"], "Vokal · Baraban · Bas · Boshqa. Neyron model (MDX-Net, brauzerda, internetsiz): GPU (WebGPU) bo‘lsa tez, bo‘lmasa CPU da sekin (3 daqiqalik qo‘shiq bir necha daqiqa). Birinchi marta ~80 MB model yuklanadi. 6 daqiqagacha.": ["Вокал · Ударные · Бас · Остальное. Нейромодель (MDX-Net, в браузере, без интернета): быстро на GPU (WebGPU), на CPU медленно (3-минутная песня — несколько минут). При первом запуске загружается ~80 МБ модели. До 6 минут.", "Vocal · Drums · Bass · Other. Neural model (MDX-Net, in the browser, offline): fast on GPU (WebGPU), slow on CPU (a 3-minute song takes several minutes). ~80 MB of model is loaded the first time. Up to 6 minutes."]};for(const k in X10)U.D[k]=X10[k];
+ [[/^Model yuklanmoqda: (.+) (\d+)%$/,["Загрузка модели: $1 $2%", "Loading model: $1 $2%"]],[/^(Vokal|Baraban|Bas) · jami (\d+)%( · ~.+ qoldi)? · (GPU|CPU)$/,["$1 · всего $2%$3 · $4", "$1 · total $2%$3 · $4"]],[/^Boshlanmoqda…$/,["Запуск…", "Starting…"]],[/^ℹ Neyron model fayllari topilmadi — tezkor \(HPSS\) usul ishlatiladi\.$/,["ℹ Файлы нейромодели не найдены — используется быстрый метод (HPSS).", "ℹ Neural model files not found — using the fast (HPSS) method."]],[/^✅ (\d+) ta stem tayyor \((.+), (GPU|CPU)\)\. Neyron model \(MDX-Net\); mukammal emas — zich miksda biroz aralashish bo‘lishi mumkin\.$/,["✅ Готово стемов: $1 ($2, $3). Нейромодель (MDX-Net); не идеально — в плотном миксе возможно небольшое смешение.", "✅ $1 stems ready ($2, $3). Neural model (MDX-Net); not perfect — some bleed is possible in dense mixes."]],[/^⏹ Stem ajratish to‘xtatildi\.$/,["⏹ Разделение на стемы остановлено.", "⏹ Stem separation stopped."]]].forEach(r=>U.RX.push(r))}
  try{if(U.get()!=='uz')U.pass()}catch(_){}
 })();
 
@@ -13757,7 +13760,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
 (function(){
  const DW=()=>window.__daw,DD=()=>DW().get(),msg=t=>{try{window.msg(t)}catch(_){}};
  const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
- const ST={sr:48000,bits:16,dither:1,q:1,busy:0,midi:null,mode:'mel',info:''};
+ const ST={sr:48000,bits:16,dither:1,q:1,busy:0,midi:null,mode:'mel',info:'',sm:'ai4',cancel:0};
  const tick=()=>new Promise(r=>setTimeout(r,0));
  const dl=(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)};
  /* ---------- Sample Rate Conversion: oynali sinc (polifaza) ---------- */
@@ -13802,7 +13805,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
    for(let sz=2;sz<=n;sz<<=1){const h=sz>>1,st=n/sz;for(let i=0;i<n;i+=sz)for(let k=0;k<h;k++){const wr=cs[k*st],wi=inv?-sn[k*st]:sn[k*st],a=i+k,b=a+h,tr=re[b]*wr-im[b]*wi,ti=re[b]*wi+im[b]*wr;re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti}}
    if(inv)for(let i=0;i<n;i++){re[i]/=n;im[i]/=n}}}
  function med(a,n){/* kichik massivning medianasi (insertion sort) */for(let i=1;i<n;i++){const v=a[i];let j=i-1;while(j>=0&&a[j]>v){a[j+1]=a[j];j--}a[j+1]=v}return a[n>>1]}
- async function stems(){
+ async function stemsHpss(){
   if(ST.busy)return;const sc=DW().selClip();if(!sc){msg('Avval ajratiladigan klipni tanlang.');return}const sl=clipSlice(sc);if(!sl){msg('Klip audiosi yuklanmagan.');return}
   ST.busy=1;ref();const t0=performance.now();
   try{
@@ -13839,6 +13842,27 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
    await DW().importFiles(files,null,sc.c.start);
    msg('✅ 4 ta stem tayyor ('+((performance.now()-t0)/1000).toFixed(1)+' s). HPSS usuli — AI model emas: vokal bilan baraban qisman aralashishi mumkin.');
   }catch(e){console.warn(e);msg('❌ Stem ajratish xatosi: '+(e&&e.message||e))}finally{ST.busy=0;ST.info='';ref()}}
+ /* ---------- Stem Separation: neyron model (MDX-Net) yoki HPSS ---------- */
+ const fmtT=s=>s>=90?Math.round(s/60)+' daq':Math.round(s)+' s';
+ async function stems(){
+  if(ST.busy)return;const sc=DW().selClip();if(!sc){msg('Avval ajratiladigan klipni tanlang.');return}
+  if(ST.sm!='fast'){let av=false;try{av=!!(window.__dawms&&await __dawms.available())}catch(_){}
+   if(av)return stemsAI(sc);msg('ℹ Neyron model fayllari topilmadi — tezkor (HPSS) usul ishlatiladi.')}
+  return stemsHpss()}
+ async function stemsAI(sc){
+  const sl=clipSlice(sc);if(!sl){msg('Klip audiosi yuklanmagan.');return}
+  ST.busy=1;ST.cancel=0;ref();const t0=performance.now(),two=ST.sm=='ai2',setI=t=>{ST.info=t;const e=document.getElementById('cvinf');if(e)e.textContent=t};
+  try{
+   setI('Boshlanmoqda…');
+   const o=await __dawms.separate(sl.data,sl.sr,{two,cancel:()=>ST.cancel,maxSec:360,onProgress:p=>{
+    if(p.phase=='load')setI('Model yuklanmoqda: '+p.model+' '+Math.round(p.p*100)+'%');
+    else setI(p.model+' · jami '+Math.round(p.frac*100)+'%'+(p.eta!=null&&p.frac>.03?' · ~'+fmtT(p.eta)+' qoldi':'')+' · '+(p.ep=='webgpu'?'GPU':'CPU'))}});
+   const AC=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(2,1,o.sr),files=[],nm=sc.c.name||'klip';
+   const list=two?[['Vokal',o.vocals],['Minus (cholg‘ular)',o.other]]:[['Vokal',o.vocals],['Baraban',o.drums],['Bas',o.bass],['Boshqa',o.other]];
+   for(const [n,ch] of list){const bf=AC.createBuffer(2,ch[0].length,o.sr);bf.copyToChannel(ch[0],0);bf.copyToChannel(ch[1],1);const sf=new File([DAWSND.wav(bf)],nm+' — '+n+'.wav',{type:'audio/wav'});sf.__noTempo=true;files.push(sf)}
+   await DW().importFiles(files,null,sc.c.start);
+   msg('✅ '+list.length+' ta stem tayyor ('+fmtT((performance.now()-t0)/1000)+', '+(o.ep=='webgpu'?'GPU':'CPU')+'). Neyron model (MDX-Net); mukammal emas — zich miksda biroz aralashish bo‘lishi mumkin.');
+  }catch(e){console.warn(e);msg(String(e&&e.message).indexOf('To‘xtatildi')>=0?'⏹ Stem ajratish to‘xtatildi.':'❌ Stem ajratish xatosi: '+(e&&e.message||e))}finally{ST.busy=0;ST.cancel=0;ST.info='';ref()}}
  /* ---------- Audio → MIDI ---------- */
  function yin(x,sr,i0,W,fmin,fmax){/* [freq, ishonch] */
   const tmax=Math.floor(sr/fmin),tmin=Math.floor(sr/fmax),n=W,d=new Float32Array(tmax+1);
@@ -13913,7 +13937,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   <div class=xcd><b>② Bit Depth Conversion</b><small>16-bit, 24-bit va 32-bit (float) WAV. 16/24 bitda TPDF dither (kvantlash shovqinini yumshatadi).</small>
    <div class=xrw><select id=cvb>${opt([16,24,32],ST.bits,v=>v==32?'32-bit float':v+'-bit')}</select><label style="font-size:11px;display:flex;gap:4px;align-items:center"><input type=checkbox id=cvd ${ST.dither?'checked':''}>Dither</label></div>
    <div class=xrw><button class=xs2 id=cvc ${dis}>Tanlangan klip → WAV</button><button class=xs2 id=cvm ${dis}>Butun miks → WAV</button></div><small id=cvinf>${E(ST.info)}</small></div>
-  <div class=xcd><b>③ Stem Separation <button class=xb2 id=cvs ${dis}>Ajratish</button></b><small>Tanlangan klipni 4 trekka ajratadi: Baraban · Bas · Vokal · Boshqa. HPSS (garmonik/perkussiv) + stereo markaz maskasi. <u>AI model emas</u> — vokal bilan baraban qisman aralashishi mumkin. 4 daqiqagacha.</small></div>
+  <div class=xcd><b>③ Stem Separation <button class=xb2 id=cvs ${dis}>Ajratish</button>${ST.busy&&ST.sm!='fast'?'<button class=xs2 id=cvx>⏹ To‘xtatish</button>':''}</b><div class=xrw><select id=cvsm><option value=ai4 ${ST.sm=='ai4'?'selected':''}>Neyron model — 4 stem (sifatli)</option><option value=ai2 ${ST.sm=='ai2'?'selected':''}>Neyron model — Vokal + Minus (tezroq)</option><option value=fast ${ST.sm=='fast'?'selected':''}>Tezkor HPSS (past sifat)</option></select></div><small>Vokal · Baraban · Bas · Boshqa. Neyron model (MDX-Net, brauzerda, internetsiz): GPU (WebGPU) bo‘lsa tez, bo‘lmasa CPU da sekin (3 daqiqalik qo‘shiq bir necha daqiqa). Birinchi marta ~80 MB model yuklanadi. 6 daqiqagacha.</small></div>
   <div class=xcd><b>④ Audio-to-MIDI</b><small>Audiodagi melodiyani (bitta ovozli: vokal, bas, lead) yoki ritmni (kick/snare/hat) MIDI faylga aylantiradi. Akkord/polifoniya <u>qo‘llab-quvvatlanmaydi</u>. 3 daqiqagacha.</small>
    <div class=xrw><select id=cvmo><option value=mel ${ST.mode=='mel'?'selected':''}>Melodiya (monofonik)</option><option value=dr ${ST.mode=='dr'?'selected':''}>Ritm (baraban)</option></select><button class=xs2 id=cvt ${dis}>Aylantirish</button></div>
    ${m?`<div class=xrw><b style="font-size:12px">${m.notes.length} nota</b>${m.notes.length&&!m.drums?'<small style="margin:0">'+nn(Math.min(...m.notes.map(n=>n.p)))+' – '+nn(Math.max(...m.notes.map(n=>n.p)))+'</small>':''}<button class=xs2 id=cvp>▶ Tinglash</button><button class=xs2 id=cvdl>⬇ .mid yuklash</button></div>
@@ -13924,7 +13948,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   p.querySelector('#xpx').onclick=()=>window.__dawui.close();
   const g=id=>p.querySelector('#'+id);
   g('cvsr').onchange=e=>ST.sr=+e.target.value;g('cvq').onchange=e=>ST.q=+e.target.value;g('cvb').onchange=e=>ST.bits=+e.target.value;g('cvd').onchange=e=>ST.dither=e.target.checked?1:0;
-  g('cvc').onclick=()=>doConvert('clip');g('cvm').onclick=()=>doConvert('mix');g('cvs').onclick=stems;g('cvmo').onchange=e=>ST.mode=e.target.value;g('cvt').onclick=toMidi;g('cvat').onchange=e=>{DAWTM.setOn(e.target.checked);msg(e.target.checked?'✅ Avtomatik tempoga moslash yoqildi.':'⏸ Avtomatik tempoga moslash o‘chirildi.')};g('cvfit').onclick=fitClip;
+  g('cvc').onclick=()=>doConvert('clip');g('cvm').onclick=()=>doConvert('mix');g('cvs').onclick=stems;g('cvsm').onchange=e=>{ST.sm=e.target.value};{const x=document.getElementById('cvx');if(x)x.onclick=()=>{ST.cancel=1}};g('cvmo').onchange=e=>ST.mode=e.target.value;g('cvt').onclick=toMidi;g('cvat').onchange=e=>{DAWTM.setOn(e.target.checked);msg(e.target.checked?'✅ Avtomatik tempoga moslash yoqildi.':'⏸ Avtomatik tempoga moslash o‘chirildi.')};g('cvfit').onclick=fitClip;
   const pl=g('cvp');if(pl)pl.onclick=playMidi;const d=g('cvdl');if(d)d.onclick=()=>{dl(writeMidi(m.notes,DD().bpm||120,m.drums),m.name+(m.drums?' — ritm':' — melodiya')+'.mid');msg('✅ MIDI fayl yuklandi.')}}
  window.__dawui.ext.cvt=panel;window.__dawcv={resample,wavBits,stems,detectMelody,detectDrums,writeMidi,yin,ST};
 })();
@@ -14364,6 +14388,103 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   on('#vxap',applyChain);on('#vxrm',removeChain);on('#vxpr',runPitch);on('#vxhr',runHarm);on('#vxmk',runMask);on('#vxma',applyMask);on('#vxmr',removeMask);on('#vxms',runMaster);on('#vxmo',removeMaster)}
  if(window.__dawui&&__dawui.ext)__dawui.ext.vox=panel;
  window.__dawvx={ST,pshift,trackF0,scaleSet,estKey,scaleNotes,rawCorr,smoothShift,ratioArr,bandSpec,buildChain,STY,MODES,runPitch,runHarm,runMask,runMaster,applyChain,applyMask};
+})();
+
+/* ===== f6zms: Neyron stem ajratish (MDX-Net ONNX, onnxruntime-web) — vokal / baraban / bas / boshqa =====
+   Modellar: models/mdx/*.onnx.pN (bo‘laklarga bo‘lingan), runtime: models/ort/. Brauzerda, internetsiz (bir marta yuklangach keshlanadi). */
+(()=>{
+ const NF=6144,HOP=1024,DF=2048,BINS=NF/2+1,TRIM=NF/2,SR=44100;
+ const MODELS={vocals:{f:'kuielab_b_vocals',dt:256,n:'Vokal'},drums:{f:'kuielab_b_drums',dt:128,n:'Baraban'},bass:{f:'kuielab_b_bass',dt:256,n:'Bas'}};
+ const BASE='models/',CACHE='daftar-mdx-v1';
+ const tick=()=>new Promise(r=>setTimeout(r,0));
+ const ST={ort:null,ep:'',sess:{},man:null,avail:null,err:''};
+ /* ---------------- FFT 6144 = 3 × 2048 ---------------- */
+ const M2=2048;let C2=null,REV=null;
+ function init2(){if(C2)return;const lv=11;REV=new Uint16Array(M2);for(let i=0;i<M2;i++){let r=0;for(let b=0;b<lv;b++)if(i&(1<<b))r|=1<<(lv-1-b);REV[i]=r}C2=[new Float32Array(M2/2),new Float32Array(M2/2)];for(let i=0;i<M2/2;i++){C2[0][i]=Math.cos(-2*Math.PI*i/M2);C2[1][i]=Math.sin(-2*Math.PI*i/M2)}}
+ function fft2(re,im){for(let i=0;i<M2;i++){const j=REV[i];if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
+  for(let sz=2;sz<=M2;sz<<=1){const h=sz>>1,st=M2/sz;for(let i=0;i<M2;i+=sz)for(let k=0;k<h;k++){const a=i+k,b=a+h,wr=C2[0][k*st],wi=C2[1][k*st],xr=re[b]*wr-im[b]*wi,xi=re[b]*wi+im[b]*wr;re[b]=re[a]-xr;im[b]=im[a]-xi;re[a]+=xr;im[a]+=xi}}}
+ let TW=null;const sa=[0,1,2].map(()=>new Float32Array(M2)),sb=[0,1,2].map(()=>new Float32Array(M2));
+ function fft6144(re,im){init2();if(!TW){TW=[new Float32Array(NF),new Float32Array(NF)];for(let i=0;i<NF;i++){TW[0][i]=Math.cos(-2*Math.PI*i/NF);TW[1][i]=Math.sin(-2*Math.PI*i/NF)}}
+  for(let j=0;j<3;j++){const a=sa[j],b=sb[j];for(let n=0;n<M2;n++){a[n]=re[3*n+j];b[n]=im[3*n+j]}fft2(a,b)}
+  const c1=-.5,s1=-Math.sqrt(3)/2; /* e^{-2πi/3} */
+  for(let k=0;k<M2;k++){
+   const w1r=TW[0][k],w1i=TW[1][k],w2r=TW[0][2*k],w2i=TW[1][2*k];
+   const a0r=sa[0][k],a0i=sb[0][k],t1r=sa[1][k]*w1r-sb[1][k]*w1i,t1i=sa[1][k]*w1i+sb[1][k]*w1r,t2r=sa[2][k]*w2r-sb[2][k]*w2i,t2i=sa[2][k]*w2i+sb[2][k]*w2r;
+   re[k]=a0r+t1r+t2r;im[k]=a0i+t1i+t2i;
+   /* q=1: W3^{j}, W3^{2j} */
+   re[k+M2]=a0r+(t1r*c1-t1i*s1)+(t2r*c1+t2i*s1);im[k+M2]=a0i+(t1r*s1+t1i*c1)+(t2i*c1-t2r*s1);
+   /* q=2: W3^{2j}, W3^{4j}=W3^{j} */
+   re[k+2*M2]=a0r+(t1r*c1+t1i*s1)+(t2r*c1-t2i*s1);im[k+2*M2]=a0i+(t1i*c1-t1r*s1)+(t2r*s1+t2i*c1)}}
+ const HANN=(()=>{const w=new Float32Array(NF);for(let i=0;i<NF;i++)w[i]=.5-.5*Math.cos(2*Math.PI*i/NF);return w})();
+ /* ---------------- model fayllari ---------------- */
+ async function manifest(){if(ST.man)return ST.man;const r=await fetch(BASE+'mdx/manifest.json',{cache:'no-cache'});if(!r.ok)throw new Error('Model manifesti topilmadi ('+r.status+')');return ST.man=await r.json()}
+ async function available(){if(ST.avail!==null)return ST.avail;try{const m=await manifest();ST.avail=!!(m&&m.vocals&&m.drums&&m.bass)}catch(e){ST.avail=false;ST.err=String(e&&e.message||e)}return ST.avail}
+ async function fetchBuf(url,onBytes){let cache=null;try{cache=await caches.open(CACHE)}catch(_){}
+  if(cache){const hit=await cache.match(url);if(hit){const b=await hit.arrayBuffer();onBytes&&onBytes(b.byteLength);return b}}
+  const r=await fetch(url);if(!r.ok)throw new Error('Yuklab bo‘lmadi: '+url+' ('+r.status+')');const b=await r.arrayBuffer();onBytes&&onBytes(b.byteLength);
+  if(cache){try{await cache.put(url,new Response(b.slice(0),{headers:{'content-type':'application/octet-stream'}}))}catch(_){}}return b}
+ async function modelBytes(key,prog){const m=(await manifest())[key];if(!m)throw new Error('Model topilmadi: '+key);const parts=[];let got=0;
+  for(let i=0;i<m.parts;i++){parts.push(new Uint8Array(await fetchBuf(BASE+'mdx/'+m.file+'.p'+i,n=>{got+=n;prog&&prog(got/m.size)})))}
+  const out=new Uint8Array(parts.reduce((s,p)=>s+p.length,0));let o=0;for(const p of parts){out.set(p,o);o+=p.length}return out}
+ /* ---------------- onnxruntime-web ---------------- */
+ function loadScript(src){return new Promise((res,rej)=>{if(window.ort)return res();const s=document.createElement('script');s.src=new URL(src,location.href).href;s.onload=res;s.onerror=()=>rej(new Error('ONNX runtime yuklanmadi: '+src));document.head.appendChild(s)})}
+ async function webgpuOk(){try{if(!navigator.gpu)return false;const a=await navigator.gpu.requestAdapter();return!!a}catch(_){return false}}
+ async function getOrt(forceWasm){if(ST.ort)return ST.ort;await loadScript(BASE+'ort/ort.webgpu.min.js');const ort=window.ort;ort.env.wasm.wasmPaths=new URL(BASE+'ort/',location.href).href;ort.env.wasm.numThreads=1;ort.env.wasm.simd=true;
+  const gpu=!forceWasm&&await webgpuOk();ort.env.wasm.proxy=!gpu;ST.ort=ort;ST.ep=gpu?'webgpu':'wasm';return ort}
+ async function getSession(key,prog,forceWasm){if(ST.sess[key])return ST.sess[key];const ort=await getOrt(forceWasm),bytes=await modelBytes(key,prog);
+  let s;try{s=await ort.InferenceSession.create(bytes,{executionProviders:[ST.ep],graphOptimizationLevel:'all'})}catch(e){if(ST.ep=='webgpu'){console.warn('WebGPU xato, WASM ga o‘tiladi',e);ST.ep='wasm';s=await ort.InferenceSession.create(bytes,{executionProviders:['wasm'],graphOptimizationLevel:'all'})}else throw e}
+  ST.sess[key]=s;return s}
+ async function wasmSession(key){const ort=ST.ort;if(ST.sw&&ST.sw[key])return ST.sw[key];const bytes=await modelBytes(key);const s=await ort.InferenceSession.create(bytes,{executionProviders:['wasm'],graphOptimizationLevel:'all'});(ST.sw=ST.sw||{})[key]=s;return s}
+ /* ---------------- STFT / ISTFT (L va R bitta kompleks FFT da) ---------------- */
+ const bre=new Float32Array(NF),bim=new Float32Array(NF);
+ function fillStft(X,dt,L,R,off){/* L,R: Float32Array (chunk uzunligi), X: [4,DF,dt] */
+  const chunk=HOP*(dt-1),pl=new Float32Array(chunk+NF),pr=new Float32Array(chunk+NF),P=NF/2;
+  const refl=(src,dst)=>{for(let i=0;i<chunk;i++)dst[P+i]=src[off+i]||0;for(let i=1;i<=P;i++){dst[P-i]=dst[P+i];dst[P+chunk-1+i]=dst[P+chunk-1-i]}};
+  refl(L,pl);refl(R,pr);
+  for(let t=0;t<dt;t++){const s=t*HOP;for(let i=0;i<NF;i++){bre[i]=pl[s+i]*HANN[i];bim[i]=pr[s+i]*HANN[i]}fft6144(bre,bim);
+   for(let k=0;k<DF;k++){const nk=(NF-k)%NF,xr=bre[k],xi=bim[k],yr=bre[nk],yi=-bim[nk];
+    /* L = (X + conj(X[N-k]))/2 ; R = (X - conj(X[N-k]))/(2i) */
+    const lr=(xr+yr)*.5,li=(xi+yi)*.5,dr=(xr-yr)*.5,di=(xi-yi)*.5,rr=di,ri=-dr;
+    X[(0*DF+k)*dt+t]=lr;X[(1*DF+k)*dt+t]=li;X[(2*DF+k)*dt+t]=rr;X[(3*DF+k)*dt+t]=ri}}}
+ const WN=new Map();function wnFor(dt){if(WN.has(dt))return WN.get(dt);const len=HOP*(dt-1)+NF,w=new Float32Array(len);for(let t=0;t<dt;t++)for(let i=0;i<NF;i++)w[t*HOP+i]+=HANN[i]*HANN[i];WN.set(dt,w);return w}
+ function istftChunk(Y,dt,outL,outR){/* Y: [4,DF,dt] -> outL/outR (uzunlik HOP*(dt-1)) */
+  const chunk=HOP*(dt-1),len=chunk+NF,al=new Float32Array(len),ar=new Float32Array(len),wn=wnFor(dt),P=NF/2;
+  for(let t=0;t<dt;t++){bre.fill(0);bim.fill(0);
+   for(let k=0;k<DF;k++){const lr=Y[(0*DF+k)*dt+t],li=Y[(1*DF+k)*dt+t],rr=Y[(2*DF+k)*dt+t],ri=Y[(3*DF+k)*dt+t];
+    /* Z = SL + i·SR (butun spektr, Hermit) */
+    bre[k]=lr-ri;bim[k]=li+rr;
+    if(k>0){const nk=NF-k;bre[nk]=lr+ri;bim[nk]=-li+rr}}
+   /* teskari FFT: conj → fft → conj → /N */
+   for(let i=0;i<NF;i++)bim[i]=-bim[i];fft6144(bre,bim);
+   const s=t*HOP;for(let i=0;i<NF;i++){const l=bre[i]/NF,r=-bim[i]/NF;al[s+i]+=l*HANN[i];ar[s+i]+=r*HANN[i]}}
+  for(let i=0;i<chunk;i++){const w=Math.max(wn[P+i],1e-8);outL[i]=al[P+i]/w;outR[i]=ar[P+i]/w}}
+ /* ---------------- bitta model bilan ajratish ---------------- */
+ async function runModel(key,mixL,mixR,onChunk,cancel){const cfg=MODELS[key],dt=cfg.dt,sess=await getSession(key,p=>onChunk&&onChunk(-1,p)),ort=ST.ort;
+  const n=mixL.length,chunk=HOP*(dt-1),gen=chunk-NF,pad=gen+TRIM-(n%gen),tot=n+TRIM+pad;
+  const mL=new Float32Array(tot),mR=new Float32Array(tot);mL.set(mixL,TRIM);mR.set(mixR,TRIM);
+  const oL=new Float32Array(n),oR=new Float32Array(n),X=new Float32Array(4*DF*dt),cL=new Float32Array(chunk),cR=new Float32Array(chunk);
+  const nCh=Math.ceil(n/gen);let ci=0;
+  for(let i=0;ci<nCh;i+=gen,ci++){if(cancel&&cancel())throw new Error('To‘xtatildi');
+   const segL=mL.subarray(i,i+chunk),segR=mR.subarray(i,i+chunk);fillStft(X,dt,segL,segR,0);
+   const out=await sess.run({input:new ort.Tensor('float32',X.slice(),[1,4,DF,dt])});let Y=out[Object.keys(out)[0]].data;
+   if(ST.ep=='webgpu'&&!ST.gpuChecked){/* GPU natijasini bir marta CPU bilan solishtirish: farq katta bo‘lsa CPU ga o‘tamiz */
+    let bad=false,rel=0;try{const sw=await wasmSession(key),o2=await sw.run({input:new ort.Tensor('float32',X.slice(),[1,4,DF,dt])}),Y2=o2[Object.keys(o2)[0]].data;let e=0,sm=0;for(let q=0;q<Y.length;q+=3){const d=Y[q]-Y2[q];e+=d*d;sm+=Y2[q]*Y2[q]}rel=Math.sqrt(e/(sm+1e-20));bad=!(rel<.03)}catch(err){console.warn('GPU tekshiruvi',err);bad=true}
+    ST.gpuChecked=true;ST.gpuRel=rel;if(bad){console.warn('WebGPU natijasi noto‘g‘ri (xato '+rel+') — CPU ga o‘tildi');ST.ep='wasm';ST.gpuBad=true;ST.sess={};return runModel(key,mixL,mixR,onChunk,cancel)}}
+   istftChunk(Y,dt,cL,cR);const o=ci*gen,len=Math.min(gen,n-o);oL.set(cL.subarray(TRIM,TRIM+len),o);oR.set(cR.subarray(TRIM,TRIM+len),o);
+   if(onChunk)onChunk(ci+1,nCh);await tick()}
+  return[oL,oR]}
+ /* ---------------- asosiy: 4 stem ---------------- */
+ async function separate(data,sr,opt){opt=opt||{};const onP=opt.onProgress||(()=>{}),cancel=opt.cancel;
+  let L=data[0],R=data[1]||data[0];
+  if(sr!==SR){const AB=new AudioBuffer({length:L.length,sampleRate:sr,numberOfChannels:2});AB.copyToChannel(L,0);AB.copyToChannel(R,1);const rs=await window.__dawcv.resample(AB,SR,1);L=rs.data[0];R=rs.data[1]||rs.data[0]}
+  const n=L.length;if(n/SR>(opt.maxSec||480))throw new Error('Klip '+Math.round((opt.maxSec||480)/60)+' daqiqadan uzun — qisqaroq qismni tanlang.');
+  const keys=opt.two?['vocals']:['vocals','drums','bass'],res={};const t0=performance.now();
+  for(let m=0;m<keys.length;m++){const k=keys[m];
+   res[k]=await runModel(k,L,R,(ci,tot)=>{if(ci<0)onP({phase:'load',model:MODELS[k].n,p:tot,frac:(m+0)/keys.length*.98});else{const frac=(m+ci/tot)/keys.length;onP({phase:'run',model:MODELS[k].n,p:ci/tot,frac,eta:ci>0?((performance.now()-t0)/1000)*(1-frac)/Math.max(frac,.001):null,ep:ST.ep})}},cancel)}
+  /* boshqa = miks − (vokal+baraban+bas)  */
+  const oth=[new Float32Array(n),new Float32Array(n)];for(let c=0;c<2;c++){const mx=c?R:L,v=res.vocals[c],d=res.drums?res.drums[c]:null,b=res.bass?res.bass[c]:null,o=oth[c];for(let i=0;i<n;i++)o[i]=mx[i]-v[i]-(d?d[i]:0)-(b?b[i]:0)}
+  return{sr:SR,vocals:res.vocals,drums:res.drums,bass:res.bass,other:oth,ep:ST.ep,secs:(performance.now()-t0)/1000}}
+ window.__dawms={available,separate,runModel,fft6144,fillStft,istftChunk,ST,MODELS,getOrt,getSession};
 })();
 
 /* ===== f6zq: ilova o'rnatilganda qurilmada «Ma'lumot papkasi» — yaratish, yozuv, har ochilishda tiklash ===== */
@@ -15578,6 +15699,9 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  
  {const X9={"Zanjirni qo‘shish": ["Добавить цепочку", "Add chain"], "Ovozni to‘g‘rilash": ["Исправить голос", "Fix pitch"], "Yaratish": ["Создать", "Create"], "Masterni sozlash": ["Настроить мастер", "Set up master"], "Maskingni tahlil qilish": ["Анализ маскирования", "Analyze masking"], "Kesimlarni qo‘llash": ["Применить срезы", "Apply cuts"], "Manba": ["Источник", "Source"], "Trek": ["Трек", "Track"]};for(const k in X9)U.D[k]=X9[k];
  [[/^Tanlangan trekka professional vokal zanjirini bir tugma bilan qo‘shadi: tozalash\/de-ess → EQ → kompressor → yakuniy insert → delay\/reverb\. Parametrlarni keyin Fx oynasida o‘zgartirish mumkin\.$/,["Одной кнопкой добавляет на выбранный трек профессиональную вокальную цепочку: очистка/де-эссер → EQ → компрессор → финальный инсерт → delay/reverb. Параметры потом можно менять в окне Fx.", "Adds a professional vocal chain to the selected track in one click: cleanup/de-ess → EQ → compressor → final insert → delay/reverb. You can tweak the parameters later in the Fx window."]],[/^Zanjir tarkibi: (.+)\.$/,["Состав цепочки: $1.", "Chain contents: $1."]],[/^Qayta bosilsa, avval shu yerdan qo‘shilgan zanjir almashtiriladi, o‘zingiz qo‘shgan effektlar saqlanadi\.$/,["При повторном нажатии ранее добавленная отсюда цепочка заменяется, ваши собственные эффекты сохраняются.", "Pressing again replaces the chain previously added from here; your own effects are kept."]],[/^Vokal klipidagi notalarni kalit bo‘yicha to‘g‘rilaydi \(Auto-Tune uslubida\)\.$/,["Исправляет ноты вокального клипа по тональности (в стиле Auto-Tune).", "Corrects the notes of the vocal clip to the key (Auto-Tune style)."]],[/^Vokal klipidan avtomatik ikkilash va kalitga mos harmoniya ovozlari yaratadi \(har biri alohida trek\)\.$/,["Создаёт из вокального клипа автоматический дубль и гармонические голоса в тональности (каждый на отдельном треке).", "Creates automatic doubling and key-matched harmony voices from the vocal clip (each on its own track)."]],[/^Harmoniya faqat tanlangan kalit\/lad bo‘yicha quriladi \(akkord bo‘yicha emas\) — g‘alati eshitilgan joylarni trek ichida o‘chirib yoki o‘zgartirib qo‘ying\.$/,["Гармония строится только по выбранной тональности/ладу (а не по аккордам) — странно звучащие места удалите или измените внутри трека.", "Harmony is built only from the selected key/mode (not by chords) — delete or edit any odd-sounding parts inside the track."]],[/^Eng yaxshi natija: quruq \(reverbsiz\), bir ovozli vokal\. «Tezlik» kichik bo‘lsa — qat’iy, robotsimon; 30–60 ms — tabiiy\. Kuchli \(±3 yarim tondan ko‘p\) o‘zgarishda ovoz sun’iy chiqadi\.$/,["Лучший результат — сухой (без реверба) одноголосный вокал. Малая «Скорость» — жёстко, как робот; 30–60 мс — естественно. При сильных изменениях (более ±3 полутонов) голос звучит искусственно.", "Best on dry (no reverb), single-voice vocals. Low “Speed” sounds hard/robotic; 30–60 ms is natural. Large changes (over ±3 semitones) sound artificial."]]].forEach(r=>U.RX.push(r))}
+ 
+ {const X10={"Neyron model — 4 stem (sifatli)": ["Нейромодель — 4 стема (качественно)", "Neural model — 4 stems (high quality)"], "Neyron model — Vokal + Minus (tezroq)": ["Нейромодель — вокал + минус (быстрее)", "Neural model — vocal + instrumental (faster)"], "Tezkor HPSS (past sifat)": ["Быстрый HPSS (низкое качество)", "Fast HPSS (lower quality)"], "⏹ To‘xtatish": ["⏹ Остановить", "⏹ Stop"], "Vokal · Baraban · Bas · Boshqa. Neyron model (MDX-Net, brauzerda, internetsiz): GPU (WebGPU) bo‘lsa tez, bo‘lmasa CPU da sekin (3 daqiqalik qo‘shiq bir necha daqiqa). Birinchi marta ~80 MB model yuklanadi. 6 daqiqagacha.": ["Вокал · Ударные · Бас · Остальное. Нейромодель (MDX-Net, в браузере, без интернета): быстро на GPU (WebGPU), на CPU медленно (3-минутная песня — несколько минут). При первом запуске загружается ~80 МБ модели. До 6 минут.", "Vocal · Drums · Bass · Other. Neural model (MDX-Net, in the browser, offline): fast on GPU (WebGPU), slow on CPU (a 3-minute song takes several minutes). ~80 MB of model is loaded the first time. Up to 6 minutes."]};for(const k in X10)U.D[k]=X10[k];
+ [[/^Model yuklanmoqda: (.+) (\d+)%$/,["Загрузка модели: $1 $2%", "Loading model: $1 $2%"]],[/^(Vokal|Baraban|Bas) · jami (\d+)%( · ~.+ qoldi)? · (GPU|CPU)$/,["$1 · всего $2%$3 · $4", "$1 · total $2%$3 · $4"]],[/^Boshlanmoqda…$/,["Запуск…", "Starting…"]],[/^ℹ Neyron model fayllari topilmadi — tezkor \(HPSS\) usul ishlatiladi\.$/,["ℹ Файлы нейромодели не найдены — используется быстрый метод (HPSS).", "ℹ Neural model files not found — using the fast (HPSS) method."]],[/^✅ (\d+) ta stem tayyor \((.+), (GPU|CPU)\)\. Neyron model \(MDX-Net\); mukammal emas — zich miksda biroz aralashish bo‘lishi mumkin\.$/,["✅ Готово стемов: $1 ($2, $3). Нейромодель (MDX-Net); не идеально — в плотном миксе возможно небольшое смешение.", "✅ $1 stems ready ($2, $3). Neural model (MDX-Net); not perfect — some bleed is possible in dense mixes."]],[/^⏹ Stem ajratish to‘xtatildi\.$/,["⏹ Разделение на стемы остановлено.", "⏹ Stem separation stopped."]]].forEach(r=>U.RX.push(r))}
  try{if(U.get()!=='uz')U.pass()}catch(_){}
 })();
 

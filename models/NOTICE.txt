@@ -1,0 +1,10 @@
+Daftar — stem ajratish modellari / Stem separation models
+
+models/mdx/*.onnx.pN  — KUIELab-MDX-Net (kuielab_b_vocals, kuielab_b_drums, kuielab_b_bass) ONNX modellari,
+  "TRvlvr/model_repo" (Ultimate Vocal Remover loyihasi) orqali tarqatilgan. Model kodi: MIT License, Copyright (c) 2020 KINoAI
+  (https://github.com/kuielab/mdx-net). Og'irlik (weights) fayllari uchun alohida litsenziya e'lon qilinmagan va
+  MUSDB18-HQ ma'lumotlarida o'qitilgan — tijorat maqsadida tarqatishdan oldin litsenziyani o'zingiz tekshiring.
+  Fayllar 14 MB lik bo'laklarga bo'lingan (Cloudflare Pages 25 MB limiti uchun), mazmuni o'zgartirilmagan.
+
+models/ort/*          — onnxruntime-web 1.22.0, MIT License, Copyright (c) Microsoft Corporation
+  (https://github.com/microsoft/onnxruntime).
