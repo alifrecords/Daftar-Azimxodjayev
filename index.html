@@ -11903,7 +11903,22 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
 ]
 };
  for(const k in X)if(!U.D[k])U.D[k]=X[k];
+ const X2={"Konvertor: sample rate, bit depth, stem ajratish, audio → MIDI": ["Конвертер: sample rate, bit depth, разделение на стемы, аудио → MIDI", "Converter: sample rate, bit depth, stem separation, audio → MIDI"], "Konvertor va MIDI": ["Конвертер и MIDI", "Converter & MIDI"], "44.1 ⇄ 48 kHz (va 88.2/96) o‘rtasida sifatli qayta hisoblash — Kaiser oynali sinc, anti-alias bilan.": ["Качественный пересчёт между 44.1 ⇄ 48 кГц (и 88.2/96) — sinc с окном Кайзера, с анти-алиасингом.", "High-quality conversion between 44.1 ⇄ 48 kHz (and 88.2/96) — Kaiser-windowed sinc with anti-aliasing."], "Tez": ["Быстро", "Fast"], "Yuqori": ["Высокое", "High"], "Maksimal": ["Максимальное", "Maximum"], "16-bit, 24-bit va 32-bit (float) WAV. 16/24 bitda TPDF dither (kvantlash shovqinini yumshatadi).": ["WAV 16-, 24- и 32-bit (float). Для 16/24 bit — TPDF dither (смягчает шум квантования).", "16-bit, 24-bit and 32-bit (float) WAV. TPDF dither on 16/24 bit (softens quantization noise)."], "Tanlangan klip → WAV": ["Выбранный клип → WAV", "Selected clip → WAV"], "Butun miks → WAV": ["Весь микс → WAV", "Whole mix → WAV"], "Tanlangan klipni 4 trekka ajratadi: Baraban · Bas · Vokal · Boshqa. HPSS (garmonik/perkussiv) + stereo markaz maskasi.": ["Разделяет выбранный клип на 4 трека: Ударные · Бас · Вокал · Остальное. HPSS (гармоническая/ударная составляющие) + маска стерео-центра.", "Splits the selected clip into 4 tracks: Drums · Bass · Vocal · Other. HPSS (harmonic/percussive) + stereo-center mask."], "AI model emas": ["не AI-модель", "not an AI model"], "— vokal bilan baraban qisman aralashishi mumkin. 4 daqiqagacha.": ["— вокал и ударные могут частично смешиваться. До 4 минут.", "— vocal and drums may partly bleed into each other. Up to 4 minutes."], "Audiodagi melodiyani (bitta ovozli: vokal, bas, lead) yoki ritmni (kick/snare/hat) MIDI faylga aylantiradi. Akkord/polifoniya": ["Превращает мелодию (одноголосную: вокал, бас, лид) или ритм (kick/snare/hat) в MIDI-файл. Аккорды/полифония", "Turns a melody (monophonic: vocal, bass, lead) or rhythm (kick/snare/hat) into a MIDI file. Chords/polyphony"], "qo‘llab-quvvatlanmaydi": ["не поддерживаются", "are not supported"], "3 daqiqagacha.": ["До 3 минут.", "Up to 3 minutes."], "Melodiya (monofonik)": ["Мелодия (монофоническая)", "Melody (monophonic)"], "Ritm (baraban)": ["Ритм (ударные)", "Rhythm (drums)"], "Aylantirish": ["Преобразовать", "Convert"], "Tinglash": ["Прослушать", "Listen"], "mid yuklash": ["скачать .mid", "download .mid"], "Audio → MIDI…": ["Аудио → MIDI…", "Audio → MIDI…"], "Nota topilmadi — monofonik (bitta ovozli) va aniq audio kerak.": ["Ноты не найдены — нужно моно-звучание (одноголосное) и чистое аудио.", "No notes found — monophonic (single voice) clean audio is needed."], "MIDI fayl yuklandi.": ["MIDI-файл скачан.", "MIDI file downloaded."], "Stem: spektr hisoblanmoqda…": ["Стем: вычисление спектра…", "Stem: computing spectrum…"], "Bit chuqurligi o‘zgartirilmoqda…": ["Изменяется разрядность…", "Converting bit depth…"], "Miks tayyorlanmoqda…": ["Готовится микс…", "Preparing the mix…"], "Tanlangan klipni 4 ta trekka ajratadi: baraban, bas, vokal, boshqa (HPSS usuli).": ["Разделяет выбранный клип на 4 трека: ударные, бас, вокал, остальное (метод HPSS).", "Splits the selected clip into 4 tracks: drums, bass, vocal, other (HPSS method)."]};
+ for(const k in X2)if(!U.D[k])U.D[k]=X2[k];
+ const X3={"Hammasi brauzerda, internetsiz. Klip":["Всё в браузере, без интернета. Клип","Everything in the browser, no internet. Clip"],"tanlanmagan (klipni bosing)":["не выбран (щёлкните клип)","none selected (click a clip)"],"vokal bilan baraban qisman aralashishi mumkin. 4 daqiqagacha.":["вокал и ударные могут частично смешиваться. До 4 минут.","vocal and drums may partly bleed into each other. Up to 4 minutes."]};
+ for(const k in X3)if(!U.D[k])U.D[k]=X3[k];
  const R=[
+ [/^Hammasi brauzerda, internetsiz\. Klip: (.+) · (\d+) Hz · (\d+) kanal$/,['Всё в браузере, без интернета. Клип: $1 · $2 Гц · $3 кан.','Everything in the browser, no internet. Clip: $1 · $2 Hz · $3 ch']],
+ [/^Hammasi brauzerda, internetsiz\. Klip: tanlanmagan \(klipni bosing\)$/,['Всё в браузере, без интернета. Клип: не выбран (щёлкните клип)','Everything in the browser, no internet. Clip: none selected (click a clip)']],
+ [/^Hammasi brauzerda, internetsiz\. Klip: (.+)$/,['Всё в браузере, без интернета. Клип: $1','Everything in the browser, no internet. Clip: $1']],
+ [/^(\d+) nota$/,['$1 нот','$1 notes']],
+ [/^(\d+) ta nota topildi\.$/,['Найдено нот: $1.','$1 notes found.']],
+ [/^Qayta hisoblash: (\d+)%$/,['Пересчёт: $1%','Resampling: $1%']],
+ [/^(Spektr|HPSS|Ajratish): (\d+)%$/,['$1: $2%','$1: $2%']],
+ [/^Sample rate o‘zgartirilmoqda \((\d+) → (\d+) Hz\)…$/,['Меняется sample rate ($1 → $2 Гц)…','Converting sample rate ($1 → $2 Hz)…']],
+ [/^(\d+(?:\.\d+)?) kHz · (.+) WAV yuklandi \((.+) MB\)\.$/,['WAV $1 кГц · $2 скачан ($3 МБ).','$1 kHz · $2 WAV downloaded ($3 MB).']],
+ [/^4 ta stem tayyor \((.+) s\)\. HPSS usuli — AI model emas: vokal bilan baraban qisman aralashishi mumkin\.$/,['4 стема готовы ($1 с). Метод HPSS — не AI-модель: вокал и ударные могут частично смешиваться.','4 stems ready ($1 s). HPSS method — not an AI model: vocal and drums may partly bleed.']],
+ [/^Konvertatsiya xatosi: (.+)$/,['Ошибка конвертации: $1','Conversion error: $1']],,
   [/^(\d+) ta kanal$/,['$1 каналов','$1 channels']],
   [/^Avto balans qo‘llandi \((\d+) trek\)\.?$/,['Авто-баланс применён ($1 тр.).','Auto balance applied ($1 tracks).']],
   [/^Asos: (.+) \((.+) LUFS\) · LUFS bo‘yicha taxminiy balans$/,['Основа: $1 ($2 LUFS) · приблизительный баланс по LUFS','Reference: $1 ($2 LUFS) · approximate balance by LUFS']],
@@ -12517,7 +12532,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  <button data-tool=sel title="Tanlash (1)">⬉ Tanlash</button><select id=dawszm title="Klip chetini cho‘zish rejimi"><option value=0>Oddiy o‘lcham<option value=1>Sizing Moves Contents<option value=2>Sizing Applies Time Stretch</select><label id=dawszl style="display:none;font-size:11px;align-items:center;gap:3px;color:#9fb0c9" title="Time stretch: tovush balandligi o‘zgarmasin (o‘chirilsa — tape kabi)"><input type=checkbox id=dawszp checked>balandlik saqlansin</label><button data-tool=split title="Kesish (2) — bosilgan joydan bo‘ladi">✂ Kesish</button><button data-tool=erase title="O‘chirish (3)">⌫ O‘chirgich</button><button data-tool=mute title="Ovozsiz (4)">🔇 Mute</button><span class=dsep></span>
  <button id=dawsn title="Tarmoqqa yopishish">🧲 Snap</button><select id=dawg title="Tarmoq turi"><option value=bar>Bar<option value=half>1/2<option value=beat>1/4<option value=eighth>1/8<option value=sixteenth>1/16<option value=off>Off</select><span class=dsep></span>
  <button id=dawzi title="Kattalashtirish (H yoki +)">🔍＋</button><button id=dawzo title="Kichraytirish (G yoki −)">🔍−</button><button id=dawzf title="Hammasini sig‘dirish">⤢ Sig‘dir</button><button id=dawty1 title="Treklarni balandroq qilish (Ctrl+↓ yoki Alt+g‘ildirak)">↕＋</button><button id=dawty2 title="Treklarni pastroq qilish (Ctrl+↑ yoki Alt+g‘ildirak)">↕−</button><button id=dawtyf title="Hamma treklarni bir ko‘rinishga sig‘dirish">⇕ Treklar</button><button id=dawfa title="Hamma narsani ekranga sig‘dirish — vaqt va treklar (Ctrl+Shift+A)">⛶ Hammasi</button><span class=dsep></span>
- <button id=dawsnd title="Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv">🎵 Sounds</button><button id=dawfx title="Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)">Fx</button><button id=dawmxb title="MixConsole — kanal qatorlari, balans (F3)">🎚 Mixer</button><button id=dawst title="Studio Setup: audio qurilma, kechikish, yozish (F4)">⚙ Studio</button><button id=dawai title="AI Studio: tahlil + avto-zanjir (EQ, kompressor, master)">🤖 AI</button><button id=dawpro title="Pro vositalar: Stem, Spectral, Automation, Bus, Sidechain, Export">🛠 Pro</button><button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
+ <button id=dawsnd title="Sound kutubxonasi: kino, teatr FX, aranjirovka samplelari (oflayn) va onlayn qidiruv">🎵 Sounds</button><button id=dawfx title="Effektlar kutubxonasi: reverb, delay, distortion, EQ… (tanlangan trek yoki Master)">Fx</button><button id=dawmxb title="MixConsole — kanal qatorlari, balans (F3)">🎚 Mixer</button><button id=dawst title="Studio Setup: audio qurilma, kechikish, yozish (F4)">⚙ Studio</button><button id=dawai title="AI Studio: tahlil + avto-zanjir (EQ, kompressor, master)">🤖 AI</button><button id=dawcvt title="Konvertor: sample rate, bit depth, stem ajratish, audio → MIDI">🔁 Konvert</button><button id=dawpro title="Pro vositalar: Stem, Spectral, Automation, Bus, Sidechain, Export">🛠 Pro</button><button id=dawat title="Yangi audio trek qo‘shish">＋ Trek</button><button id=dawdm title="Drum machine + sampler (BeatBox 16): 16 pad, step-sequencer, swing, effektlar">🥁 Drum</button><button id=dawim title="Audio faylni import qilish (yoki shu yerga tashlang)">📥 Import</button><button id=dawex title="Hamma treklarni birlashtirib WAV sifatida yuklash">📤 Miks (WAV)</button><input type=file id=dawfile accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac,.opus" multiple hidden>
 </div>
 <div class=dinfo><span id=dawi>No Object Selected</span><span style="margin-left:auto">Space — o‘ynash · Ctrl+Shift+A — hammasini ekranga sig‘dirish · Ctrl+↑/↓ yoki Alt+g‘ildirak — trek balandligi · S — kesish · Alt (bosib tur) — vaqtincha ✂ qaychi · Ctrl+Alt+sudrash — nusxa · bo‘sh joydan sudrab — ko‘p klip belgilash · Shift+bosish · Ctrl+A — hammasi · P — locator = tanlov · H/G — zoom +/− · Del — o‘chirish · Ctrl+D — nusxa · 1-4 — asboblar · Ctrl+g‘ildirak — masshtab</span></div>
 <div class=dmid><div class=dleft><div class=dlh><span>Treklar</span><button id=dawat2 title="Trek qo‘shish">＋</button></div><div id=dawheads></div></div><div class=dright><canvas id=dawcv></canvas><input type=range id=dawsx min=0 max=60 step=.1 value=0></div><div class=dfxp id=dawpan hidden></div></div>
@@ -12539,7 +12554,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   root.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{V.tool=b.dataset.tool;ui()});
   q('dawsn').onclick=()=>{D.snap=!D.snap;ui();persist()};q('dawg').onchange=e=>{D.grid=e.target.value;persist()};
   {const sz=q('dawszm'),sl=q('dawszl'),sp=q('dawszp');try{V.szm=+localStorage.getItem('daftar-daw-szm')||0;V.szp=localStorage.getItem('daftar-daw-szp')!=='0'}catch(_){V.szm=0;V.szp=true}sz.value=V.szm;sp.checked=V.szp!==false;sl.style.display=V.szm==2?'inline-flex':'none';sz.onchange=()=>{V.szm=+sz.value;sl.style.display=V.szm==2?'inline-flex':'none';try{localStorage.setItem('daftar-daw-szm',V.szm)}catch(_){}};sp.onchange=()=>{V.szp=sp.checked;try{localStorage.setItem('daftar-daw-szp',sp.checked?'1':'0')}catch(_){}}}
-  q('dawsnd').onclick=()=>{window.__dawui&&__dawui.toggle('snd')};q('dawfx').onclick=()=>{window.__dawui&&__dawui.toggle('fx')};q('dawmxb').onclick=()=>{window.__dawmx&&__dawmx.toggle()};q('dawst').onclick=()=>{window.__dawst&&__dawst.open()};q('dawai').onclick=()=>{window.__dawui&&__dawui.toggle('ai')};q('dawpro').onclick=()=>{window.__dawui&&__dawui.toggle('pro')};q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
+  q('dawsnd').onclick=()=>{window.__dawui&&__dawui.toggle('snd')};q('dawfx').onclick=()=>{window.__dawui&&__dawui.toggle('fx')};q('dawmxb').onclick=()=>{window.__dawmx&&__dawmx.toggle()};q('dawst').onclick=()=>{window.__dawst&&__dawst.open()};q('dawai').onclick=()=>{window.__dawui&&__dawui.toggle('ai')};q('dawpro').onclick=()=>{window.__dawui&&__dawui.toggle('pro')};q("dawcvt").onclick=()=>{window.__dawui&&__dawui.toggle("cvt")};q('dawls').onclick=()=>locSel();q('dawfa').onclick=()=>fitAll();q('dawty1').onclick=()=>zoomTracks(1.25);q('dawty2').onclick=()=>zoomTracks(1/1.25);q('dawtyf').onclick=()=>fitTracks();q('dawzi').onclick=()=>zoom(1.35);q('dawzo').onclick=()=>zoom(1/1.35);q('dawzf').onclick=()=>{const e=Math.max(4,projEnd()+1);D.zx=Math.max(2,Math.min(800,(V.cw-20)/e));V.sx=0;draw();persist()};
   const addT=()=>{hist();const t=addTrack();D.selT=t.id;buildHeads();draw();persist()};q('dawat').onclick=addT;q('dawat2').onclick=addT;q('dawdm').onclick=()=>menu(q('dawdm'),[{t:'🥁 Trap beat',fn:()=>addDrum('trap')},{t:'🥁 Boom Bap',fn:()=>addDrum('boombap')},{t:'🥁 House',fn:()=>addDrum('house')},{t:'🥁 Drill',fn:()=>addDrum('drill')},{t:'🥁 Bo‘sh pattern',fn:()=>addDrum('empty')}]);
   q('dawim').onclick=()=>q('dawfile').click();q('dawfile').onchange=e=>{const f=[...e.target.files];e.target.value='';const tr=selTrack();importFiles(f,tr?D.tracks.indexOf(tr):null,tr?D.ph:null)};
   q('dawex').onclick=()=>mixdown().catch(e=>{console.warn(e);msg2('❌ Miks tayyorlanmadi: '+(e&&e.message||'xato'))});
@@ -13080,11 +13095,11 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  let styled=false;
  function ensureStyle(){if(styled)return;styled=true;const s=document.createElement('style');s.textContent=CSS;document.head.append(s)}
  const panel=()=>document.getElementById('dawpan');
- const EXT=['ai','pro'];
+ const EXT=['ai','pro','cvt'];
  function toggle(m){const p=panel();if(!p)return;ensureStyle();if(ST.mode===m&&!p.hidden){close();return}open(m)}
  function open(m,trackId){const p=panel();if(!p)return;ensureStyle();const prevM=ST.mode;ST.mode=m;if(m=='fx'){if(trackId){ST.fTab='chain';ST.tgt=trackId}else if(prevM!=='fx')ST.fTab='fx'}p.hidden=false;sync();render()}
  function close(){const p=panel();if(p)p.hidden=true;ST.mode=null;stopPrev();sync();setTimeout(()=>window.dispatchEvent(new Event('resize')),30)}
- function sync(){const a=document.getElementById('dawsnd'),b=document.getElementById('dawfx');if(a)a.classList.toggle('on',ST.mode=='snd');if(b)b.classList.toggle('on',ST.mode=='fx');['ai','pro'].forEach(k=>{const e=document.getElementById('daw'+k);if(e)e.classList.toggle('on',ST.mode==k)})}
+ function sync(){const a=document.getElementById('dawsnd'),b=document.getElementById('dawfx');if(a)a.classList.toggle('on',ST.mode=='snd');if(b)b.classList.toggle('on',ST.mode=='fx');['ai','pro','cvt'].forEach(k=>{const e=document.getElementById('daw'+k);if(e)e.classList.toggle('on',ST.mode==k)})}
  /* ---------- ovoz oldindan eshitish ---------- */
  function stopPrev(){if(ST.prev){try{ST.prev.src&&ST.prev.src.stop()}catch(_){}try{ST.prev.el&&ST.prev.el.pause()}catch(_){}ST.prev=null;const r=panel();r&&r.querySelectorAll('.zpl.on').forEach(x=>{x.classList.remove('on');x.textContent='▶'})}}
  async function playBuf(b,btn){stopPrev();const ac=W().ctxOn(),src=ac.createBufferSource(),g=ac.createGain();g.gain.value=.9;src.buffer=b;src.connect(g);g.connect(ac.destination);src.onended=()=>{if(ST.prev&&ST.prev.src===src)stopPrev()};src.start();ST.prev={src};if(btn){btn.classList.add('on');btn.textContent='■'}}
@@ -13443,14 +13458,14 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   const busHtml=D.buses.map(b=>`<div class=xcd style="background:#232b3a" data-b="${b.id}"><div class=xrw><input type=text value="${E(b.n)}" data-a=bn><input type=range min=0 max=1.5 step=.01 value="${b.vol==null?1:b.vol}" data-a=bv title="Bus balandligi"><button class=xs2 data-a=bfx title="Bus uchun effektlar">Fx</button><button class=xs2 data-a=bd>✕</button></div><div class=xrw>${D.tracks.map(t=>`<label style="font-size:11px;display:flex;gap:3px;align-items:center"><input type=checkbox data-a=bt data-t="${t.id}" ${t.bus==b.id?'checked':''}>${E(t.n)}</label>`).join('')}</div></div>`).join('');
   const scHtml=D.sc.map((s,i)=>`<div class=xcd style="background:#232b3a" data-s="${i}"><div class=xrw><select data-a=ss>${opt(D.tracks,s.src)}</select>→<select data-a=sd>${opt(D.tracks,s.dst)}</select><button class=xs2 data-a=son style="${s.on===0?'opacity:.5':''}">${s.on===0?'o‘chiq':'yoniq'}</button><button class=xs2 data-a=sx>✕</button></div><div class=xrw><small style="width:62px">Pasayish</small><input type=range min=1 max=18 step=.5 value="${s.db==null?6:s.db}" data-a=sdb><b style="font-size:11px">${s.db==null?6:s.db} dB</b></div><div class=xrw><small style="width:62px">Qaytish</small><input type=range min=40 max=400 step=5 value="${s.rel||120}" data-a=srl><b style="font-size:11px">${s.rel||120} ms</b></div></div>`).join('');
   shell(p,'🛠 Pro vositalar',`<p class=xs>Cubase'dagi zamonaviy funksiyalar — Daftar DAW ichida.</p>
-  <div class=xcd><b>① Stem Separation <button class=xb2 id=xst>Ajratish</button></b><small>Tanlangan klipni 4 ta trekka ajratadi: bas, markaz (vokal), yon (stereo), yuqori. <u>Taxminiy</u> — chastota/stereo bo‘yicha, AI model emas.</small></div>
+  <div class=xcd><b>① Stem Separation <button class=xb2 id=xst>Ajratish</button></b><small>Tanlangan klipni 4 ta trekka ajratadi: baraban, bas, vokal, boshqa (HPSS usuli). <u>Taxminiy</u> — AI model emas.</small></div>
   <div class=xcd><b>② Spectral Editing <button class=xb2 id=xsp>Ochish</button></b><small>Spektrdan keraksiz shovqin va rezonansni belgilab pasaytirish (avto-topish bor).</small></div>
   <div class=xcd><b>③ Automation</b><small>Trek balandligi (volume) chizig‘i — kuplet/naqorat dinamikasi.</small><div class=xrw><select id=xaut>${opt(D.tracks,ST.auTrack)}</select><button class=xs2 id=xauk>Kuplet → Naqorat</button><button class=xs2 id=xauc>Tozalash</button></div>${D.tracks.length?'<canvas class=xau id=xau></canvas>':'<small>Avval trek qo‘shing.</small>'}</div>
   <div class=xcd><b>④ Group Channels (Bus) <button class=xb2 id=xbadd>＋ Bus</button></b><small>Orkestr, xor, baraban — treklarni bitta Bus'ga yig‘ing; Bus'ga alohida Fx qo‘yish mumkin.</small>${busHtml}</div>
   <div class=xcd><b>⑤ Sidechain <button class=xb2 id=xsadd>＋ Qo‘shish</button></b><small>Manba trek (kick) bosilganda nishon trek (bas) pasayadi.</small>${scHtml}</div>
   <div class=xcd><b>⑥ Pattern Sequencer <button class=xb2 id=xpat>Ochish</button></b><small>Qo‘shimcha baraban va ritm — BeatBox 16 (16 pad, step-sequencer).</small></div>
   <div class=xcd><b>⑦ Quick Export</b><small>Tezkor audio: butun miks yoki har bir trek alohida (ZIP).</small><div class=xrw><button class=xs2 id=xmx>Miks (WAV)</button><button class=xs2 id=xsm>Stemlar (ZIP)</button></div><small>Format: WAV 16-bit (MP3 brauzerda mavjud emas).</small></div>`,p=>{
-   p.querySelector('#xst').onclick=stems;p.querySelector('#xsp').onclick=specOpen;p.querySelector('#xpat').onclick=()=>{const b=document.getElementById('dawdm');if(b)b.click()};p.querySelector('#xmx').onclick=()=>DW().mixdown();p.querySelector('#xsm').onclick=exportStems;
+   p.querySelector('#xst').onclick=()=>window.__dawcv?window.__dawcv.stems():stems();p.querySelector('#xsp').onclick=specOpen;p.querySelector('#xpat').onclick=()=>{const b=document.getElementById('dawdm');if(b)b.click()};p.querySelector('#xmx').onclick=()=>DW().mixdown();p.querySelector('#xsm').onclick=exportStems;
    const au=p.querySelector('#xaut');if(au)au.onchange=()=>{ST.auTrack=au.value;proPanel(p)};setTimeout(()=>auPanelWire(p),0);
    p.querySelector('#xbadd').onclick=()=>{DW().hist();D.buses.push({id:DW().rid(),n:'Bus '+(D.buses.length+1),vol:1,fx:[]});DW().persist();proPanel(p)};
    p.querySelectorAll('[data-b]').forEach(el=>{const b=D.buses.find(x=>x.id==el.dataset.b);el.querySelector('[data-a=bn]').onchange=e=>{b.n=e.target.value||b.n;DW().persist()};
@@ -13462,7 +13477,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
    p.querySelector('#xsadd').onclick=()=>{if(D.tracks.length<2){msg('Sidechain uchun kamida 2 ta trek kerak.');return}DW().hist();const k=D.tracks.find(t=>/kick|baraban|drum/i.test(t.n)&&!/bas/i.test(t.n))||D.tracks[0],bs=D.tracks.find(t=>/\bbas|bass/i.test(t.n)&&t!==k)||D.tracks.find(t=>t!==k);D.sc.push({id:DW().rid(),src:k.id,dst:bs.id,db:6,rel:120,on:1});DW().persist();rewire();proPanel(p)};
    p.querySelectorAll('[data-s]').forEach(el=>{const s=D.sc[+el.dataset.s];const g=a=>el.querySelector('[data-a='+a+']');g('ss').onchange=e=>{DW().hist();s.src=e.target.value;DW().persist();rewire()};g('sd').onchange=e=>{DW().hist();s.dst=e.target.value;DW().persist();rewire()};g('son').onclick=()=>{DW().hist();s.on=s.on===0?1:0;DW().persist();rewire();proPanel(p)};g('sx').onclick=()=>{DW().hist();D.sc.splice(+el.dataset.s,1);DW().persist();rewire();proPanel(p)};
     g('sdb').oninput=e=>{s.db=+e.target.value;e.target.nextElementSibling.textContent=s.db+' dB'};g('sdb').onchange=()=>{DW().persist();rewire()};g('srl').oninput=e=>{s.rel=+e.target.value;e.target.nextElementSibling.textContent=s.rel+' ms'};g('srl').onchange=()=>{DW().persist();rewire()}})})}
- window.__dawui.ext={ai:aiPanel,pro:proPanel};window.__dawui.specClose=specClose;window.__dawui.analyze=analyze;window.__dawui.plan=plan;
+ window.__dawui.ext={ai:aiPanel,pro:proPanel};window.__dawui.specClose=specClose;window.__dawui.proCss=css;window.__dawui.analyze=analyze;window.__dawui.plan=plan;
 })();
 
 /* ===== f6zst: Studio Setup — audio tizim sozlamalari (qurilma, kechikish, sample rate, yozish) ===== */
@@ -13587,6 +13602,171 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   mix();DW().buildHeads();DW().draw();DW().persist();try{window.__dawui.ctl.rewire()}catch(_){}build();
   const r=root.querySelector('#mxrs');r.innerHTML=`<div class=rs><div style="display:flex;align-items:center"><b style="color:#eaf0fc;flex:1">🤖 Avto balans natijasi</b><button id=mxrc style="height:22px">✕</button></div><div style="color:#8ea0c2;margin:2px 0 4px">Asos: ${E(lead.t.n)} (${anchor.toFixed(1)} LUFS) · LUFS bo‘yicha taxminiy balans</div><table><tr><th>Trek</th><th>Rol</th><th>LUFS</th><th>Ovoz</th><th>Pan</th></tr>${rows.map(x=>`<tr><td>${E(x.t.n)}</td><td>${x.r[3]}</td><td>${x.an.lufs.toFixed(1)}</td><td>${x.g>0?'+':''}${x.g.toFixed(1)} dB</td><td>${x.pan?panT(x.pan):'—'}</td></tr>`).join('')}</table><div style="margin-top:4px;color:#9fb0c9">${mvNote}</div><div style="margin-top:4px;color:#8ea0c2">Ctrl+Z — qaytarish. Quloq bilan tekshiring.</div></div>`;r.querySelector('#mxrc').onclick=()=>{r.innerHTML=''};msg('🤖 Avto balans qo‘llandi ('+rows.length+' trek).')}
  window.__dawmx={toggle,show,hide,autoBalance,render:()=>root&&build()};
+})();
+
+/* Konvertor: Sample Rate / Bit Depth / Stem Separation (HPSS) / Audio→MIDI */
+(function(){
+ const DW=()=>window.__daw,DD=()=>DW().get(),msg=t=>{try{window.msg(t)}catch(_){}};
+ const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const ST={sr:48000,bits:16,dither:1,q:1,busy:0,midi:null,mode:'mel',info:''};
+ const tick=()=>new Promise(r=>setTimeout(r,0));
+ const dl=(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)};
+ /* ---------- Sample Rate Conversion: oynali sinc (polifaza) ---------- */
+ async function resample(buf,newSr,qual,prog){
+  const sr=buf.sampleRate,ch=buf.numberOfChannels;if(sr===newSr){const o=[];for(let c=0;c<ch;c++)o.push(buf.getChannelData(c));return{sr,data:o}}
+  const HW=[8,16,32][qual]||16,ratio=sr/newSr,fc=Math.min(1,newSr/sr)*.97,PH=512,nT=2*HW;
+  const tab=new Float32Array((PH+1)*nT);const I0=x=>{let s=1,t=1,k=1;for(;k<30;k++){t*=(x/2/k)*(x/2/k);s+=t}return s},B=9,ib=I0(B);
+  for(let p=0;p<=PH;p++){const fr=p/PH;let sum=0;for(let k=0;k<nT;k++){const x=(k-HW+1)-fr;const a=Math.PI*x*fc;const sinc=Math.abs(x)<1e-9?fc:Math.sin(a)/(Math.PI*x);const r=x/HW;const w=Math.abs(r)>=1?0:I0(B*Math.sqrt(1-r*r))/ib;const v=sinc*w;tab[p*nT+k]=v;sum+=v}for(let k=0;k<nT;k++)tab[p*nT+k]/=sum}
+  const n=buf.length,m=Math.floor(n/ratio),out=[];
+  for(let c=0;c<ch;c++){const x=buf.getChannelData(c),y=new Float32Array(m);
+   for(let i=0;i<m;i++){const pos=i*ratio,i0=Math.floor(pos),fr=pos-i0,pf=fr*PH,pi=Math.floor(pf),pw=pf-pi,o1=pi*nT,o2=(pi+1)*nT;let s=0;
+    for(let k=0;k<nT;k++){const j=i0-HW+1+k;if(j<0||j>=n)continue;s+=x[j]*(tab[o1+k]*(1-pw)+tab[o2+k]*pw)}y[i]=s;
+    if((i&0x3ffff)===0x3fff0){await tick();prog&&prog((c+i/m)/ch)}}
+   out.push(y)}
+  return{sr:newSr,data:out}}
+ /* ---------- WAV yozish: 16/24 (TPDF dither) / 32-float ---------- */
+ function wavBits(data,sr,bits,dither){
+  const ch=data.length,n=data[0].length,bps=bits==32?4:bits/8,len=n*ch*bps,out=new ArrayBuffer(44+len),v=new DataView(out),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+len,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,bits==32?3:1,true);v.setUint16(22,ch,true);v.setUint32(24,sr,true);v.setUint32(28,sr*bps*ch,true);v.setUint16(32,bps*ch,true);v.setUint16(34,bits,true);w(36,'data');v.setUint32(40,len,true);
+  let o=44;const sc=bits==16?32767:8388607,dz=dither&&bits<32?1/sc:0;
+  for(let i=0;i<n;i++)for(let c=0;c<ch;c++){let s=data[c][i];
+   if(bits==32){v.setFloat32(o,s,true);o+=4;continue}
+   if(dz)s+=(Math.random()-Math.random())*dz;s=s>1?1:s<-1?-1:s;
+   if(bits==16){v.setInt16(o,Math.round(s*sc),true);o+=2}else{const q=Math.round(s*sc)&0xffffff;v.setUint8(o,q&255);v.setUint8(o+1,(q>>8)&255);v.setUint8(o+2,(q>>16)&255);o+=3}}
+  return out}
+ function clipSlice(sc){const a=DW().A.get(sc.c.asset);if(!a||!a.buf)return null;const b=a.buf,sr=b.sampleRate,s0=Math.max(0,Math.floor(sc.c.off*sr)),s1=Math.min(b.length,s0+Math.floor(sc.c.dur*sr));return{sr,data:[...Array(b.numberOfChannels).keys()].map(c=>b.getChannelData(c).subarray(s0,s1))}}
+ async function doConvert(what){
+  if(ST.busy)return;ST.busy=1;ref();try{
+   let src,name='daftar';
+   if(what=='clip'){const sc=DW().selClip();if(!sc){msg('Avval klipni tanlang.');return}src=clipSlice(sc);if(!src){msg('Klip audiosi yuklanmagan.');return}name=(sc.c.name||'klip').replace(/[\\/:*?"<>|]/g,'_')}
+   else{msg('⏳ Miks tayyorlanmoqda…');const r=await DW().renderBuf();if(!r){msg('Eksport uchun trek yo‘q.');return}src={sr:r.sampleRate,data:[...Array(r.numberOfChannels).keys()].map(c=>r.getChannelData(c))};name='miks'}
+   const buf0={sampleRate:src.sr,numberOfChannels:src.data.length,length:src.data[0].length,getChannelData:c=>src.data[c]};
+   msg(src.sr===ST.sr?'⏳ Bit chuqurligi o‘zgartirilmoqda…':'⏳ Sample rate o‘zgartirilmoqda ('+src.sr+' → '+ST.sr+' Hz)…');
+   const r=await resample(buf0,ST.sr,ST.q,p=>{ST.info='Qayta hisoblash: '+Math.round(p*100)+'%';const e=document.getElementById('cvinf');if(e)e.textContent=ST.info});
+   const ab=wavBits(r.data,r.sr,ST.bits,ST.dither);
+   dl(new Blob([ab],{type:'audio/wav'}),name+' — '+(r.sr/1000)+'kHz '+(ST.bits==32?'32f':ST.bits)+'bit.wav');
+   msg('✅ '+(r.sr/1000)+' kHz · '+(ST.bits==32?'32-bit float':ST.bits+'-bit')+' WAV yuklandi ('+(ab.byteLength/1048576).toFixed(1)+' MB).');
+  }catch(e){console.warn(e);msg('❌ Konvertatsiya xatosi: '+(e&&e.message||e))}finally{ST.busy=0;ST.info='';ref()}}
+ /* ---------- Stem Separation: HPSS + markaz maskasi ---------- */
+ function fftInit(N){const lv=Math.log2(N),rev=new Uint32Array(N);for(let i=0;i<N;i++){let r=0;for(let b=0;b<lv;b++)if(i&(1<<b))r|=1<<(lv-1-b);rev[i]=r}const cs=new Float32Array(N/2),sn=new Float32Array(N/2);for(let i=0;i<N/2;i++){cs[i]=Math.cos(2*Math.PI*i/N);sn[i]=-Math.sin(2*Math.PI*i/N)}
+  return function(re,im,inv){const n=N;for(let i=0;i<n;i++){const j=rev[i];if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
+   for(let sz=2;sz<=n;sz<<=1){const h=sz>>1,st=n/sz;for(let i=0;i<n;i+=sz)for(let k=0;k<h;k++){const wr=cs[k*st],wi=inv?-sn[k*st]:sn[k*st],a=i+k,b=a+h,tr=re[b]*wr-im[b]*wi,ti=re[b]*wi+im[b]*wr;re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti}}
+   if(inv)for(let i=0;i<n;i++){re[i]/=n;im[i]/=n}}}
+ function med(a,n){/* kichik massivning medianasi (insertion sort) */for(let i=1;i<n;i++){const v=a[i];let j=i-1;while(j>=0&&a[j]>v){a[j+1]=a[j];j--}a[j+1]=v}return a[n>>1]}
+ async function stems(){
+  if(ST.busy)return;const sc=DW().selClip();if(!sc){msg('Avval ajratiladigan klipni tanlang.');return}const sl=clipSlice(sc);if(!sl){msg('Klip audiosi yuklanmagan.');return}
+  ST.busy=1;ref();const t0=performance.now();
+  try{
+   const sr=sl.sr,maxN=Math.min(sl.data[0].length,Math.floor(sr*240)),L=sl.data[0].subarray(0,maxN),R=(sl.data[1]||sl.data[0]).subarray(0,maxN);
+   const N=2048,hop=1024,K=N/2+1,F=Math.max(1,Math.ceil((maxN-N)/hop)+1),fft=fftInit(N),win=new Float32Array(N);for(let i=0;i<N;i++)win[i]=Math.sin(Math.PI*(i+.5)/N);
+   const SL=[new Float32Array(F*K),new Float32Array(F*K)],SI=[new Float32Array(F*K),new Float32Array(F*K)],MG=new Float32Array(F*K),re=new Float32Array(N),im=new Float32Array(N);
+   msg('⏳ Stem: spektr hisoblanmoqda…');
+   for(let f=0;f<F;f++){for(let c=0;c<2;c++){const x=c?R:L;for(let i=0;i<N;i++){re[i]=(x[f*hop+i]||0)*win[i];im[i]=0}fft(re,im);for(let k=0;k<K;k++){SL[c][f*K+k]=re[k];SI[c][f*K+k]=im[k]}}
+    for(let k=0;k<K;k++){const a=Math.hypot(SL[0][f*K+k]+SL[1][f*K+k],SI[0][f*K+k]+SI[1][f*K+k])*.5;MG[f*K+k]=a}
+    if(f%200==199){await tick();ST.info='Spektr: '+Math.round(f/F*100)+'%';const e=document.getElementById('cvinf');if(e)e.textContent=ST.info}}
+   /* HPSS: vaqt bo'ylab mediana = garmonik, chastota bo'ylab = perkussiv */
+   const WT=15,WF=15,H=new Float32Array(F*K),P=new Float32Array(F*K),tmp=new Float32Array(Math.max(WT,WF));
+   for(let f=0;f<F;f++){for(let k=0;k<K;k++){let n=0;for(let d=-(WT>>1);d<=(WT>>1);d++){const g=f+d;if(g>=0&&g<F)tmp[n++]=MG[g*K+k]}H[f*K+k]=med(tmp,n);n=0;for(let d=-(WF>>1);d<=(WF>>1);d++){const g=k+d;if(g>=0&&g<K)tmp[n++]=MG[f*K+g]}P[f*K+k]=med(tmp,n)}
+    if(f%150==149){await tick();ST.info='HPSS: '+Math.round(f/F*100)+'%';const e=document.getElementById('cvinf');if(e)e.textContent=ST.info}}
+   /* maskalar (yig'indisi = 1): drum, bas, vokal, boshqa */
+   const hz=k=>k*sr/N,out=[0,1,2,3].map(()=>[new Float32Array(F*K),new Float32Array(F*K),new Float32Array(F*K),new Float32Array(F*K)]);
+   const mk=[[],[],[],[]];
+   const rr=[new Float32Array(N),new Float32Array(N)],ii=[new Float32Array(N),new Float32Array(N)];
+   const names=['Baraban (perkussiv)','Bas (<180 Hz)','Vokal (markaz, garmonik)','Boshqa (cholg‘ular/yon)'],res=[[new Float32Array(maxN+N),new Float32Array(maxN+N)],[new Float32Array(maxN+N),new Float32Array(maxN+N)],[new Float32Array(maxN+N),new Float32Array(maxN+N)],[new Float32Array(maxN+N),new Float32Array(maxN+N)]],nrm=new Float32Array(maxN+N);
+   for(let i=0;i<N;i++){}
+   for(let f=0;f<F;f++){
+    for(let i=0;i<N;i++)nrm[f*hop+i]+=win[i]*win[i];
+    const m=[new Float32Array(K),new Float32Array(K),new Float32Array(K),new Float32Array(K)];
+    for(let k=0;k<K;k++){const h=H[f*K+k],p=P[f*K+k],h2=h*h,p2=p*p,den=h2+p2+1e-12,mh=h2/den,mp=p2/den;
+     const f0=hz(k),lowW=f0<140?1:f0>220?0:1-(f0-140)/80;
+     const l=Math.hypot(SL[0][f*K+k],SI[0][f*K+k]),r=Math.hypot(SL[1][f*K+k],SI[1][f*K+k]),cen=(2*Math.min(l,r)/(l+r+1e-9)),c2=cen*cen*cen;
+     const hiW=f0<180?0:f0>9000?Math.max(0,1-(f0-9000)/3000)*1:1; /* vokal diapazoni */
+     const vocW=mh*(1-lowW)*c2*hiW;
+     m[0][k]=mp;m[1][k]=mh*lowW;m[2][k]=vocW;m[3][k]=Math.max(0,1-m[0][k]-m[1][k]-m[2][k])}
+    for(let s=0;s<4;s++)for(let c=0;c<2;c++){for(let k=0;k<K;k++){const g=m[s][k];rr[c][k]=SL[c][f*K+k]*g;ii[c][k]=SI[c][f*K+k]*g}for(let k=1;k<N/2;k++){rr[c][N-k]=rr[c][k];ii[c][N-k]=-ii[c][k]}ii[c][0]=0;ii[c][N/2]=0;fft(rr[c],ii[c],true);const o=res[s][c];for(let i=0;i<N;i++)o[f*hop+i]+=rr[c][i]*win[i]}
+    if(f%40==39){await tick();ST.info='Ajratish: '+Math.round(f/F*100)+'%';const e=document.getElementById('cvinf');if(e)e.textContent=ST.info}}
+   const AC=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(2,1,sr),files=[];
+   for(let s=0;s<4;s++){const bf=AC.createBuffer(2,maxN,sr);for(let c=0;c<2;c++){const d=bf.getChannelData(c),o=res[s][c];for(let i=0;i<maxN;i++)d[i]=nrm[i]>1e-6?o[i]/nrm[i]:0}files.push(new File([DAWSND.wav(bf)],(sc.c.name||'klip')+' — '+names[s]+'.wav',{type:'audio/wav'}))}
+   await DW().importFiles(files,null,sc.c.start);
+   msg('✅ 4 ta stem tayyor ('+((performance.now()-t0)/1000).toFixed(1)+' s). HPSS usuli — AI model emas: vokal bilan baraban qisman aralashishi mumkin.');
+  }catch(e){console.warn(e);msg('❌ Stem ajratish xatosi: '+(e&&e.message||e))}finally{ST.busy=0;ST.info='';ref()}}
+ /* ---------- Audio → MIDI ---------- */
+ function yin(x,sr,i0,W,fmin,fmax){/* [freq, ishonch] */
+  const tmax=Math.floor(sr/fmin),tmin=Math.floor(sr/fmax),n=W,d=new Float32Array(tmax+1);
+  for(let t=1;t<=tmax;t++){let s=0;for(let j=0;j<n;j+=2){const a=x[i0+j]-x[i0+j+t];s+=a*a}d[t]=s}
+  let run=0;const cm=new Float32Array(tmax+1);cm[0]=1;for(let t=1;t<=tmax;t++){run+=d[t];cm[t]=d[t]*t/(run||1)}
+  let tau=-1;for(let t=tmin;t<tmax;t++){if(cm[t]<.15){while(t+1<tmax&&cm[t+1]<cm[t])t++;tau=t;break}}
+  if(tau<0){let mn=1e9,mi=-1;for(let t=tmin;t<=tmax;t++)if(cm[t]<mn){mn=cm[t];mi=t}if(mn>.35)return[0,0];tau=mi}
+  let b=tau;if(tau>1&&tau<tmax){const a=cm[tau-1],c=cm[tau],e=cm[tau+1],dn=a+e-2*c;if(Math.abs(dn)>1e-9)b=tau+(a-e)/(2*dn)}
+  return[sr/b,1-Math.min(1,cm[tau])]}
+ function detectMelody(sl){
+  const x0=sl.data[0],n=x0.length,mono=new Float32Array(n),ch=sl.data.length;for(let i=0;i<n;i++){let s=0;for(let c=0;c<ch;c++)s+=sl.data[c][i];mono[i]=s/ch}
+  const sr=sl.sr,ds=Math.max(1,Math.round(sr/22050)),x=ds>1?(()=>{const m=Math.floor(n/ds),o=new Float32Array(m);for(let i=0;i<m;i++){let s=0;for(let k=0;k<ds;k++)s+=mono[i*ds+k];o[i]=s/ds}return o})():mono,fs=sr/ds;
+  const W=Math.round(fs*.04),hop=Math.round(fs*.01),fr=[];let gmax=0;
+  for(let i=0;i+W+Math.floor(fs/60)+2<x.length;i+=hop){let e=0;for(let j=0;j<W;j++)e+=x[i+j]*x[i+j];e=Math.sqrt(e/W);if(e>gmax)gmax=e;fr.push({t:i/fs,e,f:0,c:0,i})}
+  const thr=gmax*.03;
+  for(const f of fr){if(f.e<thr)continue;const r=yin(x,fs,f.i,W,60,1100);f.f=r[0];f.c=r[1]}
+  /* MIDI nota ketma-ketligi */
+  const midi=fr.map(f=>f.f>0&&f.c>.55?69+12*Math.log2(f.f/440):NaN);
+  /* median silliqlash */
+  const sm=midi.map((v,i)=>{const a=[];for(let d=-2;d<=2;d++){const u=midi[i+d];if(u===u&&u!==undefined)a.push(u)}if(a.length<3||v!==v)return NaN;a.sort((p,q)=>p-q);return a[a.length>>1]});
+  const notes=[];let cur=null,gap=0;
+  const flush=()=>{if(cur&&cur.n>=4){const ps=cur.ps.slice().sort((a,b)=>a-b),pm=Math.round(ps[ps.length>>1]);notes.push({p:Math.max(0,Math.min(127,pm)),t:cur.t0,d:cur.t1-cur.t0+.01,v:Math.max(30,Math.min(127,Math.round(40+cur.es/cur.n/gmax*90)))})}cur=null};
+  for(let i=0;i<sm.length;i++){const v=sm[i],t=fr[i].t;
+   if(v!==v){if(cur){gap++;if(gap>3)flush()}continue}
+   if(cur&&Math.abs(v-cur.last)<.8){cur.t1=t;cur.n++;cur.ps.push(v);cur.es+=fr[i].e;cur.last=cur.last*.7+v*.3;gap=0}
+   else{flush();cur={t0:t,t1:t,n:1,ps:[v],es:fr[i].e,last:v};gap=0}}
+  flush();return notes}
+ function detectDrums(sl){
+  const sr=sl.sr,n=sl.data[0].length,N=2048,hop=512,fft=fftInit(N),w=new Float32Array(N);for(let i=0;i<N;i++)w[i]=.5-.5*Math.cos(2*Math.PI*i/N);
+  const re=new Float32Array(N),im=new Float32Array(N),K=N/2,prev=new Float32Array(K),fl=[],bands=[];const b1=Math.floor(160/sr*N),b2=Math.floor(2500/sr*N);
+  for(let p=0;p+N<=n;p+=hop){for(let i=0;i<N;i++){let s=0;for(const d of sl.data)s+=d[p+i];re[i]=s/sl.data.length*w[i];im[i]=0}fft(re,im);let fx=0,lo=0,mi=0,hi=0;for(let k=1;k<K;k++){const m=Math.sqrt(re[k]*re[k]+im[k]*im[k]),e=m*m;const dd=m-prev[k];if(dd>0)fx+=dd;prev[k]=m;if(k<b1)lo+=e;else if(k<b2)mi+=e;else hi+=e}fl.push(fx);bands.push([lo,mi,hi])}
+  const L=fl.length,sm=fl.map((v,i)=>{let s=0,c=0;for(let d=-8;d<=8;d++)if(fl[i+d]!==undefined){s+=fl[i+d];c++}return s/c}),notes=[];let last=-99,mx=Math.max(...fl)||1;const gap=Math.round(.06*sr/hop);
+  for(let i=0;i<L;i++){const pv=i?fl[i-1]:0,nx=i<L-1?fl[i+1]:0;if(fl[i]>pv&&fl[i]>=nx&&fl[i]>sm[i]*1.6+mx*.04&&i-last>gap){last=i;let lo=0,mi=0,hi=0;for(let d=0;d<4;d++){const b=bands[Math.min(i+d,L-1)];lo+=b[0];mi+=b[1];hi+=b[2]}const tt=lo+mi+hi+1e-12,fl2=lo/tt,fh=hi/tt;const p=fl2>.5?36:fh>.4?42:38;notes.push({p,t:Math.max(0,i*hop/sr),d:.1,v:Math.max(40,Math.min(127,Math.round(40+fl[i]/mx*87))),dr:1})}}
+  return notes}
+ function writeMidi(notes,bpm,drums){
+  const ppq=480,tps=ppq*bpm/60,ev=[];notes.forEach(n=>{const a=Math.round(n.t*tps),b=Math.max(a+1,Math.round((n.t+n.d)*tps));ev.push([a,1,n.p,n.v],[b,0,n.p,0])});
+  ev.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const bytes=[],vl=v=>{const o=[v&127];while(v>>=7)o.unshift((v&127)|128);return o};
+  const mpq=Math.round(60000000/bpm);bytes.push(0,0xff,0x51,3,(mpq>>16)&255,(mpq>>8)&255,mpq&255);bytes.push(0,0xff,0x58,4,4,2,24,8);
+  const chn=drums?9:0;let t=0;ev.forEach(e=>{bytes.push(...vl(e[0]-t),(e[1]?0x90:0x80)|chn,e[2],e[3]);t=e[0]});bytes.push(0,0xff,0x2f,0);
+  const hd=[0x4d,0x54,0x68,0x64,0,0,0,6,0,0,0,1,ppq>>8,ppq&255],tl=bytes.length,tr=[0x4d,0x54,0x72,0x6b,(tl>>24)&255,(tl>>16)&255,(tl>>8)&255,tl&255];
+  return new Blob([new Uint8Array([...hd,...tr,...bytes])],{type:'audio/midi'})}
+ const NN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'],nn=p=>NN[p%12]+(Math.floor(p/12)-1);
+ async function toMidi(){
+  if(ST.busy)return;const sc=DW().selClip();if(!sc){msg('Avval klipni tanlang.');return}const sl=clipSlice(sc);if(!sl){msg('Klip audiosi yuklanmagan.');return}
+  ST.busy=1;ref();await tick();
+  try{msg('⏳ Audio → MIDI…');const lim=Math.min(sl.data[0].length,Math.floor(sl.sr*180));const cut={sr:sl.sr,data:sl.data.map(d=>d.subarray(0,lim))};
+   const notes=ST.mode=='dr'?detectDrums(cut):detectMelody(cut);
+   ST.midi={notes,drums:ST.mode=='dr',name:(sc.c.name||'klip').replace(/[\\/:*?"<>|]/g,'_')};
+   msg(notes.length?'✅ '+notes.length+' ta nota topildi.':'⚠ Nota topilmadi — monofonik (bitta ovozli) va aniq audio kerak.');
+  }catch(e){console.warn(e);msg('❌ MIDI xatosi: '+(e&&e.message||e))}finally{ST.busy=0;ref()}}
+ function playMidi(){const m=ST.midi;if(!m||!m.notes.length)return;const ctx=DW().ctxOn2();if(ctx.state=='suspended')ctx.resume();const t0=ctx.currentTime+.1;
+  m.notes.slice(0,600).forEach(n=>{const g=ctx.createGain();g.connect(ctx.destination);const a=t0+n.t,b=a+Math.min(n.d,2);g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(.18*n.v/127,a+.01);g.gain.linearRampToValueAtTime(0,b);
+   if(m.drums){const o=ctx.createOscillator();o.type=n.p==36?'sine':'triangle';o.frequency.setValueAtTime(n.p==36?120:n.p==38?220:5000,a);if(n.p==36)o.frequency.exponentialRampToValueAtTime(45,a+.12);o.connect(g);o.start(a);o.stop(a+.15)}
+   else{const o=ctx.createOscillator();o.type='triangle';o.frequency.value=440*Math.pow(2,(n.p-69)/12);o.connect(g);o.start(a);o.stop(b+.02)}})}
+ /* ---------- Panel ---------- */
+ let panEl=null;function ref(){if(panEl&&document.body.contains(panEl)&&window.__dawui&&__dawui.render)__dawui.render()}
+ function panel(p){panEl=p;try{__dawui.proCss&&__dawui.proCss()}catch(_){}const sc=(()=>{try{return DW().selClip()}catch(_){return null}})(),a=sc&&DW().A.get(sc.c.asset),m=ST.midi,dis=ST.busy?'disabled':'';
+  const opt=(arr,v,f)=>arr.map(x=>`<option value="${x}" ${x==v?'selected':''}>${f?f(x):x}</option>`).join('');
+  p.innerHTML=`<div class=xp><div class=xh><b>🔁 Konvertor va MIDI</b><button id=xpx title="Yopish">✕</button></div><div class=xb>
+  <p class=xs>Hammasi brauzerda, internetsiz. Klip: ${sc?E(sc.c.name||'tanlangan')+(a&&a.buf?' · '+a.buf.sampleRate+' Hz · '+a.buf.numberOfChannels+' kanal':''):'<i>tanlanmagan (klipni bosing)</i>'}</p>
+  <div class=xcd><b>① Sample Rate Conversion</b><small>44.1 ⇄ 48 kHz (va 88.2/96) o‘rtasida sifatli qayta hisoblash — Kaiser oynali sinc, anti-alias bilan.</small>
+   <div class=xrw><select id=cvsr>${opt([44100,48000,88200,96000],ST.sr,v=>(v/1000)+' kHz')}</select><select id=cvq>${opt([0,1,2],ST.q,v=>['Tez','Yuqori','Maksimal'][v])}</select></div></div>
+  <div class=xcd><b>② Bit Depth Conversion</b><small>16-bit, 24-bit va 32-bit (float) WAV. 16/24 bitda TPDF dither (kvantlash shovqinini yumshatadi).</small>
+   <div class=xrw><select id=cvb>${opt([16,24,32],ST.bits,v=>v==32?'32-bit float':v+'-bit')}</select><label style="font-size:11px;display:flex;gap:4px;align-items:center"><input type=checkbox id=cvd ${ST.dither?'checked':''}>Dither</label></div>
+   <div class=xrw><button class=xs2 id=cvc ${dis}>Tanlangan klip → WAV</button><button class=xs2 id=cvm ${dis}>Butun miks → WAV</button></div><small id=cvinf>${E(ST.info)}</small></div>
+  <div class=xcd><b>③ Stem Separation <button class=xb2 id=cvs ${dis}>Ajratish</button></b><small>Tanlangan klipni 4 trekka ajratadi: Baraban · Bas · Vokal · Boshqa. HPSS (garmonik/perkussiv) + stereo markaz maskasi. <u>AI model emas</u> — vokal bilan baraban qisman aralashishi mumkin. 4 daqiqagacha.</small></div>
+  <div class=xcd><b>④ Audio-to-MIDI</b><small>Audiodagi melodiyani (bitta ovozli: vokal, bas, lead) yoki ritmni (kick/snare/hat) MIDI faylga aylantiradi. Akkord/polifoniya <u>qo‘llab-quvvatlanmaydi</u>. 3 daqiqagacha.</small>
+   <div class=xrw><select id=cvmo><option value=mel ${ST.mode=='mel'?'selected':''}>Melodiya (monofonik)</option><option value=dr ${ST.mode=='dr'?'selected':''}>Ritm (baraban)</option></select><button class=xs2 id=cvt ${dis}>Aylantirish</button></div>
+   ${m?`<div class=xrw><b style="font-size:12px">${m.notes.length} nota</b>${m.notes.length&&!m.drums?'<small style="margin:0">'+nn(Math.min(...m.notes.map(n=>n.p)))+' – '+nn(Math.max(...m.notes.map(n=>n.p)))+'</small>':''}<button class=xs2 id=cvp>▶ Tinglash</button><button class=xs2 id=cvdl>⬇ .mid yuklash</button></div>
+   <div style="max-height:96px;overflow:auto;font:11px monospace;color:#9fb0d0">${m.notes.slice(0,40).map(n=>(m.drums?({36:'Kick',38:'Snare',42:'Hat'}[n.p]):nn(n.p))+' @'+n.t.toFixed(2)+'s '+n.d.toFixed(2)+'s v'+n.v).join('<br>')}${m.notes.length>40?'<br>…':''}</div>`:''}</div>
+  </div></div>`;
+  p.querySelector('#xpx').onclick=()=>window.__dawui.close();
+  const g=id=>p.querySelector('#'+id);
+  g('cvsr').onchange=e=>ST.sr=+e.target.value;g('cvq').onchange=e=>ST.q=+e.target.value;g('cvb').onchange=e=>ST.bits=+e.target.value;g('cvd').onchange=e=>ST.dither=e.target.checked?1:0;
+  g('cvc').onclick=()=>doConvert('clip');g('cvm').onclick=()=>doConvert('mix');g('cvs').onclick=stems;g('cvmo').onchange=e=>ST.mode=e.target.value;g('cvt').onclick=toMidi;
+  const pl=g('cvp');if(pl)pl.onclick=playMidi;const d=g('cvdl');if(d)d.onclick=()=>{dl(writeMidi(m.notes,DD().bpm||120,m.drums),m.name+(m.drums?' — ritm':' — melodiya')+'.mid');msg('✅ MIDI fayl yuklandi.')}}
+ window.__dawui.ext.cvt=panel;window.__dawcv={resample,wavBits,stems,detectMelody,detectDrums,writeMidi,yin,ST};
 })();
 
 /* ===== f6zq: ilova o'rnatilganda qurilmada «Ma'lumot papkasi» — yaratish, yozuv, har ochilishda tiklash ===== */
@@ -14745,7 +14925,22 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
 ]
 };
  for(const k in X)if(!U.D[k])U.D[k]=X[k];
+ const X2={"Konvertor: sample rate, bit depth, stem ajratish, audio → MIDI": ["Конвертер: sample rate, bit depth, разделение на стемы, аудио → MIDI", "Converter: sample rate, bit depth, stem separation, audio → MIDI"], "Konvertor va MIDI": ["Конвертер и MIDI", "Converter & MIDI"], "44.1 ⇄ 48 kHz (va 88.2/96) o‘rtasida sifatli qayta hisoblash — Kaiser oynali sinc, anti-alias bilan.": ["Качественный пересчёт между 44.1 ⇄ 48 кГц (и 88.2/96) — sinc с окном Кайзера, с анти-алиасингом.", "High-quality conversion between 44.1 ⇄ 48 kHz (and 88.2/96) — Kaiser-windowed sinc with anti-aliasing."], "Tez": ["Быстро", "Fast"], "Yuqori": ["Высокое", "High"], "Maksimal": ["Максимальное", "Maximum"], "16-bit, 24-bit va 32-bit (float) WAV. 16/24 bitda TPDF dither (kvantlash shovqinini yumshatadi).": ["WAV 16-, 24- и 32-bit (float). Для 16/24 bit — TPDF dither (смягчает шум квантования).", "16-bit, 24-bit and 32-bit (float) WAV. TPDF dither on 16/24 bit (softens quantization noise)."], "Tanlangan klip → WAV": ["Выбранный клип → WAV", "Selected clip → WAV"], "Butun miks → WAV": ["Весь микс → WAV", "Whole mix → WAV"], "Tanlangan klipni 4 trekka ajratadi: Baraban · Bas · Vokal · Boshqa. HPSS (garmonik/perkussiv) + stereo markaz maskasi.": ["Разделяет выбранный клип на 4 трека: Ударные · Бас · Вокал · Остальное. HPSS (гармоническая/ударная составляющие) + маска стерео-центра.", "Splits the selected clip into 4 tracks: Drums · Bass · Vocal · Other. HPSS (harmonic/percussive) + stereo-center mask."], "AI model emas": ["не AI-модель", "not an AI model"], "— vokal bilan baraban qisman aralashishi mumkin. 4 daqiqagacha.": ["— вокал и ударные могут частично смешиваться. До 4 минут.", "— vocal and drums may partly bleed into each other. Up to 4 minutes."], "Audiodagi melodiyani (bitta ovozli: vokal, bas, lead) yoki ritmni (kick/snare/hat) MIDI faylga aylantiradi. Akkord/polifoniya": ["Превращает мелодию (одноголосную: вокал, бас, лид) или ритм (kick/snare/hat) в MIDI-файл. Аккорды/полифония", "Turns a melody (monophonic: vocal, bass, lead) or rhythm (kick/snare/hat) into a MIDI file. Chords/polyphony"], "qo‘llab-quvvatlanmaydi": ["не поддерживаются", "are not supported"], "3 daqiqagacha.": ["До 3 минут.", "Up to 3 minutes."], "Melodiya (monofonik)": ["Мелодия (монофоническая)", "Melody (monophonic)"], "Ritm (baraban)": ["Ритм (ударные)", "Rhythm (drums)"], "Aylantirish": ["Преобразовать", "Convert"], "Tinglash": ["Прослушать", "Listen"], "mid yuklash": ["скачать .mid", "download .mid"], "Audio → MIDI…": ["Аудио → MIDI…", "Audio → MIDI…"], "Nota topilmadi — monofonik (bitta ovozli) va aniq audio kerak.": ["Ноты не найдены — нужно моно-звучание (одноголосное) и чистое аудио.", "No notes found — monophonic (single voice) clean audio is needed."], "MIDI fayl yuklandi.": ["MIDI-файл скачан.", "MIDI file downloaded."], "Stem: spektr hisoblanmoqda…": ["Стем: вычисление спектра…", "Stem: computing spectrum…"], "Bit chuqurligi o‘zgartirilmoqda…": ["Изменяется разрядность…", "Converting bit depth…"], "Miks tayyorlanmoqda…": ["Готовится микс…", "Preparing the mix…"], "Tanlangan klipni 4 ta trekka ajratadi: baraban, bas, vokal, boshqa (HPSS usuli).": ["Разделяет выбранный клип на 4 трека: ударные, бас, вокал, остальное (метод HPSS).", "Splits the selected clip into 4 tracks: drums, bass, vocal, other (HPSS method)."]};
+ for(const k in X2)if(!U.D[k])U.D[k]=X2[k];
+ const X3={"Hammasi brauzerda, internetsiz. Klip":["Всё в браузере, без интернета. Клип","Everything in the browser, no internet. Clip"],"tanlanmagan (klipni bosing)":["не выбран (щёлкните клип)","none selected (click a clip)"],"vokal bilan baraban qisman aralashishi mumkin. 4 daqiqagacha.":["вокал и ударные могут частично смешиваться. До 4 минут.","vocal and drums may partly bleed into each other. Up to 4 minutes."]};
+ for(const k in X3)if(!U.D[k])U.D[k]=X3[k];
  const R=[
+ [/^Hammasi brauzerda, internetsiz\. Klip: (.+) · (\d+) Hz · (\d+) kanal$/,['Всё в браузере, без интернета. Клип: $1 · $2 Гц · $3 кан.','Everything in the browser, no internet. Clip: $1 · $2 Hz · $3 ch']],
+ [/^Hammasi brauzerda, internetsiz\. Klip: tanlanmagan \(klipni bosing\)$/,['Всё в браузере, без интернета. Клип: не выбран (щёлкните клип)','Everything in the browser, no internet. Clip: none selected (click a clip)']],
+ [/^Hammasi brauzerda, internetsiz\. Klip: (.+)$/,['Всё в браузере, без интернета. Клип: $1','Everything in the browser, no internet. Clip: $1']],
+ [/^(\d+) nota$/,['$1 нот','$1 notes']],
+ [/^(\d+) ta nota topildi\.$/,['Найдено нот: $1.','$1 notes found.']],
+ [/^Qayta hisoblash: (\d+)%$/,['Пересчёт: $1%','Resampling: $1%']],
+ [/^(Spektr|HPSS|Ajratish): (\d+)%$/,['$1: $2%','$1: $2%']],
+ [/^Sample rate o‘zgartirilmoqda \((\d+) → (\d+) Hz\)…$/,['Меняется sample rate ($1 → $2 Гц)…','Converting sample rate ($1 → $2 Hz)…']],
+ [/^(\d+(?:\.\d+)?) kHz · (.+) WAV yuklandi \((.+) MB\)\.$/,['WAV $1 кГц · $2 скачан ($3 МБ).','$1 kHz · $2 WAV downloaded ($3 MB).']],
+ [/^4 ta stem tayyor \((.+) s\)\. HPSS usuli — AI model emas: vokal bilan baraban qisman aralashishi mumkin\.$/,['4 стема готовы ($1 с). Метод HPSS — не AI-модель: вокал и ударные могут частично смешиваться.','4 stems ready ($1 s). HPSS method — not an AI model: vocal and drums may partly bleed.']],
+ [/^Konvertatsiya xatosi: (.+)$/,['Ошибка конвертации: $1','Conversion error: $1']],,
   [/^(\d+) ta kanal$/,['$1 каналов','$1 channels']],
   [/^Avto balans qo‘llandi \((\d+) trek\)\.?$/,['Авто-баланс применён ($1 тр.).','Auto balance applied ($1 tracks).']],
   [/^Asos: (.+) \((.+) LUFS\) · LUFS bo‘yicha taxminiy balans$/,['Основа: $1 ($2 LUFS) · приблизительный баланс по LUFS','Reference: $1 ($2 LUFS) · approximate balance by LUFS']],

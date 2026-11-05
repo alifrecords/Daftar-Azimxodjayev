@@ -81,3 +81,9 @@ Daftar ma'lumotlari qurilmaning **o'zida** (brauzer/ilova xotirasi, IndexedDB + 
 
 ## Til (v89)
 Yuqoridagi 🌐 tugmasi: O‘zbekcha / Русский / English. DAW (asboblar paneli, Mixer, Studio Setup, Sounds, Fx, AI, Pro, Drum) uchun oflayn lug‘at kiritilgan — internet shart emas. Boshqa bo‘limlarning lug‘atda yo‘q matnlari internet bo‘lsa avtomatik tarjima qilinadi. Qidiruv/kiritish maydonlaridagi yordamchi matnlar (placeholder) ham endi tarjima qilinadi.
+
+## Konvertor va MIDI (v90) — DAW ichida «🔁 Konvert» tugmasi
+- **Sample Rate Conversion:** 44.1/48/88.2/96 kHz, Kaiser oynali sinc (anti-alias).
+- **Bit Depth:** 16/24-bit (TPDF dither) va 32-bit float WAV; tanlangan klip yoki butun miks.
+- **Stem Separation:** Baraban · Bas · Vokal · Boshqa (HPSS + stereo markaz maskasi; AI model emas). «Pro» paneldagi «Ajratish» ham shuni ishlatadi.
+- **Audio → MIDI:** monofonik melodiya yoki ritm (kick/snare/hat) → .mid fayl, oldindan tinglash bilan. Akkord/polifoniya yo‘q.
