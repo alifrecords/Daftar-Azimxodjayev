@@ -87,3 +87,7 @@ Yuqoridagi 🌐 tugmasi: O‘zbekcha / Русский / English. DAW (asboblar p
 - **Bit Depth:** 16/24-bit (TPDF dither) va 32-bit float WAV; tanlangan klip yoki butun miks.
 - **Stem Separation:** Baraban · Bas · Vokal · Boshqa (HPSS + stereo markaz maskasi; AI model emas). «Pro» paneldagi «Ajratish» ham shuni ishlatadi.
 - **Audio → MIDI:** monofonik melodiya yoki ritm (kick/snare/hat) → .mid fayl, oldindan tinglash bilan. Akkord/polifoniya yo‘q.
+
+## Bounce va Avtomatizatsiya qatori (v91)
+- **Bounce Selection (B):** tanlangan klip(lar)ni bitta audio klipga birlashtiradi (klip ovozi va fade pishiriladi). Sichqonchaning o‘ng tugmasi menyusida ham bor. Ctrl+Z qaytaradi.
+- **Avtomatizatsiya qatori:** trek sarlavhasidagi «∿» tugmasi qatorni ochadi/yopadi. Volume yoki Pan; bosib nuqta qo‘shing, sudrang, ikki marta bosing yoki Alt+bosing — o‘chirish. R (o‘qish) / W (ijro paytida fader harakatini yozish). Audio to‘lqin shakli chiziqqa qarab pasayadi/ko‘tariladi.
