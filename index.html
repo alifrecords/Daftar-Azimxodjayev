@@ -11909,7 +11909,12 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  for(const k in X3)if(!U.D[k])U.D[k]=X3[k];
  const X4={"Avtomatizatsiya qatorini ochish/yopish": ["Открыть/закрыть строку автоматизации", "Show/hide automation lane"], "Read — avtomatizatsiyani ijro paytida qo‘llash": ["Read — применять автоматизацию при воспроизведении", "Read — apply automation during playback"], "Write — ijro paytida fader harakatini yozish (faqat Volume)": ["Write — записывать движение фейдера при воспроизведении (только Volume)", "Write — record fader moves during playback (Volume only)"], "Qatorni yopish": ["Закрыть строку", "Close lane"], "Chiziqni tozalash": ["Очистить линию", "Clear line"], "Konvert": ["Конверт", "Convert"], "Avval audio klip(lar)ni tanlang (Bounce Selection — B).": ["Сначала выберите аудиоклип(ы) (Bounce Selection — B).", "Select audio clip(s) first (Bounce Selection — B)."]};
  for(const k in X4)if(!U.D[k])U.D[k]=X4[k];
+ const X5={"Tempoga moslash (Auto-fit)": ["Подгонка под темп (Auto-fit)", "Tempo match (Auto-fit)"], "Avtomatik moslash": ["Автоматическая подгонка", "Auto match"], "Tanlangan klipni moslash": ["Подогнать выбранный клип", "Match selected clip"], "Tempo aniqlanmadi": ["Темп не определён", "Tempo not detected"]};
+ for(const k in X5)if(!U.D[k])U.D[k]=X5[k];
  const R=[
+ [/^Import va Sounds’dan qo‘shish\/tinglashda audio loyiha tempoiga \((\d+) BPM\) moslanadi — balandlik saqlanadi\. Tempo fayl nomidan \(masalan «96bpm»\) yoki audiodan aniqlanadi; qisqa ovozlar \(<1\.6 s\) o‘zgarmaydi\.$/,['При импорте и добавлении/прослушивании из Sounds аудио подгоняется под темп проекта ($1 BPM) — высота тона сохраняется. Темп берётся из имени файла (например «96bpm») или определяется по аудио; короткие звуки (<1.6 с) не меняются.','On import and when adding/auditioning from Sounds, audio is matched to the project tempo ($1 BPM) — pitch is preserved. Tempo comes from the file name (e.g. “96bpm”) or is detected from audio; short sounds (<1.6 s) are left unchanged.']],
+ [/^(.+): (\d+(?:\.\d+)?) → (\d+(?:\.\d+)?) BPM ga moslandi \(×(.+), balandlik saqlandi\)\. Ctrl\+Z — qaytarish; o‘chirish: 🔁 Konvert → Tempoga moslash\.$/,['$1: подогнано $2 → $3 BPM (×$4, высота тона сохранена). Ctrl+Z — отмена; отключить: 🔁 Конверт → Подгонка под темп.','$1: matched $2 → $3 BPM (×$4, pitch preserved). Ctrl+Z — undo; turn off: 🔁 Convert → Tempo match.']],
+ [/^Tempo aniqlanmoqda(?:: (.+))?…?$/,['Определение темпа…','Detecting tempo…']],
  [/^Bounce: (\d+) trek — (\d+) klip bitta audioga birlashtirildi \(.+\)\. Ctrl\+Z — qaytarish\.$/,['Bounce: треков — $1, клипов объединено в аудио — $2 (громкость клипа и fade применены; Fx/автоматизация трека остаются на треке). Ctrl+Z — отмена.','Bounce: $1 track(s) — $2 clip(s) merged into audio (clip gain and fades applied; track Fx/automation stay on the track). Ctrl+Z — undo.']],
  [/^Bounce: (.+)…$/,['Bounce: $1…','Bounce: $1…']],
  [/^Bounce xatosi: (.+)$/,['Ошибка Bounce: $1','Bounce error: $1']],
@@ -12306,6 +12311,54 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  window.DAWTS={stretch};
 })();
 
+/* ===== f6ztm: BPM aniqlash va loyiha tempoiga avtomatik moslash (pitch saqlanadi) ===== */
+(()=>{
+ const LS='daftar-daw-autotempo',yieldUI=()=>new Promise(r=>setTimeout(r,0));
+ const on=()=>{try{return localStorage.getItem(LS)!=='0'}catch(_){return true}};
+ const setOn=v=>{try{localStorage.setItem(LS,v?'1':'0')}catch(_){}};
+ function fftInit(N){const lv=Math.log2(N),rev=new Uint32Array(N);for(let i=0;i<N;i++){let r=0;for(let b=0;b<lv;b++)if(i&(1<<b))r|=1<<(lv-1-b);rev[i]=r}const cs=new Float32Array(N/2),sn=new Float32Array(N/2);for(let i=0;i<N/2;i++){cs[i]=Math.cos(2*Math.PI*i/N);sn[i]=-Math.sin(2*Math.PI*i/N)}
+  return(re,im)=>{const n=N;for(let i=0;i<n;i++){const j=rev[i];if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}for(let sz=2;sz<=n;sz<<=1){const h=sz>>1,st=n/sz;for(let i=0;i<n;i+=sz)for(let k=0;k<h;k++){const wr=cs[k*st],wi=sn[k*st],a=i+k,b=a+h,tr=re[b]*wr-im[b]*wi,ti=re[b]*wi+im[b]*wr;re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti}}}}
+ const fft=fftInit(1024);
+ /* fayl nomidagi BPM belgisi: "120bpm", "bpm120", "_96_" */
+ function hint(name){const n=String(name||'');let m=n.match(/(\d{2,3})\s*[-_ ]?bpm/i)||n.match(/bpm\s*[-_ ]?(\d{2,3})/i);if(!m)m=n.match(/(?:^|[\s_\-\[(])(\d{2,3})(?=[\s_\-\])]|\.|$)/);if(m){const v=+m[1];if(v>=55&&v<=210)return v}return 0}
+ function detect(buf){
+  const sr=buf.sampleRate,n=Math.min(buf.length,Math.floor(sr*90)),ch=buf.numberOfChannels,N=1024,hop=512,w=new Float32Array(N);for(let i=0;i<N;i++)w[i]=.5-.5*Math.cos(2*Math.PI*i/N);
+  const chs=[];for(let c=0;c<ch;c++)chs.push(buf.getChannelData(c));const re=new Float32Array(N),im=new Float32Array(N),K=N/2,prev=new Float32Array(K),env=[];
+  for(let p=0;p+N<=n;p+=hop){for(let i=0;i<N;i++){let s=0;for(let c=0;c<ch;c++)s+=chs[c][p+i];re[i]=s/ch*w[i];im[i]=0}fft(re,im);let fx=0;for(let k=2;k<K;k++){const m=Math.log(1+60*Math.sqrt(re[k]*re[k]+im[k]*im[k])),d=m-prev[k];if(d>0)fx+=d;prev[k]=m}env.push(fx)}
+  const L=env.length;if(L<40)return{bpm:0,conf:0};
+  /* mahalliy o'rtachani ayirish */
+  const e=env.map((v,i)=>{let s=0,c=0;for(let d=-12;d<=12;d++){const q=env[i+d];if(q!==undefined){s+=q;c++}}return Math.max(0,v-s/c)});
+  const fps=sr/hop,lagMin=Math.floor(fps*60/210),lagMax=Math.ceil(fps*60/55),ac=new Float32Array(lagMax+2);let z=0;for(let i=0;i<L;i++)z+=e[i]*e[i];if(z<1e-9)return{bpm:0,conf:0};
+  for(let l=lagMin;l<=lagMax;l++){let s=0;for(let i=0;i+l<L;i++)s+=e[i]*e[i+l];ac[l]=s/z*(L/(L-l))}
+  /* BPM bo'yicha: asosiy lag + 2x lag (to'rt ulush) qo'llab-quvvatlashi bilan, 120 atrofiga yumshoq vazn */
+  let best=0,bl=0,sum=0,cnt=0;
+  for(let l=lagMin;l<=lagMax;l++){const bp=60*fps/l,sup=(ac[l*2]||0)*.5+(ac[Math.round(l*1.5)]||0)*.25;const pr=Math.exp(-Math.pow(Math.log2(bp/120),2)/(2*.9*.9));const sc=(ac[l]+sup)*pr;sum+=ac[l];cnt++;if(sc>best&&ac[l]>=ac[l-1]&&ac[l]>=ac[l+1]){best=sc;bl=l}}
+  if(!bl)return{bpm:0,conf:0};
+  /* parabolik interpolyatsiya */
+  let lf=bl;const a=ac[bl-1],b=ac[bl],c=ac[bl+1],dn=a+c-2*b;if(Math.abs(dn)>1e-9)lf=bl+(a-c)/(2*dn);
+  const bpm=60*fps/lf,mean=sum/cnt,conf=ac[bl]/(mean+1e-9);
+  return{bpm,conf}}
+ /* loyiha tempoiga eng yaqin oktava: 0.5x / 1x / 2x */
+ function pick(src,proj){let bestR=0,bd=1e9;for(const f of [.5,1,2]){const r=proj/(src*f);const d=Math.abs(Math.log(r));if(d<bd){bd=d;bestR=r*f}}/* bestR = proj/src_eff * f... qaytadan hisoblaymiz */
+  let eff=src,rr=proj/src;for(const f of [.5,1,2]){const e=src*f,r=proj/e;if(Math.abs(Math.log(r))<Math.abs(Math.log(rr))){eff=e;rr=r}}return{eff,ratio:rr}}
+ const cache=new Map();
+ /* fit: {buf, srcBpm, ratio, how} yoki {buf (o'zgarishsiz), skip:'sabab'} */
+ async function fit(buf,name,projBpm,force){
+  const key=(name||'')+'|'+buf.length+'|'+projBpm;if(cache.has(key))return cache.get(key);
+  const res=await (async()=>{
+   if(!force&&buf.duration<1.6)return{buf,skip:'short'};
+   if(buf.duration>600)return{buf,skip:'long'};
+   let src=hint(name),how='name',conf=1;
+   if(!src){await yieldUI();const d=detect(buf);src=d.bpm;conf=d.conf;how='audio';if(!src||conf<(force?1.4:2.2))return{buf,skip:'unknown',conf:+conf.toFixed(2),guess:src}}
+   const pk=pick(src,projBpm);if(Math.abs(pk.ratio-1)<.015)return{buf,srcBpm:+pk.eff.toFixed(1),ratio:1,how,skip:'same'};
+   if(pk.ratio<.6||pk.ratio>1.7)return{buf,srcBpm:+pk.eff.toFixed(1),ratio:pk.ratio,how,skip:'range'};
+   if(!window.DAWTS)return{buf,skip:'nots'};
+   const nd=buf.duration/pk.ratio,out=await DAWTS.stretch(buf,0,buf.duration,nd,true);
+   return{buf:out,srcBpm:+pk.eff.toFixed(1),ratio:pk.ratio,how}})();
+  if(cache.size>12)cache.delete(cache.keys().next().value);cache.set(key,res);return res}
+ window.DAWTM={on,setOn,detect,hint,pick,fit};
+})();
+
 /* ===== f6zd: DAW — audio sekvenser (Cubase tuzilishida): treklar, timeline, import, to'lqin, transport, miks, WAV eksport ===== */
 (()=>{
  const byId=i=>document.getElementById(i);
@@ -12361,10 +12414,12 @@ body.hasw #sb{background-color:color-mix(in srgb,var(--sf) 74%,transparent)!impo
  async function importFiles(files,ti,at){
   ctxOn();let tr=ti!=null&&D.tracks[ti]?D.tracks[ti]:null,pos=at,count=0;hist();
   for(const f of files){const ok=/^audio\//.test(f.type)||/\.(wav|mp3|ogg|m4a|flac|aac|webm|opus)$/i.test(f.name);if(!ok)continue;
-   try{msg2('⏳ Audio o‘qilmoqda: '+f.name);const ab=await f.arrayBuffer();const id=rid();await IDB.put(id,ab.slice(0));const buf=await decode(ab.slice(0));
-    A.set(id,{buf,peaks:peaksOf(buf),name:f.name});D.assets[id]={name:f.name,dur:buf.duration,sr:buf.sampleRate,ch:buf.numberOfChannels};
+   try{msg2('⏳ Audio o‘qilmoqda: '+f.name);const ab=await f.arrayBuffer();const id=rid();let buf=await decode(ab.slice(0)),stored=ab.slice(0),fitted=null;
+    if(window.DAWTM&&DAWTM.on()&&!f.__noTempo){try{msg2('⏳ Tempo aniqlanmoqda: '+f.name);const r=await DAWTM.fit(buf,f.name,D.bpm);if(r.buf!==buf){buf=r.buf;stored=DAWSND.wav(buf);fitted=r;msg2('🎯 '+f.name.replace(/\.[^.]+$/,'')+': '+r.srcBpm+' → '+D.bpm+' BPM ga moslandi (×'+r.ratio.toFixed(2)+', balandlik saqlandi). Ctrl+Z — qaytarish; o‘chirish: 🔁 Konvert → Tempoga moslash.')}else if(r.skip=='unknown')msg2('ℹ Tempo aniqlanmadi — «'+f.name+'» asl holida qo‘yildi (qo‘lda: 🔁 Konvert).')}catch(e2){console.warn('fit',e2)}}
+    await IDB.put(id,stored);
+    A.set(id,{buf,peaks:peaksOf(buf),name:f.name});D.assets[id]={name:f.name,dur:buf.duration,sr:buf.sampleRate,ch:buf.numberOfChannels};if(fitted)D.assets[id].obpm=fitted.srcBpm;
     const t=tr||addTrack(f.name.replace(/\.[^.]+$/,'').slice(0,18));const st=tr?(pos!=null?pos:t.clips.reduce((m,c)=>Math.max(m,c.start+c.dur),0)):(at!=null?at:0);
-    const c={id:rid(),asset:id,name:f.name.replace(/\.[^.]+$/,''),start:st,off:0,dur:buf.duration,g:1,m:0};t.clips.push(c);D.sel=c.id;D.selT=t.id;pos=st+buf.duration;count++}
+    const c={id:rid(),asset:id,name:f.name.replace(/\.[^.]+$/,'')+(fitted?' ['+D.bpm+'bpm]':''),start:st,off:0,dur:buf.duration,g:1,m:0};t.clips.push(c);D.sel=c.id;D.selT=t.id;pos=st+buf.duration;count++}
    catch(e){console.warn(e);msg2('❌ Audio o‘qib bo‘lmadi: '+f.name+' (format qo‘llanmaydi yoki fayl buzilgan)')}}
   if(count){msg2('🎛 '+count+' ta audio qo‘shildi');buildHeads();draw();persist()}}
  /* ---------- pleyer ---------- */
@@ -12954,7 +13009,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
    D.ms=newSel.slice();D.sel=newSel[newSel.length-1]||null;buildHeads();draw();persist();
    msg2('✅ Bounce: '+made+' trek — '+ma.length+' klip bitta audioga birlashtirildi (klip ovozi va fade qo‘llandi; trek Fx/avtomatizatsiyasi trekda qoladi). Ctrl+Z — qaytarish.')
   }catch(e){console.warn(e);msg2('❌ Bounce xatosi: '+(e&&e.message||e))}}
- window.__daw={bounce,rowTop,rowAt,LH,drawLane,ctxOn2:()=>ctxOn(),AS,saveAS,resetAudio,applyMix,mixGain,rid,IDB,peaksOf,projEnd,decode,renderBuf,selClip:()=>{for(const t of D.tracks){const c=t.clips.find(x=>x.id==D.sel);if(c)return{c,t}}return null},create,get:()=>D,A,play,stop,importFiles,mixdown,V,hist,persist,selTrack,startAt,curP,buildHeads,draw,addTrack,beat,ctxOn,msg2,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
+ window.__daw={newAsset,bounce,rowTop,rowAt,LH,drawLane,ctxOn2:()=>ctxOn(),AS,saveAS,resetAudio,applyMix,mixGain,rid,IDB,peaksOf,projEnd,decode,renderBuf,selClip:()=>{for(const t of D.tracks){const c=t.clips.find(x=>x.id==D.sel);if(c)return{c,t}}return null},create,get:()=>D,A,play,stop,importFiles,mixdown,V,hist,persist,selTrack,startAt,curP,buildHeads,draw,addTrack,beat,ctxOn,msg2,addDrum,padHit,drumTrack,sliceAsset,drRefresh,an:()=>AN,ac:()=>AC};
 })();
 
 /* ===== f6zsn: DAW ichki sound kutubxonasi — kino, teatr FX, aranjirovka (sintez qilingan, oflayn, litsenziyasiz) ===== */
@@ -13171,8 +13226,9 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  function stopPrev(){if(ST.prev){try{ST.prev.src&&ST.prev.src.stop()}catch(_){}try{ST.prev.el&&ST.prev.el.pause()}catch(_){}ST.prev=null;const r=panel();r&&r.querySelectorAll('.zpl.on').forEach(x=>{x.classList.remove('on');x.textContent='▶'})}}
  async function playBuf(b,btn){stopPrev();const ac=W().ctxOn(),src=ac.createBufferSource(),g=ac.createGain();g.gain.value=.9;src.buffer=b;src.connect(g);g.connect(ac.destination);src.onended=()=>{if(ST.prev&&ST.prev.src===src)stopPrev()};src.start();ST.prev={src};if(btn){btn.classList.add('on');btn.textContent='■'}}
  const bpm=()=>{try{return DD().bpm||120}catch(_){return 120}};
+ async function fitPrev(buf,name){try{if(window.DAWTM&&DAWTM.on()){const r=await DAWTM.fit(buf,name,bpm());return r.buf}}catch(e){console.warn('fitPrev',e)}return buf}
  async function prevSnd(s,btn){if(ST.prev&&btn.classList.contains('on')){stopPrev();return}btn.textContent='…';try{const b=await DAWSND.render(s,bpm());await playBuf(b,btn)}catch(e){console.warn(e);btn.textContent='▶';W().msg2('Ovoz tayyorlanmadi: '+(e.message||e))}}
- async function addSnd(s,btn){const old=btn&&btn.textContent;if(btn)btn.textContent='…';try{const b=await DAWSND.render(s,bpm()),buf=DAWSND.wav(b),nm=s.name.replace(/[\\/:*?"<>|]/g,'')+(s.bpm?' ['+bpm()+'bpm]':'');const f=new File([buf],nm+'.wav',{type:'audio/wav'});await W().importFiles([f],null,DD().ph)}catch(e){console.warn(e);W().msg2('Qo‘shib bo‘lmadi: '+(e.message||e))}if(btn)btn.textContent=old}
+ async function addSnd(s,btn){const old=btn&&btn.textContent;if(btn)btn.textContent='…';try{const b=await DAWSND.render(s,bpm()),buf=DAWSND.wav(b),nm=s.name.replace(/[\\/:*?"<>|]/g,'')+(s.bpm?' ['+bpm()+'bpm]':'');const f=new File([buf],nm+'.wav',{type:'audio/wav'});f.__noTempo=true;await W().importFiles([f],null,DD().ph)}catch(e){console.warn(e);W().msg2('Qo‘shib bo‘lmadi: '+(e.message||e))}if(btn)btn.textContent=old}
  /* ---------- Sounds paneli ---------- */
  function sndRow(s){const fav=FAV.has(s.id);return`<div class=snr data-id="${E(s.id)}"><button class=zpl title="Oldindan eshitish">▶</button><div class=znm><b>${E(s.name)}</b><i>${E(s.cat)}${s.key?' · '+E(s.key):''}${s.bpm?' · tempoga mos ('+bpm()+' bpm)':s.dur?' · '+s.dur.toFixed(1)+' s':''}</i></div><button class=zhf title="Sevimli">${fav?'♥':'♡'}</button><button class=zad title="Loyihaga qo‘shish (yangi trek, pleyer boshiga)">＋</button></div>`}
  function bindSnd(root){root.querySelectorAll('.snr').forEach(r=>{const s=DAWSND.LIST.find(x=>x.id==r.dataset.id);if(!s)return;r.querySelector('.zpl').onclick=e=>prevSnd(s,e.currentTarget);r.querySelector('.zad').onclick=e=>addSnd(s,e.currentTarget);r.querySelector('.zhf').onclick=e=>{if(FAV.has(s.id))FAV.delete(s.id);else FAV.add(s.id);saveFav();e.currentTarget.textContent=FAV.has(s.id)?'♥':'♡';e.currentTarget.classList.toggle('on',FAV.has(s.id));if(ST.fav)render()}})}
@@ -13199,7 +13255,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   <div class=pnf>Onlayn manba: freesound.org (bepul akkaunt → Apps → API key). Fayllarning litsenziyasi har xil (CC0 / CC-BY…), tijorat uchun har birini tekshiring. Ish internetsiz davom etadi — ichki kutubxona oflayn.</div>`;
   b.querySelector('#olk').onchange=e=>{lss('daftar-fskey',e.target.value.trim())};
   const q=b.querySelector('#olq');q.onkeydown=e=>{if(e.key=='Enter'&&q.value.trim()){lss('daftar-fskey',b.querySelector('#olk').value.trim());fsSearch(q.value.trim())}};
-  b.querySelectorAll('[data-fid]').forEach(r=>{const it=ST.ol.find(x=>String(x.id)==r.dataset.fid);r.querySelector('.zpl').onclick=async e=>{const btn=e.currentTarget;if(btn.classList.contains('on')){stopPrev();return}stopPrev();const url=it.previews&&(it.previews['preview-lq-mp3']||it.previews['preview-hq-mp3']);if(!url)return;const el=new Audio(url);el.onended=()=>stopPrev();try{await el.play();ST.prev={el};btn.classList.add('on');btn.textContent='■'}catch(err){W().msg2('Eshitib bo‘lmadi: '+(err.message||err))}};
+  b.querySelectorAll('[data-fid]').forEach(r=>{const it=ST.ol.find(x=>String(x.id)==r.dataset.fid);r.querySelector('.zpl').onclick=async e=>{const btn=e.currentTarget;if(btn.classList.contains('on')){stopPrev();return}stopPrev();const url=it.previews&&(it.previews['preview-lq-mp3']||it.previews['preview-hq-mp3']);if(!url)return;btn.textContent='…';try{const ab=await fsFetch(it),ac=W().ctxOn(),buf=await new Promise((res,no)=>{const p=ac.decodeAudioData(ab.slice(0),res,no);if(p&&p.catch)p.catch(no)});await playBuf(await fitPrev(buf,it.name),btn)}catch(err){btn.textContent='▶';W().msg2('Eshitib bo‘lmadi: '+(err.message||err))}};
    r.querySelector('.zad').onclick=async e=>{const btn=e.currentTarget;btn.textContent='…';try{const ab=await fsFetch(it);const f=new File([ab],it.name.replace(/[\\/:*?"<>|]/g,'').replace(/\.[a-z0-9]+$/i,'')+'.mp3',{type:'audio/mpeg'});await W().importFiles([f],null,DD().ph)}catch(err){W().msg2('Yuklab bo‘lmadi: '+(err.message||err))}btn.textContent='＋'}})}
  /* ---------- Mening fayllarim (kompyuterdagi papka, oflayn) ---------- */
  async function scanDir(dh,out,depth){for await(const [n,h] of dh.entries()){if(h.kind=='directory'&&depth<3)await scanDir(h,out,depth+1);else if(h.kind=='file'&&/\.(wav|mp3|ogg|m4a|flac|aac|opus)$/i.test(n))out.push({n,h,p:dh.name});if(out.length>3000)return}}
@@ -13212,7 +13268,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   b.querySelector('#lcf').onclick=()=>{const el=document.getElementById('dawim');if(el)el.click()};
   const pk=b.querySelector('#lcp');if(pk)pk.onclick=async()=>{try{const dh=await showDirectoryPicker({id:'daftar-samples',mode:'read'});const out=[];W().msg2('⏳ Papka o‘qilmoqda…');await scanDir(dh,out,0);ST.loc=out;W().msg2('📂 '+out.length+' ta audio topildi');render()}catch(e){if(e.name!='AbortError')W().msg2('Papka ochilmadi: '+(e.name||e))}};
   b.querySelector('#lcq').oninput=e=>{ST.lq=e.target.value;render();const i=document.getElementById('dawpan').querySelector('#lcq');if(i){i.focus();i.setSelectionRange(99,99)}};
-  b.querySelectorAll('[data-i]').forEach(r=>{const x=ST.loc[+r.dataset.i];r.querySelector('.zpl').onclick=async e=>{const btn=e.currentTarget;if(btn.classList.contains('on')){stopPrev();return}btn.textContent='…';try{const f=await x.h.getFile(),ab=await f.arrayBuffer(),ac=W().ctxOn(),buf=await new Promise((res,no)=>{const p=ac.decodeAudioData(ab,res,no);if(p&&p.catch)p.catch(no)});await playBuf(buf,btn)}catch(err){btn.textContent='▶';W().msg2('Eshitib bo‘lmadi: '+(err.message||err))}};
+  b.querySelectorAll('[data-i]').forEach(r=>{const x=ST.loc[+r.dataset.i];r.querySelector('.zpl').onclick=async e=>{const btn=e.currentTarget;if(btn.classList.contains('on')){stopPrev();return}btn.textContent='…';try{const f=await x.h.getFile(),ab=await f.arrayBuffer(),ac=W().ctxOn(),buf=await new Promise((res,no)=>{const p=ac.decodeAudioData(ab,res,no);if(p&&p.catch)p.catch(no)});await playBuf(await fitPrev(buf,x.n),btn)}catch(err){btn.textContent='▶';W().msg2('Eshitib bo‘lmadi: '+(err.message||err))}};
    r.querySelector('.zad').onclick=async e=>{const btn=e.currentTarget;btn.textContent='…';try{const f=await x.h.getFile();await W().importFiles([f],null,DD().ph)}catch(err){W().msg2('Qo‘shib bo‘lmadi: '+(err.message||err))}btn.textContent='＋'}})}
  /* ---------- Fx paneli ---------- */
  const targets=()=>{const D=DD();return[{id:'sel',n:'▸ Tanlangan trek'},...D.tracks.map(t=>({id:t.id,n:t.n})),...(D.buses||[]).map(b=>({id:b.id,n:'🎻 Bus: '+b.n})),{id:'master',n:'🎚 Master (hamma ovoz)'}]};
@@ -13468,7 +13524,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   msg('⏳ Taxminiy ajratish (chastota/stereo bo‘yicha)…');const b=a.buf,sr=b.sampleRate,n=b.length,Lc=b.getChannelData(0),Rc=b.numberOfChannels>1?b.getChannelData(1):Lc;
   const M=new Float32Array(n),S=new Float32Array(n);for(let i=0;i<n;i++){M[i]=(Lc[i]+Rc[i])*.5;S[i]=(Lc[i]-Rc[i])*.5}
   const defs=[['Bas (<160 Hz)',M,0,[['lowpass',160]]],['Markaz — vokal/asosiy',M,0,[['highpass',160],['lowpass',5000]]],['Yon — stereo kenglik',S,1,[['highpass',160]]],['Yuqori — havo/perkussiya',M,0,[['highpass',5000]]]];
-  const files=[];for(const [nm,src,side,fl] of defs){const oc=new OfflineAudioContext(2,n,sr),bf=oc.createBuffer(2,n,sr);bf.getChannelData(0).set(src);const r=bf.getChannelData(1);for(let i=0;i<n;i++)r[i]=side?-src[i]:src[i];const s=oc.createBufferSource();s.buffer=bf;let prev=s;fl.forEach(([t,f])=>{const q=oc.createBiquadFilter();q.type=t;q.frequency.value=f;q.Q.value=.707;prev.connect(q);prev=q});prev.connect(oc.destination);s.start();const out=await oc.startRendering();files.push(new File([DAWSND.wav(out)],sc.c.name+' — '+nm+'.wav',{type:'audio/wav'}))}
+  const files=[];for(const [nm,src,side,fl] of defs){const oc=new OfflineAudioContext(2,n,sr),bf=oc.createBuffer(2,n,sr);bf.getChannelData(0).set(src);const r=bf.getChannelData(1);for(let i=0;i<n;i++)r[i]=side?-src[i]:src[i];const s=oc.createBufferSource();s.buffer=bf;let prev=s;fl.forEach(([t,f])=>{const q=oc.createBiquadFilter();q.type=t;q.frequency.value=f;q.Q.value=.707;prev.connect(q);prev=q});prev.connect(oc.destination);s.start();const out=await oc.startRendering();{const sf=new File([DAWSND.wav(out)],sc.c.name+' — '+nm+'.wav',{type:'audio/wav'});sf.__noTempo=true;files.push(sf)}}
   await DW().importFiles(files,null,sc.c.start);msg('✅ 4 ta trek ajratildi (taxminiy; AI model emas — vokalni to‘liq ajratmaydi).')}
  /* ---------- Spectral editor ---------- */
  const specClose=()=>{const e=document.getElementById('azspec');if(e)e.remove();ST.spec=null};
@@ -13753,7 +13809,7 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
     for(let s=0;s<4;s++)for(let c=0;c<2;c++){for(let k=0;k<K;k++){const g=m[s][k];rr[c][k]=SL[c][f*K+k]*g;ii[c][k]=SI[c][f*K+k]*g}for(let k=1;k<N/2;k++){rr[c][N-k]=rr[c][k];ii[c][N-k]=-ii[c][k]}ii[c][0]=0;ii[c][N/2]=0;fft(rr[c],ii[c],true);const o=res[s][c];for(let i=0;i<N;i++)o[f*hop+i]+=rr[c][i]*win[i]}
     if(f%40==39){await tick();ST.info='Ajratish: '+Math.round(f/F*100)+'%';const e=document.getElementById('cvinf');if(e)e.textContent=ST.info}}
    const AC=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(2,1,sr),files=[];
-   for(let s=0;s<4;s++){const bf=AC.createBuffer(2,maxN,sr);for(let c=0;c<2;c++){const d=bf.getChannelData(c),o=res[s][c];for(let i=0;i<maxN;i++)d[i]=nrm[i]>1e-6?o[i]/nrm[i]:0}files.push(new File([DAWSND.wav(bf)],(sc.c.name||'klip')+' — '+names[s]+'.wav',{type:'audio/wav'}))}
+   for(let s=0;s<4;s++){const bf=AC.createBuffer(2,maxN,sr);for(let c=0;c<2;c++){const d=bf.getChannelData(c),o=res[s][c];for(let i=0;i<maxN;i++)d[i]=nrm[i]>1e-6?o[i]/nrm[i]:0}{const sf=new File([DAWSND.wav(bf)],(sc.c.name||'klip')+' — '+names[s]+'.wav',{type:'audio/wav'});sf.__noTempo=true;files.push(sf)}}
    await DW().importFiles(files,null,sc.c.start);
    msg('✅ 4 ta stem tayyor ('+((performance.now()-t0)/1000).toFixed(1)+' s). HPSS usuli — AI model emas: vokal bilan baraban qisman aralashishi mumkin.');
   }catch(e){console.warn(e);msg('❌ Stem ajratish xatosi: '+(e&&e.message||e))}finally{ST.busy=0;ST.info='';ref()}}
@@ -13811,6 +13867,15 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
   m.notes.slice(0,600).forEach(n=>{const g=ctx.createGain();g.connect(ctx.destination);const a=t0+n.t,b=a+Math.min(n.d,2);g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(.18*n.v/127,a+.01);g.gain.linearRampToValueAtTime(0,b);
    if(m.drums){const o=ctx.createOscillator();o.type=n.p==36?'sine':'triangle';o.frequency.setValueAtTime(n.p==36?120:n.p==38?220:5000,a);if(n.p==36)o.frequency.exponentialRampToValueAtTime(45,a+.12);o.connect(g);o.start(a);o.stop(a+.15)}
    else{const o=ctx.createOscillator();o.type='triangle';o.frequency.value=440*Math.pow(2,(n.p-69)/12);o.connect(g);o.start(a);o.stop(b+.02)}})}
+ /* ---------- Tempoga moslash (tanlangan klip) ---------- */
+ async function fitClip(){
+  if(ST.busy)return;const sc=DW().selClip();if(!sc){msg('Avval klipni tanlang.');return}const sl=clipSlice(sc);if(!sl){msg('Klip audiosi yuklanmagan.');return}
+  ST.busy=1;ref();try{const AC=new OfflineAudioContext(sl.data.length,sl.data[0].length,sl.sr),ab=AC.createBuffer(sl.data.length,sl.data[0].length,sl.sr);sl.data.forEach((d,i)=>ab.getChannelData(i).set(d));
+   msg('⏳ Tempo aniqlanmoqda…');const bp=DD().bpm||120,r=await DAWTM.fit(ab,(sc.c.name||'')+'.wav',bp,true);
+   if(r.buf===ab){msg(r.skip=='unknown'?'ℹ Tempo ishonchli aniqlanmadi (aniq ritmli audio kerak).':r.skip=='same'?'✓ Klip allaqachon loyiha tempoida ('+r.srcBpm+' BPM).':r.skip=='range'?'⚠ Tempo juda farq qiladi ('+r.srcBpm+' → '+bp+' BPM, ×'+r.ratio.toFixed(2)+') — moslanmadi.':'ℹ Moslanmadi.');return}
+   DW().hist();const id=await DW().newAsset(r.buf,(sc.c.name||'klip')+' ['+bp+'bpm]');sc.c.asset=id;sc.c.off=0;sc.c.dur=r.buf.duration;sc.c.fi=0;sc.c.fo=0;DW().persist();DW().buildHeads();DW().draw();
+   msg('🎯 '+r.srcBpm+' → '+bp+' BPM ga moslandi (×'+r.ratio.toFixed(2)+', balandlik saqlandi). Ctrl+Z — qaytarish.')}
+  catch(e){console.warn(e);msg('❌ Tempoga moslash xatosi: '+(e&&e.message||e))}finally{ST.busy=0;ref()}}
  /* ---------- Panel ---------- */
  let panEl=null;function ref(){if(panEl&&document.body.contains(panEl)&&window.__dawui&&__dawui.render)__dawui.render()}
  function panel(p){panEl=p;try{__dawui.proCss&&__dawui.proCss()}catch(_){}const sc=(()=>{try{return DW().selClip()}catch(_){return null}})(),a=sc&&DW().A.get(sc.c.asset),m=ST.midi,dis=ST.busy?'disabled':'';
@@ -13827,11 +13892,13 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
    <div class=xrw><select id=cvmo><option value=mel ${ST.mode=='mel'?'selected':''}>Melodiya (monofonik)</option><option value=dr ${ST.mode=='dr'?'selected':''}>Ritm (baraban)</option></select><button class=xs2 id=cvt ${dis}>Aylantirish</button></div>
    ${m?`<div class=xrw><b style="font-size:12px">${m.notes.length} nota</b>${m.notes.length&&!m.drums?'<small style="margin:0">'+nn(Math.min(...m.notes.map(n=>n.p)))+' – '+nn(Math.max(...m.notes.map(n=>n.p)))+'</small>':''}<button class=xs2 id=cvp>▶ Tinglash</button><button class=xs2 id=cvdl>⬇ .mid yuklash</button></div>
    <div style="max-height:96px;overflow:auto;font:11px monospace;color:#9fb0d0">${m.notes.slice(0,40).map(n=>(m.drums?({36:'Kick',38:'Snare',42:'Hat'}[n.p]):nn(n.p))+' @'+n.t.toFixed(2)+'s '+n.d.toFixed(2)+'s v'+n.v).join('<br>')}${m.notes.length>40?'<br>…':''}</div>`:''}</div>
+  <div class=xcd><b>⑤ Tempoga moslash (Auto-fit)</b><small>Import va Sounds’dan qo‘shish/tinglashda audio loyiha tempoiga (${DD().bpm||120} BPM) moslanadi — balandlik saqlanadi. Tempo fayl nomidan (masalan «96bpm») yoki audiodan aniqlanadi; qisqa ovozlar (&lt;1.6 s) o‘zgarmaydi.</small>
+   <div class=xrw><label style="font-size:11px;display:flex;gap:4px;align-items:center"><input type=checkbox id=cvat ${window.DAWTM&&DAWTM.on()?'checked':''}>Avtomatik moslash</label><button class=xs2 id=cvfit ${dis}>Tanlangan klipni moslash</button></div></div>
   </div></div>`;
   p.querySelector('#xpx').onclick=()=>window.__dawui.close();
   const g=id=>p.querySelector('#'+id);
   g('cvsr').onchange=e=>ST.sr=+e.target.value;g('cvq').onchange=e=>ST.q=+e.target.value;g('cvb').onchange=e=>ST.bits=+e.target.value;g('cvd').onchange=e=>ST.dither=e.target.checked?1:0;
-  g('cvc').onclick=()=>doConvert('clip');g('cvm').onclick=()=>doConvert('mix');g('cvs').onclick=stems;g('cvmo').onchange=e=>ST.mode=e.target.value;g('cvt').onclick=toMidi;
+  g('cvc').onclick=()=>doConvert('clip');g('cvm').onclick=()=>doConvert('mix');g('cvs').onclick=stems;g('cvmo').onchange=e=>ST.mode=e.target.value;g('cvt').onclick=toMidi;g('cvat').onchange=e=>{DAWTM.setOn(e.target.checked);msg(e.target.checked?'✅ Avtomatik tempoga moslash yoqildi.':'⏸ Avtomatik tempoga moslash o‘chirildi.')};g('cvfit').onclick=fitClip;
   const pl=g('cvp');if(pl)pl.onclick=playMidi;const d=g('cvdl');if(d)d.onclick=()=>{dl(writeMidi(m.notes,DD().bpm||120,m.drums),m.name+(m.drums?' — ritm':' — melodiya')+'.mid');msg('✅ MIDI fayl yuklandi.')}}
  window.__dawui.ext.cvt=panel;window.__dawcv={resample,wavBits,stems,detectMelody,detectDrums,writeMidi,yin,ST};
 })();
@@ -14998,7 +15065,12 @@ body.dawon #dawv{display:flex}body.dawon #gw,body.dawon #top,body.dawon #vb{disp
  for(const k in X3)if(!U.D[k])U.D[k]=X3[k];
  const X4={"Avtomatizatsiya qatorini ochish/yopish": ["Открыть/закрыть строку автоматизации", "Show/hide automation lane"], "Read — avtomatizatsiyani ijro paytida qo‘llash": ["Read — применять автоматизацию при воспроизведении", "Read — apply automation during playback"], "Write — ijro paytida fader harakatini yozish (faqat Volume)": ["Write — записывать движение фейдера при воспроизведении (только Volume)", "Write — record fader moves during playback (Volume only)"], "Qatorni yopish": ["Закрыть строку", "Close lane"], "Chiziqni tozalash": ["Очистить линию", "Clear line"], "Konvert": ["Конверт", "Convert"], "Avval audio klip(lar)ni tanlang (Bounce Selection — B).": ["Сначала выберите аудиоклип(ы) (Bounce Selection — B).", "Select audio clip(s) first (Bounce Selection — B)."]};
  for(const k in X4)if(!U.D[k])U.D[k]=X4[k];
+ const X5={"Tempoga moslash (Auto-fit)": ["Подгонка под темп (Auto-fit)", "Tempo match (Auto-fit)"], "Avtomatik moslash": ["Автоматическая подгонка", "Auto match"], "Tanlangan klipni moslash": ["Подогнать выбранный клип", "Match selected clip"], "Tempo aniqlanmadi": ["Темп не определён", "Tempo not detected"]};
+ for(const k in X5)if(!U.D[k])U.D[k]=X5[k];
  const R=[
+ [/^Import va Sounds’dan qo‘shish\/tinglashda audio loyiha tempoiga \((\d+) BPM\) moslanadi — balandlik saqlanadi\. Tempo fayl nomidan \(masalan «96bpm»\) yoki audiodan aniqlanadi; qisqa ovozlar \(<1\.6 s\) o‘zgarmaydi\.$/,['При импорте и добавлении/прослушивании из Sounds аудио подгоняется под темп проекта ($1 BPM) — высота тона сохраняется. Темп берётся из имени файла (например «96bpm») или определяется по аудио; короткие звуки (<1.6 с) не меняются.','On import and when adding/auditioning from Sounds, audio is matched to the project tempo ($1 BPM) — pitch is preserved. Tempo comes from the file name (e.g. “96bpm”) or is detected from audio; short sounds (<1.6 s) are left unchanged.']],
+ [/^(.+): (\d+(?:\.\d+)?) → (\d+(?:\.\d+)?) BPM ga moslandi \(×(.+), balandlik saqlandi\)\. Ctrl\+Z — qaytarish; o‘chirish: 🔁 Konvert → Tempoga moslash\.$/,['$1: подогнано $2 → $3 BPM (×$4, высота тона сохранена). Ctrl+Z — отмена; отключить: 🔁 Конверт → Подгонка под темп.','$1: matched $2 → $3 BPM (×$4, pitch preserved). Ctrl+Z — undo; turn off: 🔁 Convert → Tempo match.']],
+ [/^Tempo aniqlanmoqda(?:: (.+))?…?$/,['Определение темпа…','Detecting tempo…']],
  [/^Bounce: (\d+) trek — (\d+) klip bitta audioga birlashtirildi \(.+\)\. Ctrl\+Z — qaytarish\.$/,['Bounce: треков — $1, клипов объединено в аудио — $2 (громкость клипа и fade применены; Fx/автоматизация трека остаются на треке). Ctrl+Z — отмена.','Bounce: $1 track(s) — $2 clip(s) merged into audio (clip gain and fades applied; track Fx/automation stay on the track). Ctrl+Z — undo.']],
  [/^Bounce: (.+)…$/,['Bounce: $1…','Bounce: $1…']],
  [/^Bounce xatosi: (.+)$/,['Ошибка Bounce: $1','Bounce error: $1']],

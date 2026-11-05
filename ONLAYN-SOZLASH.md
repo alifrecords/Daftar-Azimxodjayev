@@ -91,3 +91,6 @@ Yuqoridagi 🌐 tugmasi: O‘zbekcha / Русский / English. DAW (asboblar p
 ## Bounce va Avtomatizatsiya qatori (v91)
 - **Bounce Selection (B):** tanlangan klip(lar)ni bitta audio klipga birlashtiradi (klip ovozi va fade pishiriladi). Sichqonchaning o‘ng tugmasi menyusida ham bor. Ctrl+Z qaytaradi.
 - **Avtomatizatsiya qatori:** trek sarlavhasidagi «∿» tugmasi qatorni ochadi/yopadi. Volume yoki Pan; bosib nuqta qo‘shing, sudrang, ikki marta bosing yoki Alt+bosing — o‘chirish. R (o‘qish) / W (ijro paytida fader harakatini yozish). Audio to‘lqin shakli chiziqqa qarab pasayadi/ko‘tariladi.
+
+## Tempoga avtomatik moslash (v92)
+Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo‘shilganda va tinglanganda, u DAW loyiha tempoiga (BPM) moslanadi — tovush balandligi saqlanadi (WSOLA). Tempo fayl nomidan («96bpm») yoki audiodan aniqlanadi. Qisqa ovozlar (<1.6 s) o‘zgarmaydi. Yoqish/o‘chirish va qo‘lda moslash: 🔁 Konvert → «Tempoga moslash».
