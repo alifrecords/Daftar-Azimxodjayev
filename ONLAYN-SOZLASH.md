@@ -119,3 +119,13 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 - Model brauzerda bir marta yig‘ilib, brauzer keshida (Cache Storage) saqlanadi; ikkinchi marta internet kerak emas. Service worker `models/` ni keshlamaydi.
 - GPU (WebGPU) bo‘lsa tez, bo‘lmasa CPU da sekin. 6 daqiqagacha.
 - Litsenziya: `models/NOTICE.txt` ga qarang (model og‘irliklari litsenziyasi aniq e’lon qilinmagan — tijorat tarqatishdan oldin tekshiring).
+
+## v97 — Hujjat (Word) va Taqdimot (slaydlar) qo‘shimchalari
+- «+» menyusida «📝 Hujjat (Word)» va «📊 Taqdimot (slaydlar)» paydo bo‘ldi (Varaq va DAW yonida). Hujjat/taqdimot — alohida varaq (tab) sifatida saqlanadi.
+- Tugmalar Daftarning yuqori panelida (Hujjat: «Hujjat / Qo‘shish / Maket», Taqdimot: «Taqdimot / Qo‘shish / Dizayn / Namoyish» tablari); ranglar Daftar mavzusiga (qorong‘i/yorug‘) moslanadi.
+- Hujjat: shrift/o‘lcham/rang/marker, ro‘yxatlar, uslublar, jadval (+qator/ustun), rasm, havola, sahifa uzilishi, kolontitul, A4/A5/Letter/Legal/A3, maydonlar, ustunlar, topish/almashtirish, diktovka va ovozli o‘qish. Shablonlar galereyasi (qidiruv bilan): rezyume, xat, hisobot, shartnoma, marketing brif, kontent-reja, press-reliz, taklifnoma, hisob-faktura, musiqa trek brifi va h.k.
+- Eksport: Word (.docx), PDF (A4 sahifalarga bo‘lingan), HTML, TXT, Markdown, chop etish. Ochish: .docx / .txt / .html / .md.
+- Taqdimot: 16:9, 4:3, 1:1, 9:16, A4 o‘lchamlari; 8 mavzu; 11 maket; matn, rasm, shakl, jadval, diagramma (Daftar varag‘idagi ma’lumotdan); slaydlarni sudrab tartiblash; izohlar; o‘tish effektlari; to‘liq ekran namoyish (lazer, qora ekran). Shablonlar galereyasi (biznes, marketing, pitch, musiqa reliz, Instagram karusel, Story…).
+- Eksport: PowerPoint (.pptx), PDF, PNG (zip), HTML namoyish.
+- Mavjud asboblar (emoji, simvollar, formula…) hujjat/slaydga matn qo‘yadi; Matn va til tabidagi o‘qish/tarjima tanlangan matn bilan ishlaydi.
+- Server/sozlama kerak emas. UZ/RU/EN.
