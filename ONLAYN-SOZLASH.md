@@ -138,3 +138,10 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 - **Taqdimot → «Rasm» tabi:** rasmni ramkaga sudrab tashlansa o‘zi sig‘adi; to‘ldirish/sig‘dirish/cho‘zish, 90° burish, aks ettirish, erkin burchak, 3D qiyalik, ramka ichida zoom va siljitish, shaffoflik, doira/yumaloq niqob, bo‘sh rasm ramkalari. PPTX eksportda burish, aks va kesish saqlanadi (3D qiyalik faqat ekranda/PNG/PDF da).
 - Yangi piktogrammalar: telefon (Telegram bazasi), reporter (O‘qish/Pauza), binafsha logotip (Rasm→matn).
 - Server/sozlama kerak emas.
+
+## v101 — 🎭 Emotsional ovoz (she’r va sahna replikalari)
+- «Matn va til → Ovozli o‘qish» guruhida yangi tanlov: Oddiy / Avto-hissiyot / She’r (lirik) / Dramatik / Quvnoq / G‘amgin / Jahldor / Pichirlab / Sahna (rollar). Mavjud «O‘qish» tugmasi shu ohang bilan o‘qiydi (jadval, qayd, Hujjat, Taqdimot).
+- Matn jumla va satrlarga bo‘linadi; tinish belgilari (! ? … , ; :) bo‘yicha tezlik/ohang/pauza o‘zgaradi, bandlar orasida uzoq pauza, KATTA HARFLI so‘zlar bosim bilan o‘qiladi. Qavs ichidagi remarkalar past ovozda.
+- «Sahna» rejimida «ROL: matn» (yoki «ROL — matn») qatorlari har bir rol uchun alohida ovoz/ohangda o‘qiladi (qurilmada mavjud ovozlar orasidan erkak/ayol ketma-ket).
+- Eslatma: ohang (pitch) va balandlik (volume) faqat ularni qo‘llaydigan ovozlarda ishlaydi (Windows/Microsoft, Apple ovozlari); ba’zi onlayn Google ovozlari faqat tezlik va pauzani qabul qiladi.
+- Diktor qiz rasmi olib tashlandi.
