@@ -15638,6 +15638,9 @@ html[data-vrp="1"] #vr::after,html[data-vrp="1"] #rbmini [data-p=vr]::after{cont
  if(document.readyState=='complete')boot();else addEventListener('load',boot);
 })();
 
+/* Oq mavzu: jadval katagidagi yozuvlar qizil (tugmalar va sarlavhalar oq/asliday qoladi) */
+(()=>{const st=document.createElement('style');st.id='oqred';st.textContent=`:root[data-theme=light]{--cellfg:#c8102e}:root[data-theme=light] #tw td,:root[data-theme=light] #tw td [contenteditable],:root[data-theme=light] #fx{color:var(--cellfg)}:root[data-theme=light] #tw td::selection,:root[data-theme=light] #fx::selection{color:#fff}`;document.head.append(st)})();
+
 /* DAW va boshqa interfeys matnlari uchun oflayn RU/EN lug‘at (f6zl tarjimoniga qo‘shiladi) */
 (function(){
  const U=window.__ui;if(!U||!U.D)return;
