@@ -149,5 +149,5 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 ## v102 — Realistik o‘zbek AI ovozlari (Axborot / Reportyor / Multfilm / Dublyaj)
 «Ovozli o‘qish» guruhidagi 🎭 tanlovga 4 uslub qo‘shildi. Ular ilova (exe) serveridagi `/__data/tts` orqali Edge neyron ovozlari (uz-UZ Sardor/Madina) bilan o‘qiydi; server endi `r` (tezlik %), `p` (pitch Hz), `v` (balandlik) va `g` (m/f) parametrlarini qabul qiladi. Multfilm va Dublyajda «ROL: matn» qatorlari turli ovoz/ohangda o‘qiladi. Internet yoki ilova bo‘lmasa oddiy tizim ovoziga qaytadi. Cloudflare (sof onlayn) versiyada bu server yo‘li yo‘q.
 
-## v103 — Oq mavzuda jadval yozuvlari qizil
-Oq (light) mavzuda jadval kataklaridagi oddiy yozuvlar va formula qatori qizil (#c8102e); tugmalar, sarlavhalar asliday. Foydalanuvchi o‘zi bergan matn ranglari saqlanadi.
+## v104 — Oq mavzuda ajralib turuvchi atamalar qizil
+Oq mavzuda oddiy matn asliday to‘q (qora), ajratib ko‘rsatiladigan atamalar (funksiya/atama va shahar belgilari) qizil (#c8102e). Foydalanuvchi bergan maxsus ranglar saqlanadi.
