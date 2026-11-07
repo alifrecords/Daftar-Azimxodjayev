@@ -145,3 +145,6 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 - «Sahna» rejimida «ROL: matn» (yoki «ROL — matn») qatorlari har bir rol uchun alohida ovoz/ohangda o‘qiladi (qurilmada mavjud ovozlar orasidan erkak/ayol ketma-ket).
 - Eslatma: ohang (pitch) va balandlik (volume) faqat ularni qo‘llaydigan ovozlarda ishlaydi (Windows/Microsoft, Apple ovozlari); ba’zi onlayn Google ovozlari faqat tezlik va pauzani qabul qiladi.
 - Diktor qiz rasmi olib tashlandi.
+
+## v102 — Realistik o‘zbek AI ovozlari (Axborot / Reportyor / Multfilm / Dublyaj)
+«Ovozli o‘qish» guruhidagi 🎭 tanlovga 4 uslub qo‘shildi. Ular ilova (exe) serveridagi `/__data/tts` orqali Edge neyron ovozlari (uz-UZ Sardor/Madina) bilan o‘qiydi; server endi `r` (tezlik %), `p` (pitch Hz), `v` (balandlik) va `g` (m/f) parametrlarini qabul qiladi. Multfilm va Dublyajda «ROL: matn» qatorlari turli ovoz/ohangda o‘qiladi. Internet yoki ilova bo‘lmasa oddiy tizim ovoziga qaytadi. Cloudflare (sof onlayn) versiyada bu server yo‘li yo‘q.

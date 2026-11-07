@@ -10612,6 +10612,10 @@ paintCss();build();paint();
   gamgin:{n:'😢 G‘amgin',r:.76,p:.78,v:.82,k:1.7,line:600,stanza:1200,auto:1},
   jahl:{n:'😠 Jahldor',r:1.08,p:.72,v:1,k:.9,line:250,stanza:600,auto:1,strong:1},
   pich:{n:'🤫 Pichirlab',r:.88,p:.95,v:.3,k:1.1,line:350,stanza:700,auto:1},
+  axborot:{n:'📺 Axborot (diktor, onlayn)',srv:1,g:'m',r:4,p:-6,k:.7,line:300,stanza:600,auto:1},
+  reporter:{n:'🎙 Reportyor (jonli efir, onlayn)',srv:1,g:'f',r:14,p:3,k:.55,line:200,stanza:450,auto:1,strong:1},
+  multfilm:{n:'🧸 Multfilm qahramonlari (onlayn)',srv:1,g:'f',r:8,p:30,k:.8,line:300,stanza:600,auto:1,roles:1,toon:1},
+  dublyaj:{n:'🎞 Dublyaj (rollar, onlayn)',srv:1,g:'m',r:0,p:0,k:.8,line:350,stanza:700,auto:1,roles:1,dub:1},
   sahna:{n:'🎭 Sahna (rollar)',r:.95,p:1,v:1,k:1.2,line:380,stanza:800,auto:1,roles:1}
  };
  let mode='';try{mode=localStorage.getItem('daftar-vem')||''}catch(_){}
@@ -10657,10 +10661,31 @@ paintCss();build();paint();
  const sp=SS.speak.bind(SS),cn=SS.cancel.bind(SS);let gen=0,active=false,timer=0;
  const pdesc=Object.getOwnPropertyDescriptor(SpeechSynthesis.prototype,'speaking');
  try{Object.defineProperty(SS,'speaking',{configurable:true,get:()=>{let r=false;try{r=pdesc.get.call(SS)}catch(_){}return r||active}})}catch(_){}
- SS.cancel=function(){gen++;active=false;clearTimeout(timer);roles.clear();return cn()};
+ SS.cancel=function(){gen++;active=false;clearTimeout(timer);roles.clear();try{if(srvAu){srvAu.pause();srvAu=null}}catch(_){}return cn()};
+ /* ---- onlayn Uzbek AI ovozi (Edge neyron: Sardor/Madina) — ohang parametrlari bilan ---- */
+ let srvOk=null;const srvProbe=async()=>{if(srvOk!==null)return srvOk;try{const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);const r=await fetch('/__data/tts?l=uz&q='+encodeURIComponent('Sinov'),{signal:c.signal});clearTimeout(t);srvOk=r.ok&&(await r.arrayBuffer()).byteLength>100}catch(_){srvOk=false}return srvOk};
+ const TOON=[[30,10,'f'],[-28,-6,'m'],[55,14,'f'],[18,0,'m'],[-14,-10,'m'],[45,8,'f']];
+ const DUB=[['m',0,0],['f',0,0],['m',-8,-4],['f',6,4],['m',8,2],['f',-6,-2]];
+ const roleIdx=n=>{const k=[...roles.keys()];let i=k.indexOf(n);if(i<0){roles.set(n,{});i=roles.size-1}return i};
+ const srvP=(seg,M,u)=>{let g=M.g,r=M.r+Math.round(((+u.rate||1)-1)*60),p=M.p,v=0;const t=seg.t;
+  if(seg.role){const i=roleIdx(seg.role);if(M.toon){const a=TOON[i%6];p+=a[0];r+=a[1];g=a[2]}else if(M.dub){const a=DUB[i%6];g=a[0];p+=a[1];r+=a[2]}else g=i%2?'f':'m'}
+  if(M.auto){if(/!["»”)]*$/.test(t)){r+=8;p+=M.dub?8:6}else if(/\?["»”)]*$/.test(t)){p+=M.toon?12:6}else if(/(…|\.\.\.)$/.test(t)){r-=14;p-=6;v=-15}
+   if(/\b[\p{Lu}]{4,}\b/u.test(t)){r-=6;p+=5}}
+  if(seg.rem){r-=6;p-=10;v=-30}
+  return{g,r:clamp(r,-40,60),p:clamp(p,-60,100),v:clamp(v,-60,0)}};
+ const srvSpeak=(u,M,segs,my)=>{let i=0,au=null;const fire=n=>{try{u.dispatchEvent(new Event(n))}catch(_){}};
+  const fin=()=>{active=false;srvAu=null};
+  const next=()=>{if(my!=gen)return;if(i>=segs.length){fin();fire('end');return}
+   const s=segs[i++],q=srvP(s,M,u);let t=s.t.slice(0,230);
+   const a=new Audio('/__data/tts?l=uz&g='+q.g+'&r='+q.r+'&p='+q.p+'&v='+q.v+'&q='+encodeURIComponent(t));srvAu=au=a;a.volume=clamp(u.volume==null?1:u.volume,0,1);
+   const go=()=>{if(my!=gen)return;const w=Math.round(s.gap*(M.k||1));clearTimeout(timer);const wait=()=>{if(my!=gen)return;if(SS.paused){timer=setTimeout(wait,120);return}next()};timer=setTimeout(wait,w)};
+   a.onended=go;a.onerror=go;if(i==1)fire('start');a.play().catch(go)};
+  next()};
+ let srvAu=null;
  SS.speak=function(u){
   if(!mode||!u||!u.text||u._em||String(u.text).trim().length<2)return sp(u);
   const M=MODES[mode],segs=split(u.text,M);if(!segs.length)return sp(u);
+  if(M.srv){const my=++gen;active=true;srvProbe().then(ok=>{if(my!=gen)return;if(ok){srvSpeak(u,M,segs,my)}else{active=false;try{msg('⚠ Onlayn ovoz uchun ilova (exe) va internet kerak — hozircha oddiy tizim ovozi ishlatildi.')}catch(_){}gen++;sp(u)}});return}
   const my=++gen;active=true;let i=0;
   const fire=(n,ev)=>{try{u.dispatchEvent(new Event(n));}catch(_){}};
   const next=()=>{if(my!=gen)return;
