@@ -129,3 +129,12 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 - Eksport: PowerPoint (.pptx), PDF, PNG (zip), HTML namoyish.
 - Mavjud asboblar (emoji, simvollar, formula…) hujjat/slaydga matn qo‘yadi; Matn va til tabidagi o‘qish/tarjima tanlangan matn bilan ishlaydi.
 - Server/sozlama kerak emas. UZ/RU/EN.
+
+## v98 — Hujjat/Taqdimot uchun mayda mexanizmlar, rasm-ramka, 👁 Oq varaq
+- **Imlo, Tarjimon (lotin↔kirill), Raqam→so‘z, ✨ AI, Rasm→matn (OCR), ovozli yozish/o‘qish, yozishda avto-tuzatish** endi Hujjat va Taqdimotda ham Excel maydonidagidek ishlaydi (belgilangan matn yoki butun hujjat/slayd; natija joyiga yoziladi, Ctrl+Z bilan qaytariladi).
+- **Telegram bazasi:** xabarlarni «📝 Hujjat/Slayd» tugmasi bilan ochiq hujjatga (matn + rasm) yoki slaydlarga (har xabar — alohida slayd) qo‘yish mumkin. Hujjat/slaydni «✈ Telegram guruhga» (PNG) yuborish — Eksport menyusida.
+- **Telegram «Qabul» tumbleri:** Modullar tabida telefon belgisining yonida: yashil «YONIQ» / qizil «O‘CHIQ». Bosilganda qabul yoqiladi/o‘chadi (bazadagi xabarlar saqlanadi).
+- **👁 Oq varaq (yuqori o‘ngda, UZ yonida):** tayyorlanayotgan ma’lumotning jonli oq varaq ko‘rinishi — jadval (rang, birlashma, chegaralar bilan), hujjat (A4 sahifa), taqdimot (barcha slaydlar). Yozganingiz zahoti yangilanadi; masshtab, to‘r, A1 sarlavhalar.
+- **Taqdimot → «Rasm» tabi:** rasmni ramkaga sudrab tashlansa o‘zi sig‘adi; to‘ldirish/sig‘dirish/cho‘zish, 90° burish, aks ettirish, erkin burchak, 3D qiyalik, ramka ichida zoom va siljitish, shaffoflik, doira/yumaloq niqob, bo‘sh rasm ramkalari. PPTX eksportda burish, aks va kesish saqlanadi (3D qiyalik faqat ekranda/PNG/PDF da).
+- Yangi piktogrammalar: telefon (Telegram bazasi), reporter (O‘qish/Pauza), binafsha logotip (Rasm→matn).
+- Server/sozlama kerak emas.
