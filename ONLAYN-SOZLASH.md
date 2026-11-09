@@ -151,3 +151,11 @@ Audio import qilinganda yoki Sounds bo‘limidan (mening fayllarim / onlayn) qo�
 
 ## v105 — Oq mavzu qizil rang o‘zgarishlari bekor qilindi
 v103/v104 dagi qizil rang o‘zgarishlari olib tashlandi; Oq mavzu v102 holatida.
+
+## v106 — ☁ Bulut: shaxsiy kod bilan (telefon va boshqa kompyuter)
+Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili shaxsiy kod (`DK-XXXXX-XXXXX-XXXXX-XXXXX`, QR va havola bilan) beriladi; boshqa qurilmada **Kod bilan kirish** (yoki havola `#bulut=KOD`) → daftar yuklanadi va ish davom etadi.
+- **Shifrlash brauzerda:** kod → PBKDF2-SHA256 (250 000 aylanish) → `id` + AES-256-GCM kaliti. Server (`functions/api/vault.js`, D1 jadvallari `df_vault`, `df_vchunk`, `df_vnew` o‘zi yaratiladi) faqat shifrlangan paketni ko‘radi; kod/kalit serverga bormaydi. Kodni yo‘qotgan foydalanuvchi ma’lumotini tiklab bo‘lmaydi.
+- **Avto-sinxron:** o‘zgarish ~6 s tinchlikdan keyin yuboriladi, boshqa qurilmadagi yangiroq nusxa o‘zi olinadi (ko‘rinish o‘rni saqlanadi). Ikkala qurilmada ham o‘zgarish bo‘lsa «Ziddiyat» — foydalanuvchi tanlaydi; almashtirilgan nusxa `daftar-prev` da qoladi.
+- Chegaralar: siqilgan paket ≈5 MB gacha (12 bo‘lak × 600 KB), bitta IP dan soatiga 5 ta yangi daftar, jami 20 000 ta. Tarifga bog‘liq emas.
+- Sozlash shart emas (D1 `DB` allaqachon ulangan). Exe uchun: `online.json` → `{"api":"https://SAYT-NOMI.pages.dev"}` bo‘lsa exe ham shu buluttan foydalanadi.
+- Claude artifakt versiyasida bu tugma serverni topa olmaydi (u yerda Claude-hisob bulut sinxroni avvaldan bor).

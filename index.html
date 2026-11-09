@@ -16793,6 +16793,130 @@ html[data-vrp="1"] #vr::after,html[data-vrp="1"] #rbmini [data-p=vr]::after{cont
  try{if(U.get()!=='uz')U.pass()}catch(_){}
 })();
 
+/* ☁ BULUT (shaxsiy kod): daftar brauzerda AES-GCM bilan shifrlanib serverda (D1) saqlanadi; kod serverga yuborilmaydi.
+   Telefon va boshqa kompyuterda shu kod bilan kirib ishni davom ettirish mumkin. Tarifga bog‘liq emas. */
+(()=>{
+const LSK='daftar-vault',AL='ABCDEFGHJKMNPQRSTUVWXYZ23456789',CH=600000,MAXN=12;
+const V={code:'',id:'',key:null,ver:0,hash:'',at:0,size:0,auto:true,busy:false,err:'',st:'',pause:0,lastTs:0,lastChange:0,lastNet:0,conf:false};
+const enc=new TextEncoder(),dec=new TextDecoder();
+try{const j=JSON.parse(localStorage.getItem(LSK)||'null');if(j&&j.code){V.code=j.code;V.ver=j.ver|0;V.hash=j.hash||'';V.at=j.at||0;V.size=j.size||0;V.auto=j.auto!==false}}catch(_){}
+const persist=()=>{try{if(V.code)localStorage.setItem(LSK,JSON.stringify({code:V.code,ver:V.ver,hash:V.hash,at:V.at,size:V.size,auto:V.auto}));else localStorage.removeItem(LSK)}catch(_){}};
+const hex=a=>[...a].map(b=>b.toString(16).padStart(2,'0')).join('');
+const fmt=c=>'DK-'+(c.match(/.{1,5}/g)||[]).join('-');
+const norm=s=>String(s||'').toUpperCase().replace(/^\s*DK/,'').replace(/[^A-HJ-KM-NP-Z2-9]/g,'');
+const gen=()=>{const o=[];while(o.length<20){const a=new Uint8Array(32);crypto.getRandomValues(a);for(const x of a){if(x<248&&o.length<20)o.push(AL[x%31])}}return o.join('')};
+const toB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+const fromB64=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+const strHash=s=>{let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return s.length+':'+h};
+const curHash=()=>{try{return strHash(JSON.stringify(D.subjects))}catch(_){return''}};
+async function derive(code){const k=await crypto.subtle.importKey('raw',enc.encode('daftar-bulut:'+code),'PBKDF2',false,['deriveBits']);
+ const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode('daftar-azimxodjayev-vault-v1'),iterations:250000},k,512));
+ return{id:hex(bits.slice(0,32)),key:await crypto.subtle.importKey('raw',bits.slice(32),'AES-GCM',false,['encrypt','decrypt'])}}
+async function useCode(code){const d=await derive(code);V.code=code;V.id=d.id;V.key=d.key}
+async function gz(u8){if(!window.CompressionStream)return null;const cs=new CompressionStream('gzip'),w=cs.writable.getWriter();w.write(u8);w.close();return new Uint8Array(await new Response(cs.readable).arrayBuffer())}
+async function gunz(u8){const ds=new DecompressionStream('gzip'),w=ds.writable.getWriter();w.write(u8);w.close();return new Uint8Array(await new Response(ds.readable).arrayBuffer())}
+async function seal(str){const raw=enc.encode(str);let flag=2,body=raw;try{const g=await gz(raw);if(g){flag=1;body=g}}catch(_){}
+ const iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},V.key,body)),o=new Uint8Array(13+ct.length);o[0]=flag;o.set(iv,1);o.set(ct,13);return toB64(o)}
+async function unseal(b64){const u=fromB64(b64),flag=u[0],pt=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(1,13)},V.key,u.slice(13)));return dec.decode(flag==1?await gunz(pt):pt)}
+const rnd=()=>hex(crypto.getRandomValues(new Uint8Array(12)));
+let _API=null;
+async function base(){if(_API!==null){if(_API===false)_API=null;else return _API}
+ const c=[];if(/^https?:/.test(location.protocol)){try{const r=await fetch('online.json',{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&typeof j.api=='string'&&/^https:\/\/[\w.-]+$/.test(j.api.replace(/\/+$/,'')))c.push(j.api.replace(/\/+$/,''))}}catch(_){}c.push('')}
+ for(const b of c){try{const r=await fetch(b+'/api/vault?ping=1',{cache:'no-store'});if(r.ok&&/json/.test(r.headers.get('content-type')||'')){const j=await r.json();if(j&&j.ok)return _API=b}}catch(_){}}
+ throw new Error('Bulut serveri topilmadi (onlayn sayt versiyasi va internet kerak).')}
+async function post(b,body){let r;try{r=await fetch(b+'/api/vault',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})}catch(_){throw new Error('Internet yo‘q yoki server javob bermadi.')}let j={};try{j=await r.json()}catch(_){}j.status=r.status;return j}
+async function meta(b){let r;try{r=await fetch(b+'/api/vault?id='+V.id,{cache:'no-store'})}catch(_){throw new Error('Internet yo‘q yoki server javob bermadi.')}if(r.status==404)return null;if(!r.ok)throw new Error('Server xatosi ('+r.status+')');return r.json()}
+async function push(force,onp,auto){const b=await base();if(!auto){try{commit()}catch(_){}}try{save()}catch(_){}
+ const str=JSON.stringify(D),hash=curHash(),p=await seal(str),n=Math.max(1,Math.ceil(p.length/CH));
+ if(n>MAXN)throw new Error('Daftar hajmi bulut chegarasidan katta ('+(str.length/1048576).toFixed(1)+' MB). Katta rasm/audioni kamaytiring.');
+ let baseVer=V.ver;if(force){const m=await meta(b);baseVer=m?m.ver:0}
+ const tx=rnd();
+ for(let i=0;i<n;i++){if(onp)onp(i,n);const j=await post(b,{op:'put',id:V.id,tx,i,n,d:p.slice(i*CH,(i+1)*CH)});if(!j.ok)throw new Error(j.msg||('Yuklashda xato ('+(j.error||j.status)+')'))}
+ const j=await post(b,{op:'commit',id:V.id,tx,n,size:p.length,base:baseVer});
+ if(j.status==409){const e=new Error('conflict');e.conflict=true;e.ver=j.ver;throw e}
+ if(!j.ok)throw new Error(j.msg||('Saqlashda xato ('+(j.error||j.status)+')'));
+ V.ver=j.ver;V.hash=hash;V.at=Date.now();V.size=p.length;persist();return j}
+async function fetchAll(b,m){const parts=[];for(let i=0;i<m.n;i++){const r=await fetch(b+'/api/vault?id='+V.id+'&i='+i+'&tx='+m.tx,{cache:'no-store'});if(!r.ok)throw new Error('Bo‘lak yuklanmadi — qayta urining.');parts.push((await r.json()).d)}
+ return JSON.parse(await unseal(parts.join('')))}
+function keepView(o){try{const s=D.subjects[D.si],t=s&&s.topics[D.ti];if(!s)return;const si=o.subjects.findIndex(x=>x.n===s.n);if(si>=0){o.si=si;const ti=t?o.subjects[si].topics.findIndex(x=>x.n===t.n):-1;o.ti=ti>=0?ti:0}}catch(_){}}
+async function apply(m,b,keep){const o=await fetchAll(b,m);if(keep)keepView(o);restoreState(o,'☁ Bulut (v'+m.ver+')');V.ver=m.ver;V.hash=curHash();V.at=Date.now();V.size=m.size||0;persist()}
+/* ---- holat tugmasi ---- */
+function badge(){const e=document.getElementById('vlb');if(!e)return;const on=!!V.code;e.className='vlb'+(on?' on':'')+(V.err||V.conf?' bad':'')+(V.busy?' sy':'');
+ e.innerHTML='<span class=vi>☁</span><span class=vt>'+(!on?'Bulut':V.busy?'Saqlanmoqda':V.conf?'Ziddiyat':V.err?'Xato':'Saqlangan')+'</span>';
+ e.title=!on?'Daftarni shaxsiy kod bilan bulutga saqlash — telefon va boshqa kompyuterdan kirish':V.err?('Bulut xatosi: '+V.err):V.conf?'Boshqa qurilmada ham o‘zgargan — bosing va tanlang':'Bulutga shifrlab saqlanadi. Oxirgi: '+(V.at?new Date(V.at).toLocaleTimeString().slice(0,5):'—')}
+function ensureUI(){if(document.getElementById('vlb'))return;const ref=document.getElementById('eyb')||document.getElementById('acb');if(!ref||!ref.parentNode)return;
+ if(!document.getElementById('vlcss')){const s=document.createElement('style');s.id='vlcss';s.textContent=`.vlb{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px;border-radius:9px;border:1px solid rgba(150,170,220,.35);background:rgba(120,140,200,.12);color:inherit;font:600 12px system-ui;cursor:pointer;white-space:nowrap}.vlb.on{border-color:#2e9d57;background:rgba(46,157,87,.14)}.vlb.bad{border-color:#e0a800;background:rgba(224,168,0,.16)}.vlb.sy .vi{animation:vlsp 1s linear infinite;display:inline-block}@keyframes vlsp{to{transform:rotate(360deg)}}
+.vlx{font:13px/1.5 system-ui}.vlx .hero{font-size:13.5px;margin:0 0 10px}.vlx .m2{opacity:.75;font-size:12px;margin:8px 0}.vlx button.vb{display:block;width:100%;height:auto!important;min-height:0!important;line-height:1.35!important;white-space:normal;text-align:left;margin:7px 0;padding:11px 13px;border-radius:11px;border:1px solid rgba(150,170,220,.35);background:rgba(120,140,200,.12);color:inherit;font:600 13.5px system-ui;cursor:pointer}.vlx button.vb small{display:block;font-weight:400;opacity:.75;margin-top:4px;line-height:1.3}.vlx button.vb.pri{border-color:#d6283a;background:rgba(214,40,58,.16)}.vlx button.vb.dng{border-color:#d6283a;color:#ff7b88}
+.vlx .code{font:700 21px/1.35 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;text-align:center;background:rgba(0,0,0,.28);border:1px dashed #d6283a;border-radius:12px;padding:14px 8px;margin:10px 0;user-select:all;word-break:break-all}.vlx input.ci{width:100%;box-sizing:border-box;font:700 18px ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;text-align:center;padding:12px;border-radius:11px;border:1px solid rgba(150,170,220,.45);background:rgba(0,0,0,.25);color:inherit;text-transform:uppercase}.vlx .st{padding:9px 11px;border-radius:10px;background:rgba(46,157,87,.14);border:1px solid #2e9d57;margin-bottom:8px}.vlx .st.bad{background:rgba(224,168,0,.16);border-color:#e0a800}.vlx .qr{display:flex;justify-content:center;margin:8px 0}.vlx .qr svg{background:#fff;padding:6px;border-radius:8px;width:170px;height:170px}.vlx .rw{display:flex;gap:8px}.vlx .rw button.vb{text-align:center}`;document.head.append(s)}
+ const b=document.createElement('button');b.id='vlb';b.type='button';b.onclick=()=>openUI();ref.parentNode.insertBefore(b,ref);badge()}
+/* ---- oyna ---- */
+const E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const body=()=>document.getElementById('dbd');
+function show(title,html,wire){dialog(title,'<div class=vlx>'+html+'</div>',()=>{},'Yopish');const r=body();if(!r)return;r.querySelectorAll('[data-v]').forEach(x=>x.onclick=()=>{const f=wire&&wire[x.dataset.v];if(f)Promise.resolve(f(x)).catch(e=>{try{msg('Xato: '+(e&&e.message||e))}catch(_){}})});return r}
+const loadQR=()=>window.qrcode?Promise.resolve(true):new Promise(r=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';s.onload=()=>r(!!window.qrcode);s.onerror=()=>r(false);document.head.append(s)});
+const linkOf=()=>location.origin+location.pathname+'#bulut='+V.code;
+async function qrInto(el,txt){if(!el)return;try{if(!await loadQR()){el.parentNode&&(el.parentNode.style.display='none');return}const q=window.qrcode(0,'M');q.addData(txt);q.make();el.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true})}catch(_){}}
+const ago=t=>{if(!t)return'—';const s=Math.round((Date.now()-t)/1000);return s<60?'hozirgina':s<3600?Math.round(s/60)+' daqiqa oldin':new Date(t).toLocaleString().slice(0,16)};
+const mb=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+function openUI(prefill){if(V.code)return openMain();return openStart(prefill)}
+function openStart(prefill){const r=show('☁ Bulut — daftarim hamma joyda',`<p class=hero>Daftaringizni <b>shifrlab</b> bulutga saqlang. Telefon yoki boshqa kompyuterda <b>shaxsiy kod</b> bilan kirib, ishni aynan shu joydan davom ettiring.</p>
+<button class="vb pri" data-v=new>🆕 Yangi bulut daftar yaratish<small>Hozirgi daftaringiz bulutga yuklanadi, sizga shaxsiy kod beriladi</small></button>
+<button class="vb" data-v=join>🔑 Shaxsiy kod bilan kirish<small>Boshqa qurilmada yaratilgan daftarni shu qurilmaga yuklash</small></button>
+<p class=m2>🔒 Kod faqat sizda turadi — serverga yuborilmaydi, ma’lumot qurilmangizda shifrlanadi. Kodni yo‘qotsangiz, ma’lumotni hech kim (hatto biz ham) tiklay olmaydi.</p>`,{new:createFlow,join:()=>openJoin()});if(prefill)openJoin(prefill)}
+async function createFlow(){await base();const code=gen();show('☁ Yaratilmoqda…','<p class=hero id=vp>Shifrlanmoqda va yuklanmoqda…</p>');
+ try{await useCode(code);V.ver=0;V.hash='';await push(false,(i,n)=>{const p=document.getElementById('vp');if(p)p.textContent='Yuklanmoqda… '+(i+1)+'/'+n})}catch(e){V.code='';V.id='';V.key=null;persist();badge();show('☁ Xato',`<div class="st bad">${E(e.message)}</div><button class=vb data-v=back>← Orqaga</button>`,{back:()=>openStart()});return}
+ persist();V.err='';V.conf=false;badge();openCode(true)}
+async function openCode(first){const lk=linkOf();show(first?'☁ Tayyor! Kodingizni saqlang':'☁ Shaxsiy kod',`<p class=hero>${first?'Daftaringiz bulutga yuklandi. ':''}Quyidagi kod — <b>yagona kalit</b>. Uni xavfsiz joyga yozib qo‘ying.</p><div class=code>${E(fmt(V.code))}</div>
+<div class=rw><button class=vb data-v=copy>📋 Nusxalash</button><button class=vb data-v=txt>⬇ .txt</button><button class=vb data-v=lnk>🔗 Havola</button></div>
+<div class=qr><div id=vqr></div></div><p class=m2>📱 Telefonda: QR ni kamera bilan skanerlang (ko‘rinmasa — 🔗 Havolani o‘zingizga yuboring) yoki saytni ochib «☁ Bulut» → «Kod bilan kirish» ni bosing. QR va havola ichida kod bor — ularni boshqalarga bermang.</p>
+${first?'':''}<button class="vb pri" data-v=ok>${first?'✓ Kodni saqlab oldim':'Yopish'}</button>`,{
+ copy:()=>navigator.clipboard.writeText(fmt(V.code)).then(()=>msg('✓ Kod nusxalandi')),
+ lnk:()=>navigator.clipboard.writeText(lk).then(()=>msg('✓ Havola nusxalandi (ichida kod bor!)')),
+ txt:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['Daftar Azimxodjayev — bulut shaxsiy kodi\r\n\r\n'+fmt(V.code)+'\r\n\r\nBu kodni hech kimga bermang. Kodsiz ma’lumotni tiklab bo‘lmaydi.\r\n'],{type:'text/plain'}));a.download='daftar-bulut-kod.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000)},
+ ok:()=>{const d=document.getElementById('dg');try{$('#dok').click()}catch(_){}}});qrInto(document.getElementById('vqr'),lk)}
+function openJoin(pre){const r=show('🔑 Shaxsiy kod bilan kirish',`<p class=hero>Boshqa qurilmada olgan kodingizni kiriting.</p><input class=ci id=vci placeholder="DK-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete=off autocapitalize=characters spellcheck=false><p class=m2 id=vms></p>
+<button class="vb pri" data-v=go>☁→ Kirish va daftarni yuklash</button><button class=vb data-v=back>← Orqaga</button>`,{back:()=>openStart(),go:async()=>{
+  const code=norm(document.getElementById('vci').value),ms=document.getElementById('vms');if(code.length!==20){ms.textContent='Kod 20 ta belgidan iborat bo‘lishi kerak.';return}
+  ms.textContent='Tekshirilmoqda…';const b=await base();await useCode(code);let m;try{m=await meta(b)}catch(e){V.code='';ms.textContent=e.message;return}
+  if(!m){V.code='';V.id='';V.key=null;ms.textContent='Bunday kod bilan bulutda daftar topilmadi.';return}
+  show('☁ Kirish',`<div class=st>✔ Daftar topildi · versiya ${m.ver} · ${mb(m.size||0)} · ${ago(m.upd)}</div><p class=hero>Shu qurilmadagi daftar bulutdagi nusxa bilan <b>almashtiriladi</b>. Joriy nusxa «oldingi holat» sifatida saqlab qo‘yiladi.</p>
+  <button class="vb pri" data-v=yes>✓ Bulutdan yuklash</button><button class=vb data-v=no>Bekor qilish</button>`,{no:()=>{V.code='';V.id='';V.key=null;persist();badge();openStart()},yes:async()=>{
+   show('☁ Yuklanmoqda…','<p class=hero>Yuklanmoqda va shifr ochilmoqda…</p>');try{await apply(m,b,false);V.err='';V.conf=false;persist();badge();openMain(true)}catch(e){V.code='';V.id='';V.key=null;persist();badge();show('☁ Xato',`<div class="st bad">${E(e.message)}</div><button class=vb data-v=back>← Orqaga</button>`,{back:()=>openStart()})}}})}});
+ const i=document.getElementById('vci');if(i){i.oninput=()=>{const c=norm(i.value).slice(0,20);i.value=c?fmt(c):''};if(pre){i.value=fmt(norm(pre).slice(0,20));i.oninput()}i.focus()}}
+function openMain(joined){const lbl=V.conf?`<div class="st bad">⚠ Boshqa qurilmada ham o‘zgarish bo‘lgan. Qaysi nusxa qolishini tanlang.</div>`:V.err?`<div class="st bad">⚠ ${E(V.err)}</div>`:`<div class=st>● Ulangan${joined?' — daftar yuklandi':''} · oxirgi sinxron: ${ago(V.at)} · ${mb(V.size)} · versiya ${V.ver}</div>`;
+ show('☁ Bulut — daftarim',lbl+`<button class="vb pri" data-v=sync>⟳ Hozir sinxronlash<small>O‘zgarishlarni yuboradi yoki boshqa qurilmadagisini oladi</small></button>
+<button class=vb data-v=down>⬇ Bulutdagini shu qurilmaga yuklash<small>Shu qurilmadagi daftar almashtiriladi (oldingisi saqlanadi)</small></button>
+<button class=vb data-v=up>⬆ Shu qurilmadagini bulutga yozish<small>Bulutdagi nusxa almashtiriladi</small></button>
+<label style="display:flex;gap:8px;align-items:center;margin:8px 2px"><input type=checkbox id=vau ${V.auto?'checked':''}> Avto-sinxron (o‘zgarishlar o‘zi saqlanadi va yangilanadi)</label>
+<div class=rw><button class=vb data-v=code>🔑 Kod va QR</button><button class=vb data-v=out>🚪 Chiqish</button></div><button class="vb dng" data-v=del>🗑 Bulutdagi nusxani o‘chirish</button>`,{
+ sync:async()=>{await tick(true);openMain()},
+ down:async()=>{const b=await base(),m=await meta(b);if(!m){msg('Bulutda nusxa yo‘q');return}if(!confirm('Shu qurilmadagi daftar bulutdagi nusxa bilan almashtirilsin? (Oldingisi saqlab qo‘yiladi)'))return;show('☁','<p class=hero>Yuklanmoqda…</p>');await apply(m,b,false);V.conf=false;V.err='';badge();openMain()},
+ up:async()=>{if(!confirm('Bulutdagi nusxa shu qurilmadagi daftar bilan almashtirilsin?'))return;show('☁','<p class=hero>Yuklanmoqda…</p>');try{await push(true)}catch(e){V.err=e.message;badge();openMain();return}V.conf=false;V.err='';badge();openMain()},
+ code:()=>openCode(false),out:()=>{if(!confirm('Bu qurilmadan chiqilsinmi? Bulutdagi nusxa o‘chmaydi; qayta kirish uchun kod kerak bo‘ladi.'))return;V.code='';V.id='';V.key=null;V.ver=0;V.hash='';persist();badge();openStart()},
+ del:async()=>{if(!confirm('Bulutdagi shifrlangan nusxa BUTUNLAY o‘chirilsinmi? Shu qurilmadagi daftarga tegilmaydi.'))return;const b=await base();await post(b,{op:'del',id:V.id});V.code='';V.id='';V.key=null;V.ver=0;V.hash='';persist();badge();msg('✓ Bulutdagi nusxa o‘chirildi');openStart()}});
+ const a=document.getElementById('vau');if(a)a.onchange=()=>{V.auto=a.checked;persist()}}
+/* ---- avto-sinxron ---- */
+async function tick(manual){if(!V.code||V.busy)return;if(!manual&&(!V.auto||Date.now()<V.pause))return;
+ if(!V.key){try{await useCode(V.code)}catch(_){return}}
+ V.busy=true;V.err='';badge();
+ try{if(manual){try{commit()}catch(_){}}try{save()}catch(_){}const b=await base(),h=curHash(),dirty=h!==V.hash;if(h!==V.lastH){V.lastH=h;V.lastChange=Date.now()}let m=null,got=false;
+  if(manual||Date.now()-V.lastNet>40000||dirty){m=await meta(b);got=true;V.lastNet=Date.now()}
+  if(got&&m===null&&V.ver>0){/* bulutdagi nusxa o‘chirilgan */throw new Error('Bulutdagi nusxa topilmadi (boshqa qurilmadan o‘chirilgan bo‘lishi mumkin).')}
+  const remote=m&&m.ver>V.ver;
+  if(remote&&dirty){V.conf=true;if(manual)msg('⚠ Ziddiyat: ikkala qurilmada ham o‘zgarish bor — ☁ tugmasidan tanlang.')}
+  else if(remote){await apply(m,b,true);V.conf=false}
+  else if(dirty&&(manual||Date.now()-V.lastChange>=6000)){try{await push(false,null,!manual);V.conf=false;if(manual)msg('✓ Bulutga saqlandi')}catch(e){if(e.conflict){V.conf=true}else throw e}}
+  else if(manual){msg('✓ Hammasi yangilangan')}
+ }catch(e){V.err=e.message||String(e)}
+ V.busy=false;badge()}
+setInterval(()=>{ensureUI();if(V.code)tick(false)},10000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&V.code){V.lastNet=0;setTimeout(()=>tick(false),600)}});
+addEventListener('pagehide',()=>{});
+const hashJoin=()=>{const m=/#bulut=([A-Za-z0-9\-]+)/.exec(location.hash||'');if(!m)return false;try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}if(V.code){msg('☁ Bu qurilma allaqachon bulutga ulangan.');return true}setTimeout(()=>openStart(m[1]),900);return true};
+setTimeout(()=>{ensureUI();hashJoin();if(V.code){V.lastNet=0;tick(false)}},2500);setInterval(ensureUI,1500);
+window.__vault={V,openUI,tick,push,derive,norm,gen,fmt};
+})();
+
 loadTopic();applyView();pushRecent();gw.focus();
 addEventListener('pagehide',()=>{if(PD.on)pdSave()});setInterval(pdBadge,5000);
 </script><script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script><style>#acb{display:none!important}</style></body></html>
