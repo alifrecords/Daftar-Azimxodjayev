@@ -159,3 +159,9 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 - Chegaralar: siqilgan paket ≈5 MB gacha (12 bo‘lak × 600 KB), bitta IP dan soatiga 5 ta yangi daftar, jami 20 000 ta. Tarifga bog‘liq emas.
 - Sozlash shart emas (D1 `DB` allaqachon ulangan). Exe uchun: `online.json` → `{"api":"https://SAYT-NOMI.pages.dev"}` bo‘lsa exe ham shu buluttan foydalanadi.
 - Claude artifakt versiyasida bu tugma serverni topa olmaydi (u yerda Claude-hisob bulut sinxroni avvaldan bor).
+
+## v107 — 📥 PowerPoint (.pptx) import (Taqdimot)
+- Taqdimot bo'limida ribbon «📥 Import», «+» menyusi yoki .pptx faylni sudrab tashlash orqali ochiladi.
+- Saqlanadi: matn (rang, shrift, qalin/kursiv, ro'yxat), rasm (qirqish, burish, yumaloq), shakllar, chiziq/strelka, jadval, diagramma (1-qator), izohlar, fon, mavzu ranglari, master/layout bezaklari.
+- Saqlanmaydi: SmartArt, EMF/WMF, animatsiya, audio/video, ko'p qatorli diagramma, jadval ustun kengligi/katak rangi, egri ulagichlar.
+- Ishlashi uchun JSZip kutubxonasi (lib/ yoki internet) kerak.
