@@ -17385,7 +17385,7 @@ html[data-theme=light] #zdr:not(.open) .zdt{background:#18181b}
 const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 const HUE=['#3ddc84','#4aa3ff','#b68cff','#ffb23d','#ff6b9a','#2fd6d0','#ffd84a','#ff7a59'],KEY='daftar-zd-open';
 let dr=null,cur=0;
-const sections=()=>{const tabs=[...document.querySelectorAll('#rbn .rbt .tab')],panes=[...document.querySelectorAll('#rbn .rbb')];return tabs.map((t,i)=>({tab:t,pane:panes[i],name:t.textContent.trim()})).filter(x=>x.pane&&x.tab.getClientRects().length)};
+const sections=()=>{const tabs=[...document.querySelectorAll('#rbn .rbt .tab')],panes=[...document.querySelectorAll('#rbn .rbb')];return tabs.map((t,i)=>({tab:t,pane:panes[i],name:t.textContent.trim()})).filter(x=>x.pane&&!x.tab.hidden&&x.tab.style.display!='none')};
 const clean=t=>{t=(t||'').replace(/\s*\([^)]*\)\s*/g,' ').split(/\s[—–-]\s|[:.]\s/)[0].trim();return t.length>26?t.slice(0,25)+'…':t};
 const tile=(b,col)=>{if(b.hidden||b.style.display=='none')return null;let icon='',label=clean(b.title);const i=b.querySelector('i');const tx=(b.textContent||'').replace(/[▾▼]/g,'').trim();
  if(i&&i.outerHTML){icon=i.outerHTML;const sp=b.querySelector('span');if(!label)label=(sp?sp.textContent:tx.replace(i.textContent,'')).trim()}

@@ -228,3 +228,6 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 
 ## v124 — «PANEL» chizig‘i: bir bosilsa ochiladi, yana bosilsa yopiladi
 - Yuqori panel tepasidagi ingichka «PANEL» chizig‘i doim ko‘rinadi va bir bosishda panelni ochadi/yopadi (belgi ⌄/⌃ aylanadi). Holat eslab qolinadi.
+
+## v125 — Yuqori panel yopiq bo‘lsa ham yon panel funksiyalari ishlaydi
+- Yon «Bo‘limlar» paneli bo‘limlarni ekrandagi o‘lchamdan emas, DOM dan o‘qiydi — yuqori panel yig‘ilgan bo‘lsa ham barcha plitkalar ko‘rinadi va ishlaydi.
