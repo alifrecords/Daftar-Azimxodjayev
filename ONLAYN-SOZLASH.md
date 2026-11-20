@@ -209,3 +209,7 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 
 ## v119 — Ixcham panel: kattaroq tugma va ikonkalar
 - Tugma 30×30 px, ikonka ~15–17 px, tugmalar orasi 3–4 px, yozuv 13 px (avval ≈10–12 px). Panel bitta qatorda qoladi (1500 px da balandlik 82 px).
+
+## v120 — PDF: asl ko‘rinishda ochish
+- PDF import oynasida yangi tugma «📕 Asl ko‘rinishda (sahifalar) — Hujjat varag‘ida»: har bir sahifa pdf.js bilan rasm qilib (shakl, jadval, shrift buzilmasdan) yangi Hujjat varag‘iga joylanadi (120 sahifagacha).
+- Matn sifatida tahrirlash uchun avvalgi tugmalar qoladi.
