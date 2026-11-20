@@ -213,3 +213,7 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 ## v120 — PDF: asl ko‘rinishda ochish
 - PDF import oynasida yangi tugma «📕 Asl ko‘rinishda (sahifalar) — Hujjat varag‘ida»: har bir sahifa pdf.js bilan rasm qilib (shakl, jadval, shrift buzilmasdan) yangi Hujjat varag‘iga joylanadi (120 sahifagacha).
 - Matn sifatida tahrirlash uchun avvalgi tugmalar qoladi.
+
+## v121 — «⊞ Bo‘limlar»: panel plitkalar ko‘rinishida
+- Yorliqlar qatoridagi yangi tugma «⊞ Bo‘limlar» ochadigan oyna: yuqorida bo‘limlar (Bosh sahifa, Qo‘shish, …), pastda tanlangan bo‘lim funksiyalari guruhlar bo‘yicha katta yumaloq plitkalar (yorqin ikonka + nom). Plitka bosilsa oyna yopiladi va asl tugma ishga tushadi. Esc / tashqariga bosish — yopish. Har bir rejim (Jadval, Hujjat, Taqdimot) panelini o‘zi o‘qiydi.
+- Plitkalar originaldir (Apple ikonkalari nusxasi emas).
