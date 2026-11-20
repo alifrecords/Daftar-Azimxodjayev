@@ -197,3 +197,7 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 ## v116 — Qadimgi Sharq atamalari va shaxslari bazaga qo‘shildi
 - Atamalar: Xammurapi qonunlari, Qadimgi Bobil, Shumerlar, Akkad, Ossuriya, Mixxat yozuvi, Ierogliflar, Fir‘avn, Piramida, Despotiya.
 - Shaxslar: Xammurapi, Ashurbanipal, Nabukodonosor, Gilgamesh, Xufu, Ramses II, Tutanxamon, Nefertiti, Kir II, Doro I.
+
+## v117 — Qadimgi shahar va davlat nomlari (74 ta) + atamalar
+- Joy nomlari: Eshnunna, Bobil, Ninevey, Uruk, Lagash, Nippur, Akkad, Shumer, Mesopotamiya, Ossuriya, Elam, Midiya, Mitanni, Urartu, Xattusa, Finikiya, Karfagen, Troya, Afina, Sparta, Fiva, Korinf, Makedoniya, Vizantiya, Persepol, Parfiya, Baqtriya, Sug‘diyona, Marg‘iyona, Kushon, Xorazm, Memfis, Iskandariya, Mohenjo-Daro, Xarappa va boshqalar.
+- Atamalar: Eshnun qonunlari, Shahar-davlat, Mesopotamiya, Ahamoniylar.
