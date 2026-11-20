@@ -169,3 +169,9 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 ## v108 — Word → Hujjat varag‘i, PowerPoint → Taqdimot varag‘i
 - Word (.docx/.doc/.pdf/.rtf) fayl endi asosiy tugma bilan yangi «📝 Hujjat (Word)» varag‘ida ochiladi (oldin Jadval katakchalarida). Eski katakli usul «▦ Jadval-Word varaq» tugmasi bilan qoldi.
 - .pptx fayl (fayl tanlash, Telegram bazasi) avtomatik yangi «📊 Taqdimot» varag‘ida ochiladi. Eski .ppt qo‘llab-quvvatlanmaydi — .pptx qilib saqlash kerak.
+
+## v109 — 🧩 «Zamonaviy panel» temasi + yagona ovozli o‘qish
+- Yuqori panel (Jadval, Hujjat, Taqdimot) uchun yangi uslub: bir xil tugma o‘lchami (32 px / katta 60 px), bir xil chiziqli ikonlar (katta tugmalarda), qizil faqat «faol» holat, tablar tagida qizil chiziq, guruh sarlavhalari.
+- Telefon: sarlavha (chiplar) bir qatorda siljitiladigan bo‘ldi, panel tablari bir qatorli.
+- Almashtirgich: tab qatoridagi «▦ Zamonaviy / ▤ Klassik» tugmasi (brauzerda eslab qolinadi). Tarif/narxlarga tegilmadi.
+- Hujjatdagi «Ovoz» guruhi (Diktovka/O‘qish) olib tashlandi; Jadvaldagi megafon (ovozli o‘qish: 🔁, ■) Hujjat va Taqdimotda ham suzuvchi tugma sifatida ishlaydi — belgilangan matnni yoki butun hujjat / joriy slaydni o‘qiydi.
