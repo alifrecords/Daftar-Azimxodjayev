@@ -206,3 +206,6 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 - "🎨 Belgilar" oynasida Davlat/joy nomlari, Tarixiy atamalar, Fan terminlari va Shaxs ismlari uchun alohida rang tanlagich.
 - Standart: har tur bitta rangda (chalkashlik yo‘q). "🌈 har biri alohida rang" belgisi (har tur uchun) eski ko‘p rangli rejimni qaytaradi.
 - Sozlamalar: `D.mk.col.{cty,his,trm,ppl}`, `D.mk.dist.{cty,his,ppl}`; eksportda ham shu ranglar.
+
+## v119 — Ixcham panel: kattaroq tugma va ikonkalar
+- Tugma 30×30 px, ikonka ~15–17 px, tugmalar orasi 3–4 px, yozuv 13 px (avval ≈10–12 px). Panel bitta qatorda qoladi (1500 px da balandlik 82 px).
