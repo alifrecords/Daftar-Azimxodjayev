@@ -180,3 +180,5 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 - Ixcham panel (standart): sarlavha 41 px, tab qatori 32 px, tugmalar 28 px, guruh sarlavhalari yashirin, katta tugmalar bir qatorli (ekran <1700 px da faqat ikon, tooltip bilan). Ish maydoni Jadvalda +18%, Hujjatda +36%, Taqdimotda +26%.
 - Tab qatoridagi tugma: Ixcham → Keng → Klassik (brauzerda eslab qolinadi).
 - Sarlavha chiplari (Bulut, til, Darsliklar, tungi rejim, profil…) bir xil 28 px; 3 rang roli: neytral (yordamchi), oltin (Sinov/tarif holati), qizil gradient (asosiy harakat — AI Aqil qopi). Tarif va narxlarga tegilmadi.
+
+## v111 — «Sinov», «AI Aqil qopi», «Darsliklar va kurslar» chiplari bir xil effektda (oltin kontur)
