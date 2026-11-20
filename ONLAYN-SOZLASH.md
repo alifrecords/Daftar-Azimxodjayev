@@ -222,3 +222,6 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 - Panel endi oyna emas, ish maydoni o‘ng yonidagi yon tortma (SAHNA NURI dagi `insp-panel` kabi): yig‘ilganda 52 px vertikal qora tugma (‹ BOʻLIMLAR ●), bosilsa eni silliq (.28s) 372 px gacha kengayadi va ish maydoni qisqaradi; «»» bilan yopiladi; holat `daftar-zd-open` da saqlanadi; ochiqligi yashil nuqta bilan ko‘rinadi.
 - Panel ochiq turganda ham ish davom etadi (plitka bosilganda yopilmaydi); yorliq almashsa panel ham mos bo‘limga o‘tadi.
 - Telefonda (≤820px) tugma gorizontal qatorga aylanadi, ochilganda o‘ng tomondan sirpanib chiqadi.
+
+## v123 — Yuqori panel ham yopiladigan-ochiladigan
+- Yorliqlar qatorida yangi «⌃» tugma: yuqori panel (yorliqlar + funksiyalar) yig‘iladi va faqat 28 px li «⌄ PANEL · faol bo‘lim ●» chizig‘i qoladi (ish maydoni ~80 px kengayadi). Chiziq bosilsa panel silliq ochiladi. Holat `daftar-rbn-open` da eslab qolinadi.

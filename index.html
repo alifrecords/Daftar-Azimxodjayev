@@ -17370,6 +17370,16 @@ html[data-theme=light] #zdr:not(.open) .zdt{background:#18181b}
  #zdr:not(.open) .zdv{writing-mode:horizontal-tb;transform:none}
  #zdr:not(.open) .zdd{margin:0}
 }
+#rbst{display:none;all:unset;box-sizing:border-box;cursor:pointer;width:100%;height:28px;align-items:center;justify-content:center;gap:10px;background:#0d0e12;color:#fff;font:800 11px system-ui,sans-serif;letter-spacing:.14em;border-bottom:1px solid #ffffff1a}
+#rbst:hover{background:#1c1d23}#rbst:focus-visible{outline:3px solid #3ddc84;outline-offset:-3px}
+#rbst .zdc{font-size:18px;font-weight:300;letter-spacing:0}#rbst .zdd{width:8px;height:8px;border-radius:50%;background:#52525b;margin:0}
+#rbst .rbn2{font-weight:600;letter-spacing:.04em;opacity:.7;text-transform:none}
+#rbn.zcl>#rbst{display:flex}
+#rbn.zcl>.rbt,#rbn.zcl>.rbb,#rbn.zcl>.rbgrip,#rbn.zcl>.rbz{display:none!important}
+#rbn:not(.zcl)>.rbt,#rbn:not(.zcl)>.rbb.on{animation:zdIn2 .22s ease}
+@keyframes zdIn2{from{opacity:.2;transform:translateY(-6px)}to{opacity:1;transform:none}}
+#rbcl{font-size:15px;line-height:1}
+@media (prefers-reduced-motion:reduce){#rbn>.rbt,#rbn>.rbb{animation:none!important}}
 @media (prefers-reduced-motion:reduce){#zdr{transition:none}#zdr.open .zdb{animation:none}}
 `;
 const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
@@ -17398,7 +17408,13 @@ let synced=false;const syncTabs=()=>{const r=document.querySelector('#rbn .rbt')
 function open(v){if(!build())return;const o=v===undefined?!dr.classList.contains('open'):v;dr.classList.toggle('open',o);dr.querySelector('#zdt').setAttribute('aria-expanded',o);dr.querySelector('#zdd').style.cssText=o?'background:#4ade80;box-shadow:0 0 8px 2px rgba(74,222,128,.8)':'';
  try{localStorage.setItem(KEY,o?'1':'0')}catch(_){}if(o){const S=sections(),k=S.findIndex(x=>x.tab.classList.contains('on'));cur=k>=0?k:0;draw()}}
 window.__lt={open:()=>open(true),close:()=>open(false),toggle:()=>open()};
-const addB=()=>{build();syncTabs();const row=document.querySelector('#rbn .rbt');if(!row||document.getElementById('ltb'))return;const b=document.createElement('button');b.id='ltb';b.className='act';b.title='Bo‘limlar paneli (yon tortma)';b.textContent='⊞ Bo‘limlar';b.onclick=()=>open();const z=document.getElementById('zpt');if(z&&z.parentNode===row)row.insertBefore(b,z);else row.appendChild(b)};
+const RK='daftar-rbn-open';let rbs=null;
+function rbOpen(v){const r=document.getElementById('rbn');if(!r)return;const o=v===undefined?r.classList.contains('zcl'):v;r.classList.toggle('zcl',!o);
+ if(rbs){rbs.setAttribute('aria-expanded',o);const t=document.querySelector('#rbn .rbt .tab.on');rbs.querySelector('.rbn2').textContent=t?'· '+t.textContent.trim():'';rbs.querySelector('.zdd').style.cssText=o?'background:#4ade80;box-shadow:0 0 8px 2px rgba(74,222,128,.8)':''}
+ try{localStorage.setItem(RK,o?'1':'0')}catch(_){}}
+const rbInit=()=>{const r=document.getElementById('rbn');if(!r||rbs)return;rbs=document.createElement('button');rbs.id='rbst';rbs.type='button';rbs.title='Panelni ochish / yopish';rbs.setAttribute('aria-expanded','true');rbs.innerHTML='<span class=zdc aria-hidden=true>⌄</span><span>PANEL</span><span class=rbn2></span><i class=zdd></i>';rbs.onclick=()=>rbOpen(true);r.insertBefore(rbs,r.firstChild);
+ try{if(localStorage.getItem(RK)==='0')rbOpen(false)}catch(_){}};
+const addB=()=>{rbInit();const rb=document.querySelector('#rbn .rbt');if(rb&&!document.getElementById('rbcl')){const c=document.createElement('button');c.id='rbcl';c.className='act';c.title='Panelni yig‘ish (yuqori panel yopiladi)';c.textContent='⌃';c.onclick=()=>rbOpen(false);rb.appendChild(c)}build();syncTabs();const row=document.querySelector('#rbn .rbt');if(!row||document.getElementById('ltb'))return;const b=document.createElement('button');b.id='ltb';b.className='act';b.title='Bo‘limlar paneli (yon tortma)';b.textContent='⊞ Bo‘limlar';b.onclick=()=>open();const z=document.getElementById('zpt');if(z&&z.parentNode===row)row.insertBefore(b,z);else row.appendChild(b)};
 addB();setInterval(addB,1200);
 try{if(localStorage.getItem(KEY)==='1')setTimeout(()=>open(true),400)}catch(_){}
 })();
