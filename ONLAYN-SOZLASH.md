@@ -187,3 +187,6 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 - Jadval sinfi (mkt) rang-tanlash to‘rining (grid) uslubi bilan to‘qnashib, ustunlar buzilgan va matn tik yozilgan edi. Sinf nomi ajratildi (mkdb).
 
 ## v113 — baza jadvali ustun kengliklari (Fan › Mavzu ustuni tik yozilib qolmasin)
+
+## v114 — Tarixiy atamalar (Feodalizm, Merkantilizm, Renessans…) har biri alohida rangda avtomatik belgilanadi
+- Jadval katakchalari va yozuv maydonida; har bir atama o‘z rangiga ega (10 ta uyg‘un rang, atama nomidan barqaror tanlanadi), qalin yozuv saqlanadi. Qora/Oq temada mos rang.
