@@ -185,3 +185,5 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 
 ## v112 — «Mashhur shaxslar / atamalar bazasi» jadvali tuzatildi
 - Jadval sinfi (mkt) rang-tanlash to‘rining (grid) uslubi bilan to‘qnashib, ustunlar buzilgan va matn tik yozilgan edi. Sinf nomi ajratildi (mkdb).
+
+## v113 — baza jadvali ustun kengliklari (Fan › Mavzu ustuni tik yozilib qolmasin)
