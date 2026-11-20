@@ -17360,6 +17360,7 @@ const css=`
 #zdr .zlt .zli i[data-zi]::before{content:"";display:block;width:26px;height:26px;background:currentColor;-webkit-mask:var(--zm) center/contain no-repeat;mask:var(--zm) center/contain no-repeat}
 #zdr .zlt:hover .zli{transform:translateY(-2px);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px color-mix(in srgb,var(--h) 60%,#0000),0 9px 20px #000c,0 0 18px color-mix(in srgb,var(--h) 35%,#0000)}
 #zdr .zlt.on .zli{border-color:var(--h)}
+.zgrip{cursor:grab;touch-action:none;user-select:none;text-align:center;font:600 10px system-ui,sans-serif;letter-spacing:.12em;opacity:.65;padding:3px 0 5px;margin:-2px 0 2px;border-bottom:1px dashed #8886;color:inherit;flex:none}.zgrip:active{cursor:grabbing}
 #zdr .zlt span.zll{max-width:76px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 html[data-theme=light] #zdr:not(.open) .zdt{background:#18181b}
 @media (max-width:820px){
@@ -17393,11 +17394,17 @@ const tile=(b,col)=>{if(b.hidden||b.style.display=='none')return null;let icon='
   else if(tx.length&&tx.length<=3){icon='<b>'+tx+'</b>'}else if(tx){icon='<b>'+tx.slice(0,2)+'</b>';if(!label)label=tx}}
  if(!icon)return null;if(!label)label=tx||'';
  const d=document.createElement('button');d.className='zlt'+(b.classList.contains('on')?' on':'');d.style.setProperty('--h',col);d.title=b.title||label;d.innerHTML='<div class=zli>'+icon+'</div><span class=zll></span>';d.querySelector('.zll').textContent=label;return d};
+/* ochiladigan menyu (sozlagichlar) bosilgan plitka yoniga chiqadi va sichqoncha bilan sudrab ko‘chiriladi */
+function fire(b,tile){const tr=tile.getBoundingClientRect(),w=250,fake={left:Math.max(8,tr.left-w-12),right:tr.left-12,top:tr.top,bottom:tr.top-4,width:w,height:tr.height,x:Math.max(8,tr.left-w-12),y:tr.top};
+ b.getBoundingClientRect=()=>fake;try{b.click()}finally{setTimeout(()=>{try{delete b.getBoundingClientRect}catch(_){}},500)}
+ setTimeout(()=>{[...document.querySelectorAll('#pm,.ofcpal,#mxm')].forEach(m=>{const cs=getComputedStyle(m);if(cs.display=='none'||m.querySelector(':scope>.zgrip'))return;const g=document.createElement('div');g.className='zgrip';g.title='Sudrab joyini o‘zgartiring';g.textContent='⋮⋮⋮ sudrab suring';m.insertBefore(g,m.firstChild);
+  g.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();g.setPointerCapture(e.pointerId);const sx=e.clientX,sy=e.clientY,l0=parseFloat(m.style.left)||m.getBoundingClientRect().left,t0=parseFloat(m.style.top)||m.getBoundingClientRect().top;
+   const mv=ev=>{m.style.left=(l0+ev.clientX-sx)+'px';m.style.top=(t0+ev.clientY-sy)+'px';m.style.right='auto';m.style.bottom='auto'};const up=()=>{g.removeEventListener('pointermove',mv);g.removeEventListener('pointerup',up)};g.addEventListener('pointermove',mv);g.addEventListener('pointerup',up)})})},40)}
 function draw(){if(!dr)return;const S=sections();if(cur>=S.length)cur=0;const hd=dr.querySelector('.zlh'),bd=dr.querySelector('.zlb');hd.innerHTML='';bd.innerHTML='';
  S.forEach((x,k)=>{const c=HUE[k%HUE.length],b=document.createElement('button');b.className='zls'+(k==cur?' on':'');b.style.setProperty('--h',c);b.textContent=x.name;b.onclick=()=>{cur=k;draw()};hd.append(b)});
  const x=S[cur];if(!x)return;const col=HUE[cur%HUE.length];
  const groups=[...x.pane.querySelectorAll('.rbg')];const list=groups.length?groups:[x.pane];
- list.forEach(g=>{const bs=[...g.querySelectorAll('button')].filter(b=>!b.closest('#rbmini'));const tl=bs.map(b=>{const t=tile(b,col);if(t)t.onclick=()=>{const go=()=>{b.click();setTimeout(draw,60)};if(!x.tab.classList.contains('on')){x.tab.click();requestAnimationFrame(go)}else go()};return t}).filter(Boolean);if(!tl.length)return;
+ list.forEach(g=>{const bs=[...g.querySelectorAll('button')].filter(b=>!b.closest('#rbmini'));const tl=bs.map(b=>{const t=tile(b,col);if(t)t.onclick=()=>{const go=()=>{fire(b,t);setTimeout(draw,60)};if(!x.tab.classList.contains('on')){x.tab.click();requestAnimationFrame(go)}else go()};return t}).filter(Boolean);if(!tl.length)return;
   const sec=document.createElement('div');sec.className='zlg';const lg=g.querySelector&&g.querySelector('.rgl');sec.innerHTML='<h4></h4><div class=zlr></div>';if(lg)sec.querySelector('h4').textContent=lg.textContent;else sec.querySelector('h4').remove();tl.forEach(t=>sec.querySelector('.zlr').append(t));bd.append(sec)})}
 function build(){if(dr)return true;const app=document.getElementById('app');if(!app)return false;dr=document.createElement('aside');dr.id='zdr';dr.setAttribute('aria-label','Bo‘limlar');
  dr.innerHTML='<button class=zdt id=zdt type=button aria-expanded=false aria-controls=zdb title="Bo‘limlar va funksiyalarni ochish / yopish"><span class=zdc aria-hidden=true>‹</span><span class=zdv>BOʻLIMLAR</span><i class=zdd id=zdd aria-hidden=true></i></button><div class=zdb id=zdb><div class=zdh><b>Bo‘limlar</b><button class=zdx id=zdx type=button title="Yopish" aria-label="Yopish">»</button></div><div class=zlh></div><div class=zlb></div></div>';

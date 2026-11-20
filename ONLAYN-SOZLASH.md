@@ -231,3 +231,7 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 
 ## v125 — Yuqori panel yopiq bo‘lsa ham yon panel funksiyalari ishlaydi
 - Yon «Bo‘limlar» paneli bo‘limlarni ekrandagi o‘lchamdan emas, DOM dan o‘qiydi — yuqori panel yig‘ilgan bo‘lsa ham barcha plitkalar ko‘rinadi va ishlaydi.
+
+## v126 — Yon paneldagi ochiladigan sozlagichlar: tugma yonida chiqadi va sudraladi
+- Yon panel plitkasi bosilganda ochiladigan menyu (Tekislash, Rang, Chegara…) endi ekran burchagida emas, bosilgan plitkaning chap tomonida chiqadi (asl tugma o‘rniga plitka koordinatasi beriladi).
+- Menyu tepasida «⋮⋮⋮ sudrab suring» tutqichi: sichqoncha (yoki barmoq) bilan ushlab istalgan joyga ko‘chiriladi. #pm, .ofcpal, #mxm menyulari uchun.
