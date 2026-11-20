@@ -201,3 +201,8 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 ## v117 — Qadimgi shahar va davlat nomlari (74 ta) + atamalar
 - Joy nomlari: Eshnunna, Bobil, Ninevey, Uruk, Lagash, Nippur, Akkad, Shumer, Mesopotamiya, Ossuriya, Elam, Midiya, Mitanni, Urartu, Xattusa, Finikiya, Karfagen, Troya, Afina, Sparta, Fiva, Korinf, Makedoniya, Vizantiya, Persepol, Parfiya, Baqtriya, Sug‘diyona, Marg‘iyona, Kushon, Xorazm, Memfis, Iskandariya, Mohenjo-Daro, Xarappa va boshqalar.
 - Atamalar: Eshnun qonunlari, Shahar-davlat, Mesopotamiya, Ahamoniylar.
+
+## v118 — Belgilar: har bir tur uchun bitta umumiy rang
+- "🎨 Belgilar" oynasida Davlat/joy nomlari, Tarixiy atamalar, Fan terminlari va Shaxs ismlari uchun alohida rang tanlagich.
+- Standart: har tur bitta rangda (chalkashlik yo‘q). "🌈 har biri alohida rang" belgisi (har tur uchun) eski ko‘p rangli rejimni qaytaradi.
+- Sozlamalar: `D.mk.col.{cty,his,trm,ppl}`, `D.mk.dist.{cty,his,ppl}`; eksportda ham shu ranglar.
