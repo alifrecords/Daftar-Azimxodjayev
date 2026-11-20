@@ -165,3 +165,7 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 - Saqlanadi: matn (rang, shrift, qalin/kursiv, ro'yxat), rasm (qirqish, burish, yumaloq), shakllar, chiziq/strelka, jadval, diagramma (1-qator), izohlar, fon, mavzu ranglari, master/layout bezaklari.
 - Saqlanmaydi: SmartArt, EMF/WMF, animatsiya, audio/video, ko'p qatorli diagramma, jadval ustun kengligi/katak rangi, egri ulagichlar.
 - Ishlashi uchun JSZip kutubxonasi (lib/ yoki internet) kerak.
+
+## v108 — Word → Hujjat varag‘i, PowerPoint → Taqdimot varag‘i
+- Word (.docx/.doc/.pdf/.rtf) fayl endi asosiy tugma bilan yangi «📝 Hujjat (Word)» varag‘ida ochiladi (oldin Jadval katakchalarida). Eski katakli usul «▦ Jadval-Word varaq» tugmasi bilan qoldi.
+- .pptx fayl (fayl tanlash, Telegram bazasi) avtomatik yangi «📊 Taqdimot» varag‘ida ochiladi. Eski .ppt qo‘llab-quvvatlanmaydi — .pptx qilib saqlash kerak.

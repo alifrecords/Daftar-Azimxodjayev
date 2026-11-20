@@ -6724,6 +6724,13 @@ function commitSheets(sheets){snap();sheets.forEach(s=>{let n=s.n,k=2;while(S.so
 async function toWordSheet(model,name,o){o=o||{};const base=String(name).replace(/\.[^.]+$/,'')||'Word';const b=build(model.blocks,base,{pageW:model.pageW});
  commitSheets(b.sheets);const st=b.stat;
  msg('📘 «'+name+'» yangi «Word varaq»da ochildi: '+st.p+' abzats, '+st.t+' jadval, '+st.i+' rasm'+(b.sheets.length>1?' ('+b.sheets.length+' varaqqa bo‘lindi)':'')+'. Tartib va shakl saqlandi; Imlo, Tarjimon, AI, 🔤 va boshqa barcha funksiyalar shu varaqda ishlaydi.'+(model.note?' '+model.note:''));return b}
+function docPageHtml(blocks){let h=wrapHtml(blocks);return h.replace(/<table class=bd>/g,'<table style="border-collapse:collapse;width:100%" border="1">').replace(/<table>/g,'<table style="border-collapse:collapse;width:100%">').replace(/<td /g,'<td style="border:1px solid #999;padding:3px 6px;vertical-align:top" data-x ').replace(/<td>/g,'<td style="border:1px solid #999;padding:3px 6px;vertical-align:top">')}
+async function toDocSheet(model,name,o){o=o||{};if(!window.__doc||!window.__doc.create)return toWordSheet(model,name,o);const base=String(name).replace(/\.[^.]+$/,'')||'Hujjat';
+ const html=docPageHtml(model.blocks)||'<p><br></p>';window.__doc.create({nodlg:1});await new Promise(r=>setTimeout(r,120));
+ try{window.__doc.setHtml(html);const s=S[cur];if(s&&s.doc){let n='📝 '+base.slice(0,24),k=2,nn=n;while(S.some(x=>x!==s&&x.n===nn))nn=n+' ('+k++ +')';s.n=nn;tabs();save()}}catch(e){console.warn(e);throw e}
+ const st=model.blocks.reduce((a,b)=>{if(b.k=='p'&&b.text.trim())a.p++;if(b.k=='t')a.t++;if(b.k=='i')a.i++;return a},{p:0,t:0,i:0});
+ msg('📝 «'+name+'» yangi «Hujjat (Word)» varaqda ochildi: '+st.p+' abzats, '+st.t+' jadval, '+st.i+' rasm. Tahrirlash, Word/PDF eksport va boshqa Hujjat funksiyalari shu yerda ishlaydi.'+(model.note?' '+model.note:''))}
+async function toSlides(f){if(!window.__sl||!window.__sl.create||!window.__pptxImport){msg('Taqdimot moduli yuklanmadi.');return}window.__sl.create({nodlg:1});await new Promise(r=>setTimeout(r,150));return window.__pptxImport(f)}
 function xlsToSheets(model,name){const base=String(name).replace(/\.[^.]+$/,''),wb=model.wb,made=[];
  wb.SheetNames.forEach((sn,idx)=>{const ws=wb.Sheets[sn];if(!ws||!ws['!ref'])return;const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});const sh=newSh((wb.SheetNames.length>1?base.slice(0,14)+'-'+sn:base).replace(/[\[\]\\\/*?:]/g,'').slice(0,28));sh.cw={};sh.rh={};
   rows.slice(0,MX()-1).forEach((rw,ri)=>rw.slice(0,MC()).forEach((v,ci)=>{if(v!==''&&v!=null)sh.cells[ri+','+ci]={v:String(v),s:{}}}));
@@ -6748,14 +6755,15 @@ function showDoc(model,name,o){o=o||{};if(!ov){ov=document.createElement('div');
  const isX=model.kind=='xls',st=model.n||{};
  let info=isX?model.wb.SheetNames.length+' ta varaq':((model.blocks.filter(b=>b.k=='p'&&b.text.trim()).length)+' abzats · '+model.blocks.filter(b=>b.k=='t').length+' jadval · '+(st.img||0)+' rasm'+(st.pages?' · '+st.pages+' sahifa':''));
  ov.innerHTML='<div class="dwc"><div class="dwh"><span style="font-size:20px">'+(isX?'📗':extOf(name)=='pdf'?'📕':'📘')+'</span><b>'+esc(name)+'</b><span style="opacity:.7;font-size:12px">'+esc(info)+'</span><button class="dwx" title="Yopish (Esc)">✕</button></div>'
-  +'<div class="dwo">'+(isX?'<span>Har bir Excel varag‘i alohida varaq bo‘lib ochiladi.</span>':'<label><input type=checkbox id=dw_im checked> 🖼 Rasmlarni ham olish</label><span style="opacity:.8">Ochiladi: yangi «Word varaq» (mavjud jadval yonida alohida tab). Matn, jadval, rasm tartibi saqlanadi.</span>')+(model.note?'<span style="color:#ffd58a">⚠ '+esc(model.note)+'</span>':'')+'</div>'
+  +'<div class="dwo">'+(isX?'<span>Har bir Excel varag‘i alohida varaq bo‘lib ochiladi.</span>':'<label><input type=checkbox id=dw_im checked> 🖼 Rasmlarni ham olish</label><span style="opacity:.8">Ochiladi: yangi «Hujjat (Word)» varag‘i (alohida tab) — haqiqiy Word kabi tahrirlanadi. Matn, jadval, rasm tartibi saqlanadi.</span>')+(model.note?'<span style="color:#ffd58a">⚠ '+esc(model.note)+'</span>':'')+'</div>'
   +'<div class="dwp"><div class="dwt"></div><div class="dwpg" id="dw_pg"></div></div>'
-  +'<div class="dwb2">'+(isX?'<button class="b gn" id="dw_go">📗 Varaqlar sifatida ochish</button>':'<button class="b gn" id="dw_go">📘 Yangi Word varaqda ochish</button>'+(o.legacy?'<button class="b" id="dw_old">▦ Eski usul (jadval → varaq, matn → yozuv)</button>':''))+(o.dl?'<button class="b" id="dw_dl">⬇ Yuklab olish</button>':'')+(o.pdfUrl?'<button class="b" id="dw_pdf">📕 PDF ni asl holida ko‘rish</button>':'')+'<span style="flex:1"></span><button class="b" id="dw_x">Yopish</button></div></div>';
+  +'<div class="dwb2">'+(isX?'<button class="b gn" id="dw_go">📗 Varaqlar sifatida ochish</button>':'<button class="b gn" id="dw_go">📝 Hujjat (Word) varag‘ida ochish</button><button class="b" id="dw_grid" title="Jadval maydonida (katakchalarda)">▦ Jadval-Word varaq (katakli)</button>'+(o.legacy?'<button class="b" id="dw_old">▦ Eski usul (jadval → varaq, matn → yozuv)</button>':''))+(o.dl?'<button class="b" id="dw_dl">⬇ Yuklab olish</button>':'')+(o.pdfUrl?'<button class="b" id="dw_pdf">📕 PDF ni asl holida ko‘rish</button>':'')+'<span style="flex:1"></span><button class="b" id="dw_x">Yopish</button></div></div>';
  const pg=ov.querySelector('#dw_pg'),tb=ov.querySelector('.dwt');
  if(isX){pg.classList.add('x');const draw=i=>{const ws=model.wb.Sheets[model.wb.SheetNames[i]];pg.innerHTML=ws&&ws['!ref']?XLSX.utils.sheet_to_html(ws,{header:'',footer:''}).replace(/<\/?(html|head|body)[^>]*>/g,'').replace(/<meta[^>]*>/g,''):'<p>(bo‘sh)</p>';tb.querySelectorAll('button').forEach((b,j)=>b.classList.toggle('on',j==i))};model.wb.SheetNames.forEach((n,i)=>{const b=document.createElement('button');b.textContent=n;b.onclick=()=>draw(i);tb.append(b)});draw(0)}
  else{const bl=model.blocks.slice(0,600);pg.innerHTML=wrapHtml(bl)+(model.blocks.length>600?'<p style="opacity:.6">… (ko‘rinishda dastlabki qismi; varaqqa to‘liq o‘tadi)</p>':'');tb.remove()}
  ov.querySelector('.dwx').onclick=closeV;ov.querySelector('#dw_x').onclick=closeV;
- const go=ov.querySelector('#dw_go');go.onclick=async()=>{go.disabled=true;go.textContent='⏳ …';try{if(isX){const sh=xlsToSheets(model,name);if(!sh.length){msg('Excel fayl bo‘sh');return}commitSheets(sh);msg('📗 «'+name+'»: '+sh.length+' ta varaq ochildi.')}else{let m=model;const im=ov.querySelector('#dw_im');if(im&&!im.checked){m=Object.assign({},model,{blocks:stripImgs(model.blocks)})}await toWordSheet(m,name)}closeV();if(o.done)o.done()}catch(e){console.warn(e);msg('❌ Varaqqa joylab bo‘lmadi: '+(e&&e.message||e));go.disabled=false;go.textContent='Qayta urinish'}};
+ const go=ov.querySelector('#dw_go');go.onclick=async()=>{go.disabled=true;go.textContent='⏳ …';try{if(isX){const sh=xlsToSheets(model,name);if(!sh.length){msg('Excel fayl bo‘sh');return}commitSheets(sh);msg('📗 «'+name+'»: '+sh.length+' ta varaq ochildi.')}else{let m=model;const im=ov.querySelector('#dw_im');if(im&&!im.checked){m=Object.assign({},model,{blocks:stripImgs(model.blocks)})}await toDocSheet(m,name)}closeV();if(o.done)o.done()}catch(e){console.warn(e);msg('❌ Varaqqa joylab bo‘lmadi: '+(e&&e.message||e));go.disabled=false;go.textContent='Qayta urinish'}};
+ const gr=ov.querySelector('#dw_grid');if(gr)gr.onclick=async()=>{gr.disabled=true;try{let m=model;const im=ov.querySelector('#dw_im');if(im&&!im.checked)m=Object.assign({},model,{blocks:stripImgs(model.blocks)});await toWordSheet(m,name);closeV();if(o.done)o.done()}catch(e){console.warn(e);msg('❌ '+(e&&e.message||e));gr.disabled=false}};
  const od=ov.querySelector('#dw_old');if(od)od.onclick=()=>{closeV();o.legacy()};const dl=ov.querySelector('#dw_dl');if(dl)dl.onclick=()=>o.dl();const pdf=ov.querySelector('#dw_pdf');if(pdf)pdf.onclick=()=>window.open(o.pdfUrl,'_blank');
  ov.hidden=false}
 function stripImgs(bs){return bs.filter(b=>b.k!='i').map(b=>b.k=='t'?Object.assign({},b,{rows:b.rows.map(r=>r.map(c=>Object.assign({},c,{blocks:stripImgs(c.blocks)})))}):b)}
@@ -6768,17 +6776,18 @@ function hook(){if(typeof importAny!='function'||importAny.__dw)return;const old
    if(ext=='docx'){await need(['JSZip']);const z=await JSZip.loadAsync(await f.arrayBuffer()),xml=z.file('word/document.xml')?await z.file('word/document.xml').async('string'):'';
     if(/DAFTAR1:/.test(xml))return old(f);
     return openFile(f,{legacy:()=>old(f)})}
+   if(ext=='pptx'||ext=='ppt'||ext=='pps'||ext=='ppsx'){if(ext=='pptx'||ext=='ppsx')return toSlides(f);msg('Eski .ppt formati o‘qilmaydi — PowerPoint’da «Saqlash → .pptx» qilib qayta yuklang.');return}
    if(ext=='doc'||ext=='pdf'||ext=='rtf')return openFile(f);
   }catch(e){console.warn(e)}
   return old(f)};nf.__dw=1;importAny=nf;
- try{if(!/\.pdf/.test(fpick.accept))fpick.accept+=',.doc,.pdf,.rtf'}catch(_){}}
+ try{if(!/\.pdf/.test(fpick.accept))fpick.accept+=',.doc,.pdf,.rtf,.pptx'}catch(_){}}
 /* ---------- Telegram bazasi: hujjat tugmalari ---------- */
-const DOCX_E=new Set(['docx','doc','docm','rtf','txt','md','html','htm','mht','mhtml','xlsx','xls','xlsm','xlsb','ods','csv','tsv','pdf']);
+const DOCX_E=new Set(['pptx','docx','doc','docm','rtf','txt','md','html','htm','mht','mhtml','xlsx','xls','xlsm','xlsb','ods','csv','tsv','pdf']);
 const urlOf=(f,dl)=>typeof TGI!='undefined'&&TGI.url?TGI.url(f,dl):'/__data/tginfile?n='+encodeURIComponent(f)+(dl?'&dl=1':'');
 async function tgOpen(m,mode){const name=m.fname||m.file.split('/').pop();let buf;try{const r=await fetch(urlOf(m.file));if(!r.ok)throw 0;buf=await r.arrayBuffer()}catch(_){msg('❌ Fayl o‘qilmadi: '+name);return}
- const ext=extOf(name);const o={dl:()=>{const a=document.createElement('a');a.href=urlOf(m.file,1);a.download=name;document.body.append(a);a.click();a.remove()},done:()=>{markPl(m.id);try{TGI.st.msgs&&fetch('/__data/tginact',{method:'POST',body:JSON.stringify({a:'done',ids:[m.id]})})}catch(_){}}};
+ const ext=extOf(name);if(ext=='pptx'&&mode=='go'){try{await toSlides(new File([buf],name));try{markPl(m.id)}catch(_){}}catch(e){msg('❌ '+(e&&e.message||e))}return}const o={dl:()=>{const a=document.createElement('a');a.href=urlOf(m.file,1);a.download=name;document.body.append(a);a.click();a.remove()},done:()=>{markPl(m.id);try{TGI.st.msgs&&fetch('/__data/tginact',{method:'POST',body:JSON.stringify({a:'done',ids:[m.id]})})}catch(_){}}};
  if(ext=='pdf')o.pdfUrl=urlOf(m.file);
- if(mode=='go'){try{const model=await loadAny(buf,name,{images:true});if(model.kind=='xls'){const sh=xlsToSheets(model,name);if(sh.length){commitSheets(sh);msg('📗 «'+name+'»: '+sh.length+' ta varaq ochildi.')}}else await toWordSheet(model,name);o.done()}catch(e){console.warn(e);msg('❌ «'+name+'» ochilmadi: '+(e&&e.message||e))}return}
+ if(mode=='go'){try{const model=await loadAny(buf,name,{images:true});if(model.kind=='xls'){const sh=xlsToSheets(model,name);if(sh.length){commitSheets(sh);msg('📗 «'+name+'»: '+sh.length+' ta varaq ochildi.')}}else await toDocSheet(model,name);o.done()}catch(e){console.warn(e);msg('❌ «'+name+'» ochilmadi: '+(e&&e.message||e))}return}
  return openBuf(buf,name,o)}
 function markPl(id){placed.add(id);try{localStorage.setItem('daftar-dwplaced',JSON.stringify([...placed].slice(-1500)))}catch(_){}}
 let tgBusy=false;
@@ -6795,7 +6804,7 @@ let rq=0;const mo=new MutationObserver(()=>{if(rq)return;rq=requestAnimationFram
 const boot=()=>{const o=document.getElementById('tgdbx');if(o){mo.observe(o,{childList:true,subtree:true});aug();return true}return false};
 const bmo=new MutationObserver(()=>{if(boot())bmo.disconnect()});if(!boot())bmo.observe(document.body,{childList:true});
 setInterval(autoDocs,4000);setTimeout(hook,0);
-return {loadAny,docxModel,htmlModel,docBinary,pdfModel,build,toWordSheet,showDoc,openFile,openBuf,commitSheets,xlsToSheets,hook,tgOpen,cellContent,bounds,extOf};
+return {toDocSheet,toSlides,loadAny,docxModel,htmlModel,docBinary,pdfModel,build,toWordSheet,showDoc,openFile,openBuf,commitSheets,xlsToSheets,hook,tgOpen,cellContent,bounds,extOf};
 })();
 
 /* ===== f6e: IMLO-2 (SP2) — o'zbek / English / Русский / العربية; katta lug'at, o'zi o'rganadi; katakda qizil belgi + yashil tuzatish chipi ===== */
@@ -14989,7 +14998,7 @@ body.docon #docv{display:flex}body.docon #gw,body.docon #top,body.docon #vb{disp
  const oR=render;render=function(){const r=oR.apply(this,arguments);try{syncShow()}catch(e){console.warn('doc',e)}return r};
  window.addEventListener('beforeunload',()=>{try{flush2()}catch(_){}});
  function create(tpl){try{snap()}catch(_){}const n=S.filter(x=>x.doc).length+1;const s=newSh('📝 Hujjat '+n);s.doc=newDoc();if(tpl){const t=TP.find(x=>x[0]==tpl);if(t)s.doc.html=t[4]}S.push(s);cur=S.length-1;ar=ac=0;sel={r1:0,c1:0,r2:0,c2:0};tabs();render();save();
-  if(!tpl)setTimeout(newDlg,60);else toast('📝 Hujjat ochildi.')}
+  if(!tpl)setTimeout(newDlg,60);else if(!tpl.nodlg)toast('📝 Hujjat ochildi.')}
  /* mavjud asboblar (emoji, simvol, formula, kalkulyator…) matnni hujjatga qo‘ysin */
  try{const oIns=insText;insText=function(t){if(shown&&sh&&document.body.classList.contains('docon')){restSel();document.execCommand('insertText',false,String(t));touch();return}return oIns.apply(this,arguments)}}catch(e){console.warn('insText',e)}
  window.__addItems=window.__addItems||[];window.__addItems.push({t:'📝 Hujjat (Word)',fn:()=>create()});
