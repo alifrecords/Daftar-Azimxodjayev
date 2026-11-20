@@ -193,3 +193,7 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 
 ## v115 — Atoqli otlar (shaxs ismlari va joy nomlari) ham har biri alohida rangda
 - Shaxslar — oddiy rangli, joy nomlari — nuqtali tagchiziq bilan; har bir ism/joy o‘z rangini nomidan oladi (10 ta rang, barqaror).
+
+## v116 — Qadimgi Sharq atamalari va shaxslari bazaga qo‘shildi
+- Atamalar: Xammurapi qonunlari, Qadimgi Bobil, Shumerlar, Akkad, Ossuriya, Mixxat yozuvi, Ierogliflar, Fir‘avn, Piramida, Despotiya.
+- Shaxslar: Xammurapi, Ashurbanipal, Nabukodonosor, Gilgamesh, Xufu, Ramses II, Tutanxamon, Nefertiti, Kir II, Doro I.
