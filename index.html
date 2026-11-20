@@ -17211,6 +17211,35 @@ html.zp #rbn .rbt .tab,html.zp #rbn .rbb button:not(.rbk):not([id^=fcb]):not([id
 /* ovoz tugmalari hamma bo‘limlarda bir joyda */
 html.zp #rbmini.zfloat{position:fixed;right:16px;bottom:44px;z-index:99990;margin:0;padding:6px 8px;gap:6px;background:var(--rp2,var(--sf));border:1px solid var(--rbo,var(--ln));border-radius:26px;box-shadow:0 6px 24px #0007}
 #rbmini.zfloat{position:fixed;right:16px;bottom:44px;z-index:99990;margin:0;padding:6px 8px;gap:6px;background:var(--rp2,var(--sf));border:1px solid var(--rbo,var(--ln));border-radius:26px;box-shadow:0 6px 24px #0007}
+/* sarlavha chiplari: bir xil o‘lcham va 3 xil rang roli (neytral / holat-oltin / asosiy harakat-qizil) */
+html.zp #hd .rbq{height:28px}
+html.zp #hd #sbx,html.zp #hd #fmb,html.zp #hd #vlb,html.zp #hd #eyb,html.zp #hd #rblg,html.zp #hd #trfb,html.zp #hd #aiq,html.zp #hd #kvb,html.zp #hd #th,html.zp #hd #rbav,html.zp #hd #acb,html.zp #hd #kcb{height:28px!important;min-height:0!important;line-height:1!important;padding:0 11px!important;border-radius:14px!important;font-size:11.5px!important;font-weight:600!important;display:inline-flex!important;align-items:center;justify-content:center;gap:5px;white-space:nowrap;box-sizing:border-box;margin-top:0!important;margin-bottom:0!important}
+html.zp #hd #sbx,html.zp #hd #th,html.zp #hd #rbav,html.zp #hd #eyb{width:30px;min-width:30px;padding:0!important}
+html.zp #hd #vlb,html.zp #hd #eyb,html.zp #hd #rblg,html.zp #hd #kvb,html.zp #hd #th,html.zp #hd #rbav,html.zp #hd #fmb,html.zp #hd #sbx{background:color-mix(in srgb,var(--rt) 6%,transparent)!important;border:1px solid var(--rln)!important;color:var(--rt)!important;box-shadow:none!important}
+html.zp #hd #vlb:hover,html.zp #hd #eyb:hover,html.zp #hd #rblg:hover,html.zp #hd #kvb:hover,html.zp #hd #th:hover,html.zp #hd #rbav:hover,html.zp #hd #fmb:hover{border-color:var(--rbo);background:color-mix(in srgb,var(--rt) 12%,transparent)!important}
+html.zp #hd #trfb{background:color-mix(in srgb,#f2b84b 13%,transparent)!important;border:1px solid color-mix(in srgb,#f2b84b 55%,transparent)!important;color:#f2b84b!important;box-shadow:none!important}
+html.zp #hd #aiq{background:linear-gradient(135deg,#ff5a5f,#ff7a59)!important;border:1px solid transparent!important;color:#fff!important;box-shadow:0 2px 10px #ff5a5f55!important}
+html.zp #hd #eyb{overflow:hidden;width:40px!important;min-width:40px!important;background-color:#fff!important;background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;border-color:#fff!important}
+/* ixcham rejim: ish maydoni maksimal */
+html.zp.zc #hd{padding-top:3px!important;padding-bottom:3px!important;min-height:0!important}
+html.zp.zc #hd>*{max-height:34px}
+html.zp.zc #rbn .rbt{min-height:32px}
+html.zp.zc #rbn .rbt .tab{height:32px;padding:0 9px;font-size:12.5px}
+html.zp.zc #rbn .rbt .act{height:24px;margin:4px 2px;padding:0 9px;font-size:11.5px}
+html.zp.zc #rbn .rbb{padding:3px 6px 2px}
+html.zp.zc #rbn .rbg{padding:0 6px}
+html.zp.zc #rbn .rbg .rgi{min-height:34px;gap:2px;flex-wrap:nowrap}
+html.zp.zc #rbn .rbg .rgl{display:none}
+html.zp.zc #rbn .rbb button,html.zp.zc #rbn .rbb select,html.zp.zc #rbn .rbb input[type=text],html.zp.zc #rbn .rbb input[type=number]{height:28px;font-size:12px}
+html.zp.zc #rbn .rbb button{min-width:28px;padding:0 5px}
+html.zp.zc #rbn .rbb button.rbk{height:30px;min-width:0;flex-direction:row;gap:5px;padding:0 9px;font-size:12px;border-radius:8px}
+html.zp.zc #rbn .rbb button.rbk i,html.zp.zc #rbn .rbb button.rbk i[data-zi]::before{width:16px;height:16px}
+html.zp.zc #rbn .rbb button.rbk i:not([data-zi]){font-size:15px}
+html.zp.zc #rbn .rbgrip{height:5px}
+html.zp.zc #rbn .rbb button.rbk span{display:none}
+html.zp.zc #rbn .rbb button.rbk{padding:0 7px}
+@media (min-width:1700px){html.zp.zc #rbn .rbb button.rbk span{display:inline}}
+html.zp.zc #rbn .rbb select{max-width:92px}html.zp.zc #rbn .rbb input[type=text]{width:90px}
 /* telefon */
 @media (max-width:820px){
  html.zp #rbn .rbt{overflow-x:auto;flex-wrap:nowrap;padding:0 6px;min-height:42px;-webkit-overflow-scrolling:touch}
@@ -17225,7 +17254,8 @@ html.zp #rbmini.zfloat{position:fixed;right:16px;bottom:44px;z-index:99990;margi
  html.zp #hd>*{flex:none}
 }`;
 const st=document.createElement('style');st.id='zpcss';st.textContent=css;document.head.append(st);
-const apply=()=>{document.documentElement.classList.toggle('zp',on)};apply();
+let cmp=true;try{cmp=localStorage.getItem('daftar-zcompact')!=='0'}catch(_){}
+const apply=()=>{document.documentElement.classList.toggle('zp',on);document.documentElement.classList.toggle('zc',on&&cmp)};apply();
 /* katta tugmalar: emoji o‘rniga chiziqli ikon (matn tuguni o‘zgarmaydi — tarjima buzilmaydi) */
 const encSvg=p=>'url("data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>')+'")';
 let busy=false;
@@ -17234,7 +17264,7 @@ let rq=0;const mo=new MutationObserver(()=>{if(rq)return;rq=requestAnimationFram
 const boot=()=>{const r=document.getElementById('rbn');if(!r)return false;mo.observe(r,{childList:true,subtree:true,characterData:true});icons();return true};
 const bt=setInterval(()=>{if(boot())clearInterval(bt)},400);
 /* panel almashtirgich (Tema yonida) */
-const addT=()=>{const row=document.querySelector('#rbn .rbt');if(!row||document.getElementById('zpt'))return;const b=document.createElement('button');b.id='zpt';b.className='act';b.title='Panel ko‘rinishi: Zamonaviy ⇄ Klassik';b.textContent=on?'▦ Zamonaviy':'▤ Klassik';b.onclick=()=>{on=!on;try{localStorage.setItem(LS,on?'1':'0')}catch(_){}apply();b.textContent=on?'▦ Zamonaviy':'▤ Klassik';try{msg(on?'Zamonaviy panel yoqildi.':'Klassik panel qaytarildi.')}catch(_){}};const th=[...row.querySelectorAll('.act')].pop();(th||row.lastElementChild).after(b)};
+const addT=()=>{const row=document.querySelector('#rbn .rbt');if(!row||document.getElementById('zpt'))return;const b=document.createElement('button');b.id='zpt';b.className='act';b.title='Panel ko‘rinishi: Ixcham → Keng → Klassik';const lab=()=>!on?'▤ Klassik':cmp?'▦ Ixcham':'▦ Keng';b.textContent=lab();b.onclick=()=>{if(on&&cmp){cmp=false}else if(on&&!cmp){on=false}else{on=true;cmp=true}try{localStorage.setItem(LS,on?'1':'0');localStorage.setItem('daftar-zcompact',cmp?'1':'0')}catch(_){}apply();b.textContent=lab();try{msg(!on?'Klassik panel qaytarildi.':cmp?'Ixcham panel (ish maydoni katta).':'Keng panel (katta tugmalar, yozuvlar bilan).')}catch(_){}};const th=[...row.querySelectorAll('.act')].pop();(th||row.lastElementChild).after(b)};
 setInterval(addT,1500);
 /* Ovozli o‘qish (megafon) — Hujjat va Taqdimot rejimlarida ham ishlaydi */
 function floatVoice(){const m=document.getElementById('rbmini');if(!m)return;const b=document.body.classList;const need=b.contains('docon')||b.contains('slon');

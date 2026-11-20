@@ -175,3 +175,8 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 - Telefon: sarlavha (chiplar) bir qatorda siljitiladigan bo‘ldi, panel tablari bir qatorli.
 - Almashtirgich: tab qatoridagi «▦ Zamonaviy / ▤ Klassik» tugmasi (brauzerda eslab qolinadi). Tarif/narxlarga tegilmadi.
 - Hujjatdagi «Ovoz» guruhi (Diktovka/O‘qish) olib tashlandi; Jadvaldagi megafon (ovozli o‘qish: 🔁, ■) Hujjat va Taqdimotda ham suzuvchi tugma sifatida ishlaydi — belgilangan matnni yoki butun hujjat / joriy slaydni o‘qiydi.
+
+## v110 — Ixcham panel + sarlavha chiplari
+- Ixcham panel (standart): sarlavha 41 px, tab qatori 32 px, tugmalar 28 px, guruh sarlavhalari yashirin, katta tugmalar bir qatorli (ekran <1700 px da faqat ikon, tooltip bilan). Ish maydoni Jadvalda +18%, Hujjatda +36%, Taqdimotda +26%.
+- Tab qatoridagi tugma: Ixcham → Keng → Klassik (brauzerda eslab qolinadi).
+- Sarlavha chiplari (Bulut, til, Darsliklar, tungi rejim, profil…) bir xil 28 px; 3 rang roli: neytral (yordamchi), oltin (Sinov/tarif holati), qizil gradient (asosiy harakat — AI Aqil qopi). Tarif va narxlarga tegilmadi.
