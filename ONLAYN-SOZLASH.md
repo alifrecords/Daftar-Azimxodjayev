@@ -190,3 +190,6 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 
 ## v114 — Tarixiy atamalar (Feodalizm, Merkantilizm, Renessans…) har biri alohida rangda avtomatik belgilanadi
 - Jadval katakchalari va yozuv maydonida; har bir atama o‘z rangiga ega (10 ta uyg‘un rang, atama nomidan barqaror tanlanadi), qalin yozuv saqlanadi. Qora/Oq temada mos rang.
+
+## v115 — Atoqli otlar (shaxs ismlari va joy nomlari) ham har biri alohida rangda
+- Shaxslar — oddiy rangli, joy nomlari — nuqtali tagchiziq bilan; har bir ism/joy o‘z rangini nomidan oladi (10 ta rang, barqaror).
