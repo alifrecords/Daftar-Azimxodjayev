@@ -217,3 +217,8 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 ## v121 — «⊞ Bo‘limlar»: panel plitkalar ko‘rinishida
 - Yorliqlar qatoridagi yangi tugma «⊞ Bo‘limlar» ochadigan oyna: yuqorida bo‘limlar (Bosh sahifa, Qo‘shish, …), pastda tanlangan bo‘lim funksiyalari guruhlar bo‘yicha katta yumaloq plitkalar (yorqin ikonka + nom). Plitka bosilsa oyna yopiladi va asl tugma ishga tushadi. Esc / tashqariga bosish — yopish. Har bir rejim (Jadval, Hujjat, Taqdimot) panelini o‘zi o‘qiydi.
 - Plitkalar originaldir (Apple ikonkalari nusxasi emas).
+
+## v122 — «Bo‘limlar» SAHNA NURI «Chiroq sozlamalari» mexanizmida
+- Panel endi oyna emas, ish maydoni o‘ng yonidagi yon tortma (SAHNA NURI dagi `insp-panel` kabi): yig‘ilganda 52 px vertikal qora tugma (‹ BOʻLIMLAR ●), bosilsa eni silliq (.28s) 372 px gacha kengayadi va ish maydoni qisqaradi; «»» bilan yopiladi; holat `daftar-zd-open` da saqlanadi; ochiqligi yashil nuqta bilan ko‘rinadi.
+- Panel ochiq turganda ham ish davom etadi (plitka bosilganda yopilmaydi); yorliq almashsa panel ham mos bo‘limga o‘tadi.
+- Telefonda (≤820px) tugma gorizontal qatorga aylanadi, ochilganda o‘ng tomondan sirpanib chiqadi.
