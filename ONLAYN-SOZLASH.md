@@ -225,3 +225,6 @@ Yuqori paneldagi **☁ Bulut** tugmasi. **Yangi bulut daftar** → 20 belgili sh
 
 ## v123 — Yuqori panel ham yopiladigan-ochiladigan
 - Yorliqlar qatorida yangi «⌃» tugma: yuqori panel (yorliqlar + funksiyalar) yig‘iladi va faqat 28 px li «⌄ PANEL · faol bo‘lim ●» chizig‘i qoladi (ish maydoni ~80 px kengayadi). Chiziq bosilsa panel silliq ochiladi. Holat `daftar-rbn-open` da eslab qolinadi.
+
+## v124 — «PANEL» chizig‘i: bir bosilsa ochiladi, yana bosilsa yopiladi
+- Yuqori panel tepasidagi ingichka «PANEL» chizig‘i doim ko‘rinadi va bir bosishda panelni ochadi/yopadi (belgi ⌄/⌃ aylanadi). Holat eslab qolinadi.
